@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import '@fontsource-variable/cairo';
 import '@fontsource/amiri/400.css';
 import '@fontsource/amiri/700.css';
+import '@fontsource/amiri-quran/400.css';
 import './globals.css';
 
 export const metadata: Metadata = {

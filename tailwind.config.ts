@@ -18,6 +18,7 @@ export default {
       fontFamily: {
         sans: ['"Cairo Variable"', 'Cairo', 'system-ui', 'sans-serif'],
         display: ['Amiri', '"Cairo Variable"', 'serif'],
+        quran: ['"Amiri Quran"', 'Amiri', 'serif'],
       },
       borderRadius: { xl2: '1.25rem' },
     },

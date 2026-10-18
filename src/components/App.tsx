@@ -15,6 +15,7 @@ import Today from './Today';
 import CalendarView from './CalendarView';
 import QiblaView from './QiblaView';
 import SettingsView from './SettingsView';
+import QuranView from './QuranView';
 
 const LOCATION_TTL = 30 * 60 * 1000;
 
@@ -238,6 +239,7 @@ export default function App() {
   const tabs: { k: Tab; l: string; i: Parameters<typeof Icon>[0]['name'] }[] = [
     { k: 'today', l: t.tabToday, i: 'today' },
     { k: 'calendar', l: t.tabCalendar, i: 'calendar' },
+    { k: 'quran', l: s.lang === 'ar' ? 'القرآن' : 'Qurʾan', i: 'book' },
     { k: 'qibla', l: t.tabQibla, i: 'compass' },
     { k: 'settings', l: t.tabSettings, i: 'gear' },
   ];
@@ -248,6 +250,7 @@ export default function App() {
         <main className="mx-auto w-full max-w-6xl px-3 pb-28 sm:px-5 lg:pb-10">
           {tab === 'today' && <Today />}
           {tab === 'calendar' && <CalendarView />}
+          {tab === 'quran' && <QuranView />}
           {tab === 'qibla' && <QiblaView />}
           {tab === 'settings' && <SettingsView />}
         </main>
