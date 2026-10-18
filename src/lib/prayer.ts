@@ -34,17 +34,21 @@ export function computeDay(date: CivilDate, place: Pick<Place, 'lat' | 'lng'>, o
   if (o.method === 'UmmAlQura' && o.ramadan) p.ishaInterval = 120;
   p.madhab = o.madhab === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi;
   p.highLatitudeRule = HighLatitudeRule.recommended(coords);
-  p.rounding = Rounding.Nearest;
+  // Rounded manually below: prayers → nearest minute, sunrise → floor (matches published Egyptian schedules)
+  p.rounding = Rounding.None;
   p.adjustments = { ...o.adjustments };
   // adhan reads the date's local Y/M/D components, so build it from the civil date directly
   const pt = new PrayerTimes(coords, new Date(date.y, date.m - 1, date.d, 12), p);
+  const M = 60_000;
+  const near = (d: Date) => new Date(Math.round(d.getTime() / M) * M);
+  const floor = (d: Date) => new Date(Math.floor(d.getTime() / M) * M);
   return {
-    fajr: pt.fajr,
-    sunrise: pt.sunrise,
-    dhuhr: pt.dhuhr,
-    asr: pt.asr,
-    maghrib: pt.maghrib,
-    isha: pt.isha,
+    fajr: near(pt.fajr),
+    sunrise: floor(pt.sunrise), // end of Fajr: the earlier minute is the safe one
+    dhuhr: near(pt.dhuhr),
+    asr: near(pt.asr),
+    maghrib: near(pt.maghrib),
+    isha: near(pt.isha),
   };
 }
 
