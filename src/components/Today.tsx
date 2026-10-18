@@ -12,6 +12,7 @@ import { daysPhrase } from '@/lib/format';
 import { significanceFor } from '@/data/significance';
 import { eventsForDay, eventsForMonthOnly } from '@/data/history';
 import EventCard from './EventCard';
+import { CITIES } from '@/data/cities';
 
 export default function Today() {
   return (
@@ -137,7 +138,7 @@ function Hero() {
               {ps.next.tomorrow ? ` · ${t.tomorrow}` : ''}
             </p>
             <p className="font-display text-[30px] font-bold leading-tight text-[#f7e7b8]">{nextName}</p>
-            <p key={Math.floor(now.getTime() / 1000)} className="tnum tick text-[34px] font-extrabold leading-none tracking-wide" dir="ltr" aria-live="off">
+            <p className="tnum text-[36px] font-extrabold leading-none" dir="ltr" aria-live="off" style={{ fontVariantNumeric: 'tabular-nums', minWidth: '5.2ch' }}>
               {f.countdown(remaining)}
             </p>
             <p className="mt-1 text-[13px] text-white/75">
@@ -154,7 +155,7 @@ function Hero() {
 }
 
 function LocationNotice() {
-  const { locStatus, t, refreshLocation, s, place } = useApp();
+  const { locStatus, t, refreshLocation, s, set, place } = useApp();
   if (s.locationMode === 'manual') return null;
   if (locStatus === 'locating')
     return (
@@ -163,17 +164,51 @@ function LocationNotice() {
         {t.locating}
       </p>
     );
-  if (locStatus === 'denied' || locStatus === 'failed' || place.source === 'default')
-    return (
-      <div className="card flex items-center gap-2 p-3 text-[12px]">
-        <Icon name="info" className="h-4 w-4 shrink-0 text-gold" />
-        <span className="flex-1 text-ink/80">{locStatus === 'denied' ? t.locDenied : t.locFailed}</span>
-        <button type="button" onClick={() => refreshLocation(true)} className="rounded-lg bg-emerald px-2.5 py-1.5 font-bold text-white">
-          {t.updateLocation}
+  if (locStatus !== 'denied' && locStatus !== 'failed' && place.source !== 'default') return null;
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const ios = /iphone|ipad|ipod/i.test(ua);
+  const app = /CriOS/i.test(ua) ? 'Chrome' : /EdgiOS/i.test(ua) ? 'Edge' : /FxiOS/i.test(ua) ? 'Firefox' : null;
+  const ar = s.lang === 'ar';
+  const fix = !ios
+    ? ar
+      ? 'اسمح للموقع من إعدادات المتصفح (رمز القفل بجوار العنوان) ثم اضغط «إعادة المحاولة».'
+      : 'Allow location in the browser site settings (lock icon by the address), then tap Retry.'
+    : app
+      ? ar
+        ? `الإعدادات ← ${app} ← الموقع ← «أثناء استخدام التطبيق»، ثم اضغط «إعادة المحاولة».`
+        : `Settings → ${app} → Location → “While Using the App”, then tap Retry.`
+      : ar
+        ? 'الإعدادات ← الخصوصية والأمن ← خدمات الموقع ← مواقع Safari ← «أثناء استخدام التطبيق»، وفي Safari: الإعدادات ← Safari ← الموقع ← «اسأل» أو «السماح». ثم اضغط «إعادة المحاولة».'
+        : 'Settings → Privacy & Security → Location Services → Safari Websites → “While Using the App”; and Settings → Safari → Location → Ask/Allow. Then tap Retry.';
+  return (
+    <div className="card p-3 text-[12px]">
+      <div className="flex items-start gap-2">
+        <Icon name="info" className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+        <div className="flex-1 leading-5 text-ink/80">
+          <p className="font-bold">{locStatus === 'denied' ? (ar ? 'تحديد الموقع غير مسموح' : 'Location access is off') : t.locFailed}</p>
+          {locStatus === 'denied' && <p className="mt-0.5 text-muted">{fix}</p>}
+        </div>
+      </div>
+      <div className="mt-2.5 flex gap-2">
+        <select
+          aria-label={t.city}
+          className="min-w-0 flex-1 rounded-lg border border-line/15 bg-surface px-2 py-2 text-[13px] font-semibold"
+          value=""
+          onChange={(e) => e.target.value && set((x) => ({ ...x, locationMode: 'manual', manualCityId: e.target.value }))}
+        >
+          <option value="">{ar ? 'اختر مدينتك الآن…' : 'Choose your city now…'}</option>
+          {CITIES.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name[s.lang]} — {c.country[s.lang]}
+            </option>
+          ))}
+        </select>
+        <button type="button" onClick={() => refreshLocation(true)} className="shrink-0 rounded-lg bg-emerald px-3 py-2 font-bold text-white">
+          {ar ? 'إعادة المحاولة' : 'Retry'}
         </button>
       </div>
-    );
-  return null;
+    </div>
+  );
 }
 
 function PrayerList() {
