@@ -114,6 +114,98 @@ try {
   hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day: 'numeric', month: 'long' }).format(now);
 } catch (e) {}
 
+
+/* ---------------- full-screen wallpaper (Shortcuts → Set Wallpaper) ---------------- */
+let MODE = ((args.shortcutParameter || (args.queryParameters && args.queryParameters.mode) || '') + '').trim().toLowerCase();
+if (config.runsInApp && !MODE) {
+  // tapped ▶ inside Scriptable: offer the three actions
+  const a = new Alert();
+  a.title = 'مواقيت الصلاة';
+  a.addAction('معاينة الودجت');
+  a.addAction('معاينة الخلفية (ملء الشاشة)');
+  a.addAction('حفظ الخلفية في الصور');
+  a.addCancelAction('إلغاء');
+  const pick = await a.presentSheet();
+  MODE = pick === 1 ? 'wallpaper' : pick === 2 ? 'wallpaper-save' : pick === 0 ? '' : 'cancel';
+}
+if (MODE === 'wallpaper' || MODE === 'wallpaper-save') {
+  const res = Device.screenResolution(); // pixels
+  const W = res.width, H = res.height, u = W / 100; // u = 1% of width
+  const dc = new DrawContext();
+  dc.size = new Size(W, H);
+  dc.respectScreenScale = false;
+  // background: vertical gradient emerald → midnight, drawn as bands
+  const top = [11, 59, 51], bot = [6, 18, 24];
+  for (let i = 0; i < 64; i++) {
+    const f = i / 63;
+    const c = top.map((v, j) => Math.round(v + (bot[j] - v) * f));
+    dc.setFillColor(new Color('#' + c.map((x) => x.toString(16).padStart(2, '0')).join('')));
+    dc.fillRect(new Rect(0, (H * i) / 64, W, H / 64 + 2));
+  }
+  // subtle 8-point stars
+  dc.setStrokeColor(new Color('#e8c77a', 0.07));
+  dc.setLineWidth(u * 0.25);
+  for (let y = 0; y < H; y += u * 14) for (let x = (y / (u * 14)) % 2 ? u * 7 : 0; x < W; x += u * 14) {
+    const r = u * 3;
+    for (const a0 of [0, Math.PI / 4]) {
+      const p = new Path();
+      for (let k = 0; k < 4; k++) {
+        const a = a0 + Math.PI / 4 + (k * Math.PI) / 2;
+        const pt = new Point(x + r * Math.cos(a), y + r * Math.sin(a));
+        k ? p.addLine(pt) : p.move(pt);
+      }
+      p.closeSubpath();
+      dc.addPath(p);
+      dc.strokePath();
+    }
+  }
+  const text = (s, y, size, color, opts = {}) => {
+    dc.setFont(opts.light ? Font.mediumSystemFont(size) : opts.rounded ? Font.boldRoundedSystemFont(size) : Font.boldSystemFont(size));
+    dc.setTextColor(color);
+    if (opts.align === 'left') dc.setTextAlignedLeft();
+    else if (opts.align === 'center') dc.setTextAlignedCenter();
+    else dc.setTextAlignedRight();
+    dc.drawTextInRect(s, new Rect(opts.x || u * 8, y, opts.w || W - u * 16, size * 1.45));
+  };
+  // header (below the clock/widget area, which iOS keeps in the top ~38%)
+  let y = H * 0.40;
+  const city = loc.name || '';
+  const hij = (() => { try { return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day: 'numeric', month: 'long', year: 'numeric' }).format(now); } catch (e) { return ''; } })();
+  text(`${hij}${city ? '  ·  ' + city : ''}`, y, u * 4.6, new Color('#f2cf7a'), { align: 'center' });
+  y += u * 8.5;
+  // rows
+  const rowH = u * 15;
+  for (const k of ORDER) {
+    const sun = k === 'sunrise';
+    const size = sun ? u * 7 : u * 9.6;
+    const col = sun ? new Color('#fbf5e6', 0.55) : new Color('#fbf5e6');
+    // card
+    const card = new Path();
+    card.addRoundedRect(new Rect(u * 6, y, W - u * 12, rowH - u * 2), u * 3, u * 3);
+    dc.addPath(card);
+    dc.setFillColor(new Color('#ffffff', sun ? 0.04 : 0.08));
+    dc.fillPath();
+    const ty = y + (rowH - u * 2 - size * 1.3) / 2;
+    text(label(k), ty, size, col, { x: u * 10, w: W - u * 20 });
+    text(`${hm(today[k])} ${ap(today[k])}`, ty, size, sun ? col : new Color('#f2cf7a'), { align: 'left', rounded: true, x: u * 10, w: W - u * 20 });
+    y += rowH;
+  }
+  text('مواقيت الصلاة – أ.د. على قطب', H - u * 15, u * 3.4, new Color('#fbf5e6', 0.35), { align: 'center', light: true });
+  const img = dc.getImage();
+  if (MODE === 'wallpaper-save') {
+    await Photos.save(img);
+    const ok = new Alert();
+    ok.title = 'تم الحفظ في الصور';
+    ok.message = 'الصور ← الصورة ← مشاركة ← استخدام كخلفية';
+    ok.addAction('حسنًا');
+    await ok.present();
+  } else if (config.runsInApp) await QuickLook.present(img, true);
+  Script.setShortcutOutput(img);
+  Script.complete();
+} else if (MODE === 'cancel') {
+  Script.complete();
+} else {
+
 const param = ((args.widgetParameter || '') + '').trim().toLowerCase();
 const family = config.widgetFamily || 'large';
 const w = new ListWidget();
@@ -162,22 +254,21 @@ if (family === 'accessoryInline') {
   txt(w, label(nextKey).replace('ال', ''), 13, { center: true });
   txt(w, hm(nextAt), 17, { center: true, rounded: true });
 } else if (family === 'accessoryRectangular' && param === 'times') {
-  // TODAY: 5 prayers, 2 rows, large type; next prayer at full brightness, passed ones dimmed
+  // UPCOMING: the next 4 prayers (rolling into tomorrow), 2×2 grid, large digits
   w.setPadding(0, 2, 0, 2);
-  const rows = [['fajr', 'dhuhr', 'asr'], ['maghrib', 'isha']];
-  rows.forEach((row, ri) => {
+  const seq = [];
+  for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']) if (today[k] > now) seq.push([k, today[k]]);
+  for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']) if (seq.length < 4) seq.push([k, tomorrow[k]]);
+  [seq.slice(0, 2), seq.slice(2, 4)].forEach((row, ri) => {
     const r = w.addStack();
     r.centerAlignContent();
-    row.forEach((k, i) => {
-      const c = r.addStack();
-      c.layoutVertically();
-      const on = k === nextKey;
-      const done = today[k] <= now;
-      txt(c, label(k).replace('ال', ''), 11, { bold: on, opacity: done && !on ? 0.5 : 0.85 });
-      txt(c, hm(today[k]), on ? 19 : 17, { rounded: true, opacity: done && !on ? 0.5 : 1 });
-      if (i < row.length - 1) r.addSpacer();
+    row.forEach(([k, t], i) => {
+      txt(r, label(k).replace('ال', ''), 13, { bold: false, opacity: 0.8 });
+      r.addSpacer(4);
+      txt(r, hm(t), 22, { rounded: true });
+      if (i === 0) r.addSpacer();
     });
-    if (ri === 0) w.addSpacer(2);
+    if (ri === 0) w.addSpacer(1);
   });
 } else if (family === 'accessoryRectangular') {
   // NEXT PRAYER: name + time on top, huge countdown below
@@ -281,3 +372,4 @@ if (family === 'accessoryInline') {
 if (config.runsInWidget || config.runsInAccessoryWidget) Script.setWidget(w);
 else await w.presentLarge();
 Script.complete();
+}
