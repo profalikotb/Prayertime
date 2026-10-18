@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useApp } from './ctx';
 import { Card, Icon, Row, Seg, Toggle } from './ui';
 import HijriAdjust from './HijriAdjust';
+import WidgetCard from './WidgetCard';
 import { CITIES } from '@/data/cities';
 import { METHODS, autoMethod, methodInfo } from '@/lib/methods';
 import { PRAYER_NAMES } from '@/lib/i18n';
@@ -232,6 +233,8 @@ export default function SettingsView() {
           {t.exportIcs}
         </button>
       </Card>
+
+      <WidgetCard />
 
       <Card title={t.about} icon="info" className="md:col-span-2">
         <p className="text-[12.5px] leading-6 text-ink/80">
