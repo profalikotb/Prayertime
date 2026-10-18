@@ -99,4 +99,7 @@ export interface Settings {
   /** ISO timestamp of when the user confirmed a date via "set confirmed date" */
   hijriConfirmedAt: Record<Profile, string | null>;
   notify: NotifyPrefs;
+  clinics: import('./clinics').Clinic[];
+  /** footer line printed on shared prayer-time cards */
+  shareFooter: string;
 }

@@ -1,4 +1,5 @@
 import type { Adjustments, Place, Settings } from './types';
+import { DEFAULT_CLINICS } from './clinics';
 
 const KEY = 'pakpt.settings.v1';
 const PLACE_KEY = 'pakpt.place.v1';
@@ -20,6 +21,8 @@ export function defaultSettings(): Settings {
     hijriCountry: 'auto',
     hijriOffset: { EG: null, SA: null, OTHER: null },
     hijriConfirmedAt: { EG: null, SA: null, OTHER: null },
+    clinics: DEFAULT_CLINICS.map((c) => ({ ...c, days: [...c.days] })),
+    shareFooter: 'أ.د. على قطب على · أستاذ جراحة المخ والأعصاب – جامعة عين شمس',
     notify: {
       enabled: false,
       beforeMin: 10,
