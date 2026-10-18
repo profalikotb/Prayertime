@@ -168,6 +168,8 @@ function LocationNotice() {
       </p>
     );
   if (locStatus !== 'denied' && locStatus !== 'failed' && place.source !== 'default') return null;
+  // a recent GPS fix is still valid — keep using it silently instead of alarming the user
+  if (place.source === 'gps' && Date.now() - place.at < 7 * 86400000) return null;
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
   const ios = /iphone|ipad|ipod/i.test(ua);
   const app = /CriOS/i.test(ua) ? 'Chrome' : /EdgiOS/i.test(ua) ? 'Edge' : /FxiOS/i.test(ua) ? 'Firefox' : null;

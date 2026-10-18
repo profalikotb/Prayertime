@@ -91,7 +91,30 @@ export default function SettingsView() {
             </button>
           </div>
         )}
-        {locStatus === 'denied' && <p className="mt-2 text-[12px] text-gold">{t.locDenied}</p>}
+        {(locStatus === 'denied' || locStatus === 'failed') && s.locationMode === 'auto' && (
+          <div className="mt-3 rounded-xl bg-gold/10 p-3 text-[12px] leading-6 text-ink/85">
+            <p className="font-bold text-gold">
+              {s.lang === 'ar' ? 'المتصفح منع تحديد الموقع' : 'The browser blocked location'}
+              {place.source === 'gps' && (s.lang === 'ar' ? ' — يُستخدم آخر موقع محفوظ' : ' — using the last saved location')}
+            </p>
+            {s.lang === 'ar' ? (
+              <ol className="mt-1 list-decimal space-y-0.5 ps-5">
+                <li>الإعدادات ← الخصوصية والأمن ← <b>خدمات الموقع</b>: مفعّلة.</li>
+                <li>في نفس الصفحة: <b>مواقع Safari</b> ← «أثناء استخدام التطبيق» + تفعيل «الموقع الدقيق».</li>
+                <li>الإعدادات ← التطبيقات ← <b>Safari</b> ← الموقع ← «السماح» أو «اسأل».</li>
+                <li>أغلق التطبيق تمامًا (اسحبه لأعلى) ثم افتحه واضغط زر التحديث ↻ واختر «السماح».</li>
+              </ol>
+            ) : (
+              <ol className="mt-1 list-decimal space-y-0.5 ps-5">
+                <li>Settings → Privacy &amp; Security → <b>Location Services</b>: on.</li>
+                <li>Same page: <b>Safari Websites</b> → “While Using the App” + Precise Location on.</li>
+                <li>Settings → Apps → <b>Safari</b> → Location → Allow or Ask.</li>
+                <li>Close the app fully, reopen it, tap ↻ and choose Allow.</li>
+              </ol>
+            )}
+            <p className="mt-1 text-muted">{s.lang === 'ar' ? 'أو اختر «يدوي» واختر مدينتك.' : 'Or switch to Manual and pick your city.'}</p>
+          </div>
+        )}
       </Card>
 
       <Card title={t.method} icon="sun">
