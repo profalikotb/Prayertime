@@ -67,10 +67,9 @@ export function makeFmt(s: Settings, tz: string): Fmt {
     },
     countdown: (ms) => {
       const t = Math.max(0, Math.floor(ms / 1000));
-      // hours omitted when zero: Arabic-Indic "٠٠" reads like dots
-      const h = Math.floor(t / 3600);
-      const mm = `${pad(Math.floor((t % 3600) / 60))}:${pad(t % 60)}`;
-      return n(h > 0 ? `${pad(h)}:${mm}` : mm);
+      // Always Western tabular digits: Arabic-Indic ٠ renders as a dot ("٠٤:٠١:٠٦" reads as "·٤:·١:·٦")
+      // and proportional glyph widths make a per-second counter jitter.
+      return `${pad(Math.floor(t / 3600))}:${pad(Math.floor((t % 3600) / 60))}:${pad(t % 60)}`;
     },
   };
 }
