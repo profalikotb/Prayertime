@@ -138,9 +138,12 @@ function Hero() {
               {ps.next.tomorrow ? ` · ${t.tomorrow}` : ''}
             </p>
             <p className="font-display text-[30px] font-bold leading-tight text-[#f7e7b8]">{nextName}</p>
-            <p className="tnum text-[36px] font-extrabold leading-none" dir="ltr" aria-live="off" style={{ fontVariantNumeric: 'tabular-nums', minWidth: '5.2ch' }}>
-              {f.countdown(remaining)}
-            </p>
+            <div className="flex items-baseline justify-center gap-2">
+              <span className="text-[17px] font-bold text-[#f7e7b8]">{s.lang === 'ar' ? 'بعد' : 'in'}</span>
+              <p className="tnum text-[34px] font-extrabold leading-none" dir="ltr" aria-live="off" style={{ fontVariantNumeric: 'tabular-nums' }}>
+                {f.countdown(remaining)}
+              </p>
+            </div>
             <p className="mt-1 text-[13px] text-white/75">
               <span className="tnum">{nt.hm}</span> {nt.ap}
             </p>
