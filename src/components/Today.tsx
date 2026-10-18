@@ -14,6 +14,8 @@ import { eventsForDay, eventsForMonthOnly } from '@/data/history';
 import EventCard from './EventCard';
 import { ClinicCard, LogCard, LogCheck } from './DailyCards';
 import ShareCard from './ShareCard';
+import AzkarCard from './AzkarCard';
+import PrayerWhy from './PrayerWhy';
 import { CITIES } from '@/data/cities';
 
 export default function Today() {
@@ -29,6 +31,7 @@ export default function Today() {
         </div>
         <div className="grid gap-3 xl:grid-cols-2 xl:items-start">
           <ClinicCard />
+          <AzkarCard />
           <RamadanCard />
           <Occasions />
           <Significance />
@@ -225,6 +228,7 @@ function PrayerList() {
   const { s, f, t, times, ps, now, today } = useApp();
   const names = PRAYER_NAMES[s.lang];
   const isFri = weekday(today) === 5;
+  const [why, setWhy] = useState<PrayerKey | null>(null);
   return (
     <section className="card overflow-hidden p-1.5">
       <ul className="divide-y divide-line/5">
@@ -237,9 +241,12 @@ function PrayerList() {
           const tp = f.timeParts(at);
           const label = k === 'dhuhr' && isFri ? (s.lang === 'ar' ? 'الجمعة' : 'Jumuʿa') : names[k];
           return (
-            <li
-              key={k}
-              className={`relative flex items-center gap-3 rounded-xl px-3 ${sunrise ? 'py-2' : 'py-3'} transition-colors ${
+            <li key={k}>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setWhy(why === k ? null : k)}
+              className={`relative flex cursor-pointer items-center gap-3 rounded-xl px-3 ${sunrise ? 'py-2' : 'py-3'} transition-colors ${
                 isNext ? 'bg-gold/10 ring-1 ring-gold/50' : isCurrent ? 'bg-emerald/10' : ''
               } ${passed ? 'opacity-45' : ''}`}
             >
@@ -257,10 +264,13 @@ function PrayerList() {
                 <span>{tp.hm}</span>
                 {tp.ap && <span className="text-[12px] font-bold text-muted">{tp.ap}</span>}
               </p>
+            </div>
+            {why === k && <PrayerWhy k={k} />}
             </li>
           );
         })}
       </ul>
+      <p className="px-3 pb-1.5 pt-1 text-center text-[10.5px] text-muted">{s.lang === 'ar' ? 'اضغط على أي صلاة لمعرفة كيف حُسب وقتها' : 'Tap a prayer to see how its time is computed'}</p>
     </section>
   );
 }
