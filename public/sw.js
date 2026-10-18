@@ -4,7 +4,7 @@
  * Fonts/icons/other same-origin GETs: stale-while-revalidate.
  * Prayer times are computed on-device, so the app is fully functional offline once cached.
  */
-const VERSION = 'v1.0.0';
+const VERSION = 'v1.1.0';
 const CACHE = `pakpt-${VERSION}`;
 const SHELL = ['/', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png'];
 
@@ -60,6 +60,7 @@ self.addEventListener('fetch', (e) => {
   }
 
   if (url.pathname === '/adhan.mp3') return; // large media: let the browser handle range requests
+  if (url.pathname.startsWith('/widget/')) return; // always fetch the latest widget code from the network
 
   e.respondWith(
     caches.match(req).then((hit) => {

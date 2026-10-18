@@ -1,8 +1,10 @@
-// Builds public/widget/PrayerWidget.js (Scriptable widget) by embedding the adhan engine.
-// Run: npm run widget   (also runs automatically before `npm run build`)
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-const tpl = readFileSync(new URL('../widget/PrayerWidget.template.js', import.meta.url), 'utf8');
-const umd = readFileSync(new URL('../node_modules/adhan/lib/bundles/adhan.umd.min.js', import.meta.url), 'utf8').replace(/\/\/# sourceMappingURL=.*$/m, '');
-mkdirSync(new URL('../public/widget/', import.meta.url), { recursive: true });
-writeFileSync(new URL('../public/widget/PrayerWidget.js', import.meta.url), tpl.replace('__ADHAN__', () => umd));
-console.log('public/widget/PrayerWidget.js written');
+// Refreshes the embedded adhan engine inside public/widget/PrayerWidget.js (between the ADHAN markers).
+// The widget file is always complete and runnable as committed; run `npm run widget` after upgrading adhan.
+import { readFileSync, writeFileSync } from 'node:fs';
+const file = new URL('../public/widget/PrayerWidget.js', import.meta.url);
+const src = readFileSync(file, 'utf8');
+const umd = readFileSync(new URL('../node_modules/adhan/lib/bundles/adhan.umd.min.js', import.meta.url), 'utf8').replace(/\/\/# sourceMappingURL=.*$/m, '').trim();
+const out = src.replace(/(\/\* ADHAN-BEGIN \*\/\n)[\s\S]*?(\n\s*\/\* ADHAN-END \*\/)/, (_, a, b) => a + umd + b);
+if (!out.includes('CalculationMethod')) throw new Error('adhan engine missing from widget');
+writeFileSync(file, out);
+console.log('widget engine refreshed');
