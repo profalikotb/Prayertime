@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.profalikotb.prayertime'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.profalikotb.prayertime'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    // Fixed signing key committed with the project so every CI build can update the installed app.
+    // (Personal sideloaded app — not for Play Store distribution.)
+    signingConfigs {
+        release {
+            storeFile file('prayertime.keystore')
+            storePassword 'prayertime'
+            keyAlias 'prayertime'
+            keyPassword 'prayertime'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
