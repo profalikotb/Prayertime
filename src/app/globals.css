@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 246 242 233;
+  --surface: 255 253 248;
+  --ink: 20 36 31;
+  --muted: 94 107 102;
+  --line: 20 36 31;
+  --emerald: 14 92 74;
+  --gold: 168 122 38;
+  --night: 7 20 26;
+  --pattern-opacity: 0.05;
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --bg: 7 18 23;
+  --surface: 13 31 38;
+  --ink: 239 233 218;
+  --muted: 147 163 157;
+  --line: 239 233 218;
+  --emerald: 63 179 148;
+  --gold: 217 176 97;
+  --pattern-opacity: 0.045;
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: rgb(var(--bg));
+  color: rgb(var(--ink));
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+body {
+  font-family: 'Cairo Variable', Cairo, system-ui, sans-serif;
+  min-height: 100dvh;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* subtle 8-point star (Rub el Hizb) lattice */
+.pattern {
+  position: relative;
+  isolation: isolate;
+}
+.pattern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--pattern-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23000' stroke-width='1'%3E%3Crect x='16' y='16' width='24' height='24'/%3E%3Crect x='16' y='16' width='24' height='24' transform='rotate(45 28 28)'/%3E%3Cpath d='M0 0l8 8M56 0l-8 8M0 56l8-8M56 56l-8-8'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 56px 56px;
+}
+[data-theme='dark'] .pattern::before {
+  filter: invert(1);
+}
+
+.hero-pattern::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.09;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23e8c77a' stroke-width='.8'%3E%3Crect x='14' y='14' width='20' height='20'/%3E%3Crect x='14' y='14' width='20' height='20' transform='rotate(45 24 24)'/%3E%3Ccircle cx='24' cy='24' r='4'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 48px 48px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 85%);
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 85%);
+}
+
+.safe-top {
+  padding-top: max(env(safe-area-inset-top), 0.75rem);
+}
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+
+.card {
+  @apply rounded-xl2 border bg-surface shadow-[0_1px_0_rgb(0_0_0/0.02),0_8px_24px_-12px_rgb(0_0_0/0.12)];
+  border-color: rgb(var(--line) / 0.08);
+}
+.chip {
+  @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold leading-5;
+}
+.seg {
+  @apply flex rounded-xl p-1 text-sm font-semibold;
+  background: rgb(var(--line) / 0.06);
+}
+.seg > button {
+  @apply flex-1 rounded-lg px-2 py-2 transition-colors;
+  color: rgb(var(--muted));
+}
+.seg > button[aria-pressed='true'] {
+  @apply bg-surface shadow-sm;
+  color: rgb(var(--emerald));
+}
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+.fade-in {
+  animation: fadeIn 0.35s ease both;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tick {
+  animation: tick 1s ease-out;
+}
+@keyframes tick {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+button,
+[role='button'] {
+  touch-action: manipulation;
+}
+select {
+  -webkit-appearance: none;
+  appearance: none;
+}

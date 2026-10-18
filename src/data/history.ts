@@ -1,0 +1,632 @@
+import type { Bi } from '../lib/types';
+
+/**
+ * Curated Islamic historical events keyed to the Hijri calendar.
+ *
+ * Editorial rules (enforced by review, see TESTING.md):
+ *  - `d: null` when the sources record only the month — the event is then shown
+ *    under "this month", never on an invented day.
+ *  - `disputed: true` + `note` when reputable sources give competing dates.
+ *  - `gregorian` only for post-Prophetic-era events with a standard equivalence
+ *    (Julian calendar before 1582). Early-era conversions are omitted because the
+ *    pre-10 AH calendar (nasīʾ intercalation) makes them unreliable.
+ *  - Every entry cites at least one classical or academic source.
+ *  - `y` is the AH year; negative = years before the Hijra; `yLabel` overrides display.
+ */
+export interface HistEvent {
+  id: string;
+  m: number;
+  d: number | null;
+  y: number;
+  yLabel?: Bi;
+  disputed?: boolean;
+  title: Bi;
+  summary: Bi;
+  significance: Bi;
+  note?: Bi;
+  gregorian?: Bi;
+  sources: string[];
+}
+
+export const HISTORY: HistEvent[] = [
+  /* ───────── Muharram ───────── */
+  {
+    id: 'karbala',
+    m: 1,
+    d: 10,
+    y: 61,
+    title: { ar: 'استشهاد الحسين بن علي رضي الله عنهما في كربلاء', en: 'Martyrdom of al-Husayn ibn ʿAli at Karbala' },
+    summary: {
+      ar: 'قُتل الحسين بن علي سبط النبي ﷺ ومعه عدد من أهل بيته وأصحابه بكربلاء في العراق.',
+      en: 'Al-Husayn, grandson of the Prophet ﷺ, was killed at Karbala in Iraq together with members of his family and companions.',
+    },
+    significance: {
+      ar: 'من أعظم المآسي في تاريخ الأمة، وكان لها أثر بالغ في تاريخها السياسي والديني.',
+      en: 'One of the great tragedies of Islamic history, with lasting political and religious consequences.',
+    },
+    gregorian: { ar: '١٠ أكتوبر ٦٨٠م (يولياني)', en: '10 October 680 CE (Julian)' },
+    sources: ['تاريخ الطبري (تاريخ الرسل والملوك)، حوادث سنة ٦١هـ', 'ابن كثير، البداية والنهاية'],
+  },
+  {
+    id: 'khaybar',
+    m: 1,
+    d: null,
+    y: 7,
+    title: { ar: 'غزوة خيبر', en: 'Expedition of Khaybar' },
+    summary: {
+      ar: 'سار النبي ﷺ إلى حصون خيبر شمال المدينة وفتحها بعد حصار.',
+      en: 'The Prophet ﷺ marched on the fortresses of Khaybar north of Madinah and took them after a siege.',
+    },
+    significance: { ar: 'أمّنت شمال المدينة بعد صلح الحديبية.', en: 'Secured the north of Madinah after the Treaty of Hudaybiyyah.' },
+    note: { ar: 'المشهور أنها في المحرم، وبعض المصادر تجعلها في صفر.', en: 'Most place it in Muharram; some sources say Safar.' },
+    sources: ['ابن هشام، السيرة النبوية', 'صحيح البخاري، كتاب المغازي، باب غزوة خيبر'],
+  },
+
+  /* ───────── Safar ───────── */
+  {
+    id: 'saladin-death',
+    m: 2,
+    d: 27,
+    y: 589,
+    title: { ar: 'وفاة السلطان صلاح الدين الأيوبي', en: 'Death of Sultan Salah al-Din (Saladin)' },
+    summary: { ar: 'توفي صلاح الدين يوسف بن أيوب في دمشق.', en: 'Salah al-Din Yusuf ibn Ayyub died in Damascus.' },
+    significance: {
+      ar: 'موحّد مصر والشام ومحرر بيت المقدس، ومؤسس الدولة الأيوبية.',
+      en: 'Unifier of Egypt and Syria, liberator of Jerusalem and founder of the Ayyubid state.',
+    },
+    gregorian: { ar: '٤ مارس ١١٩٣م', en: '4 March 1193 CE' },
+    sources: ['ابن شداد، النوادر السلطانية والمحاسن اليوسفية', 'ابن خلكان، وفيات الأعيان'],
+  },
+  {
+    id: 'siffin',
+    m: 2,
+    d: null,
+    y: 37,
+    title: { ar: 'وقعة صفّين', en: 'Battle of Siffin' },
+    summary: {
+      ar: 'القتال الرئيس بين جيش علي بن أبي طالب وجيش معاوية بن أبي سفيان عند صفين على الفرات، وانتهى إلى التحكيم.',
+      en: 'The main fighting between the armies of ʿAli ibn Abi Talib and Muʿawiya at Siffin on the Euphrates, ending in arbitration.',
+    },
+    significance: { ar: 'من أبرز أحداث الفتنة الأولى.', en: 'A defining episode of the First Fitna.' },
+    sources: ['تاريخ الطبري، حوادث سنة ٣٧هـ', 'نصر بن مزاحم، وقعة صفين'],
+  },
+
+  /* ───────── Rabiʿ al-Awwal ───────── */
+  {
+    id: 'mawlid',
+    m: 3,
+    d: 12,
+    y: -53,
+    yLabel: { ar: 'عام الفيل', en: 'Year of the Elephant' },
+    disputed: true,
+    title: { ar: 'مولد النبي محمد ﷺ', en: 'Birth of the Prophet Muhammad ﷺ' },
+    summary: { ar: 'وُلد رسول الله ﷺ بمكة يوم الإثنين من شهر ربيع الأول عام الفيل.', en: 'The Messenger of Allah ﷺ was born in Makkah on a Monday in Rabiʿ al-Awwal, in the Year of the Elephant.' },
+    significance: { ar: 'مولد خاتم الأنبياء والمرسلين ﷺ.', en: 'The birth of the Seal of the Prophets ﷺ.' },
+    note: {
+      ar: 'كونه يوم الإثنين ثابت (صحيح مسلم ١١٦٢)، واختُلف في تعيين اليوم: قيل ٢ و٨ و٩ و١٢ من ربيع الأول، والأشهر ١٢.',
+      en: 'That it was a Monday is authentic (Muslim 1162); the day is disputed — 2nd, 8th, 9th and 12th are reported; the 12th is the best known.',
+    },
+    sources: ['صحيح مسلم ١١٦٢', 'ابن هشام، السيرة النبوية', 'ابن كثير، السيرة النبوية'],
+  },
+  {
+    id: 'hijra-arrival',
+    m: 3,
+    d: 12,
+    y: 1,
+    disputed: true,
+    title: { ar: 'وصول النبي ﷺ مهاجرًا إلى المدينة', en: 'Arrival of the Prophet ﷺ in Madinah (Hijra)' },
+    summary: {
+      ar: 'بلغ النبي ﷺ قباء ثم المدينة مهاجرًا من مكة ومعه أبو بكر الصديق رضي الله عنه.',
+      en: 'The Prophet ﷺ reached Quba and then Madinah, migrating from Makkah with Abu Bakr.',
+    },
+    significance: {
+      ar: 'بداية الدولة الإسلامية في المدينة، واتُّخذت سنتها بداية للتقويم الهجري في عهد عمر رضي الله عنه.',
+      en: 'The start of the Muslim polity in Madinah; its year was later adopted as the epoch of the Hijri calendar under ʿUmar.',
+    },
+    note: { ar: 'قيل وصل قباء يوم الإثنين ٨ ربيع الأول، وقيل ١٢ منه (ابن هشام).', en: 'Arrival at Quba on Monday is reported as the 8th or the 12th (Ibn Hisham) of Rabiʿ al-Awwal.' },
+    sources: ['صحيح البخاري، كتاب مناقب الأنصار، باب هجرة النبي ﷺ', 'ابن هشام، السيرة النبوية'],
+  },
+  {
+    id: 'prophet-death',
+    m: 3,
+    d: 12,
+    y: 11,
+    disputed: true,
+    title: { ar: 'وفاة النبي ﷺ', en: 'Passing of the Prophet ﷺ' },
+    summary: { ar: 'تُوفي رسول الله ﷺ في المدينة يوم الإثنين في حجرة عائشة رضي الله عنها.', en: 'The Messenger of Allah ﷺ passed away in Madinah on a Monday, in the room of ʿAʾisha.' },
+    significance: { ar: 'انقطاع الوحي، وبيعة أبي بكر الصديق خليفةً.', en: 'The end of revelation and the succession of Abu Bakr as caliph.' },
+    note: { ar: 'يوم الإثنين ثابت؛ والأشهر أنه ١٢ ربيع الأول، وقيل ١ أو ٢ منه.', en: 'Monday is established; the 12th is the best-known date, with the 1st and 2nd also reported.' },
+    sources: ['صحيح البخاري، كتاب المغازي، باب مرض النبي ﷺ ووفاته', 'ابن هشام، السيرة النبوية'],
+  },
+  {
+    id: 'ahmad-death',
+    m: 3,
+    d: 12,
+    y: 241,
+    disputed: true,
+    title: { ar: 'وفاة الإمام أحمد بن حنبل', en: 'Death of Imam Ahmad ibn Hanbal' },
+    summary: { ar: 'توفي إمام أهل السنة أحمد بن حنبل ببغداد يوم الجمعة.', en: 'Imam Ahmad ibn Hanbal died in Baghdad on a Friday.' },
+    significance: { ar: 'صاحب المسند وإمام المذهب الحنبلي، وثباته في المحنة مشهور.', en: 'Compiler of the Musnad, founder of the Hanbali school, renowned for his steadfastness in the Mihna.' },
+    note: { ar: 'الأكثر على ١٢ ربيع الأول، وقيل ربيع الآخر.', en: 'Most give 12 Rabiʿ al-Awwal; some say Rabiʿ al-Akhir.' },
+    sources: ['الذهبي، سير أعلام النبلاء', 'الخطيب البغدادي، تاريخ بغداد'],
+  },
+  {
+    id: 'granada',
+    m: 3,
+    d: 2,
+    y: 897,
+    title: { ar: 'سقوط غرناطة', en: 'Fall of Granada' },
+    summary: { ar: 'سلّم أبو عبد الله محمد الثاني عشر غرناطة لفرديناند وإيزابيلا.', en: 'Muhammad XII (Boabdil) surrendered Granada to Ferdinand and Isabella.' },
+    significance: { ar: 'نهاية آخر دولة إسلامية في الأندلس بعد نحو ثمانية قرون.', en: 'The end of the last Muslim state in al-Andalus after some eight centuries.' },
+    gregorian: { ar: '٢ يناير ١٤٩٢م', en: '2 January 1492 CE' },
+    sources: ['المقري، نفح الطيب', 'L. P. Harvey, Islamic Spain 1250–1500 (Chicago, 1990)'],
+  },
+  {
+    id: 'malik-death',
+    m: 3,
+    d: null,
+    y: 179,
+    disputed: true,
+    title: { ar: 'وفاة الإمام مالك بن أنس', en: 'Death of Imam Malik ibn Anas' },
+    summary: { ar: 'توفي إمام دار الهجرة مالك بن أنس بالمدينة.', en: 'Imam Malik, the Imam of Madinah, died in the city.' },
+    significance: { ar: 'صاحب الموطأ وإمام المذهب المالكي.', en: 'Author of al-Muwattaʾ and founder of the Maliki school.' },
+    note: { ar: 'اختُلف في يومه من ربيع الأول (١٠، ١١، ١٤).', en: 'The day within Rabiʿ al-Awwal is disputed (10th, 11th, 14th).' },
+    sources: ['القاضي عياض، ترتيب المدارك', 'الذهبي، سير أعلام النبلاء'],
+  },
+
+  /* ───────── Rabiʿ al-Akhir ───────── */
+  {
+    id: 'hattin',
+    m: 4,
+    d: 24,
+    y: 583,
+    title: { ar: 'معركة حطين', en: 'Battle of Hattin' },
+    summary: { ar: 'انتصر صلاح الدين الأيوبي على جيوش الصليبيين قرب طبرية.', en: 'Salah al-Din defeated the Crusader armies near Tiberias.' },
+    significance: { ar: 'فتحت الطريق لتحرير بيت المقدس بعد ثلاثة أشهر.', en: 'Opened the way to the recovery of Jerusalem three months later.' },
+    gregorian: { ar: '٤ يوليو ١١٨٧م', en: '4 July 1187 CE' },
+    sources: ['ابن شداد، النوادر السلطانية', 'ابن الأثير، الكامل في التاريخ'],
+  },
+
+  /* ───────── Jumada al-Ula ───────── */
+  {
+    id: 'mutah',
+    m: 5,
+    d: null,
+    y: 8,
+    title: { ar: 'غزوة مؤتة', en: 'Battle of Muʾtah' },
+    summary: {
+      ar: 'التقى جيش المسلمين بجموع الروم وحلفائهم في مؤتة بالأردن، واستُشهد القادة الثلاثة زيد وجعفر وعبد الله بن رواحة، ثم انحاز خالد بن الوليد بالجيش.',
+      en: 'The Muslim army met Byzantine and allied forces at Muʾtah (Jordan); the three commanders Zayd, Jaʿfar and ʿAbdullah ibn Rawaha were martyred, and Khalid ibn al-Walid withdrew the army.',
+    },
+    significance: { ar: 'أول مواجهة كبرى مع الروم.', en: 'The first major confrontation with Byzantium.' },
+    sources: ['صحيح البخاري، كتاب المغازي، باب غزوة مؤتة', 'ابن هشام، السيرة النبوية'],
+  },
+  {
+    id: 'ajnadayn',
+    m: 5,
+    d: null,
+    y: 13,
+    title: { ar: 'معركة أجنادين', en: 'Battle of Ajnadayn' },
+    summary: { ar: 'انتصر المسلمون على الروم في فلسطين في أواخر خلافة أبي بكر رضي الله عنه.', en: 'Muslims defeated the Byzantines in Palestine late in the caliphate of Abu Bakr.' },
+    significance: { ar: 'أول نصر كبير في فتوح الشام.', en: 'The first major victory of the conquest of Syria.' },
+    sources: ['تاريخ الطبري، حوادث سنة ١٣هـ', 'البلاذري، فتوح البلدان'],
+  },
+  {
+    id: 'suyuti-death',
+    m: 5,
+    d: 19,
+    y: 911,
+    title: { ar: 'وفاة الإمام جلال الدين السيوطي', en: 'Death of Jalal al-Din al-Suyuti' },
+    summary: { ar: 'توفي السيوطي في القاهرة بعد حياة حافلة بالتأليف.', en: 'Al-Suyuti died in Cairo after a prolific scholarly life.' },
+    significance: { ar: 'من أكثر علماء الإسلام تأليفًا، وصاحب تفسير الجلالين (مع المحلي) والإتقان.', en: 'One of the most prolific Muslim scholars; co-author of Tafsir al-Jalalayn and author of al-Itqan.' },
+    gregorian: { ar: 'أكتوبر ١٥٠٥م', en: 'October 1505 CE' },
+    sources: ['ابن إياس، بدائع الزهور في وقائع الدهور', 'نجم الدين الغزي، الكواكب السائرة'],
+  },
+  {
+    id: 'constantinople',
+    m: 5,
+    d: 20,
+    y: 857,
+    title: { ar: 'فتح القسطنطينية', en: 'Conquest of Constantinople' },
+    summary: { ar: 'فتح السلطان العثماني محمد الثاني القسطنطينية بعد حصار دام قرابة ثمانية أسابيع.', en: 'Ottoman Sultan Mehmed II took Constantinople after a siege of about eight weeks.' },
+    significance: { ar: 'نهاية الإمبراطورية البيزنطية، وصارت المدينة (إسطنبول) عاصمة العثمانيين.', en: 'The end of the Byzantine Empire; the city (Istanbul) became the Ottoman capital.' },
+    gregorian: { ar: '٢٩ مايو ١٤٥٣م', en: '29 May 1453 CE' },
+    sources: ['Halil İnalcık, The Ottoman Empire: The Classical Age 1300–1600', 'Steven Runciman, The Fall of Constantinople 1453'],
+  },
+
+  /* ───────── Jumada al-Akhirah ───────── */
+  {
+    id: 'abubakr-death',
+    m: 6,
+    d: 22,
+    y: 13,
+    disputed: true,
+    title: { ar: 'وفاة أبي بكر الصديق رضي الله عنه', en: 'Death of Abu Bakr al-Siddiq' },
+    summary: { ar: 'توفي الخليفة الأول أبو بكر الصديق بالمدينة، وعهد بالخلافة إلى عمر بن الخطاب.', en: 'The first caliph Abu Bakr died in Madinah, having nominated ʿUmar ibn al-Khattab.' },
+    significance: { ar: 'خلافة دامت نحو سنتين وثلاثة أشهر، ثبّت فيها الدولة بعد وفاة النبي ﷺ.', en: 'A caliphate of about two years and three months that stabilised the state after the Prophet ﷺ.' },
+    note: { ar: 'الأشهر ٢٢ جمادى الآخرة، وقيل ٢١.', en: 'The 22nd is best known; the 21st is also reported.' },
+    sources: ['تاريخ الطبري، حوادث سنة ١٣هـ', 'ابن سعد، الطبقات الكبرى'],
+  },
+  {
+    id: 'ghazali-death',
+    m: 6,
+    d: 14,
+    y: 505,
+    title: { ar: 'وفاة الإمام أبي حامد الغزالي', en: 'Death of Abu Hamid al-Ghazali' },
+    summary: { ar: 'توفي حجة الإسلام الغزالي في طابران بطوس.', en: 'Al-Ghazali, "Proof of Islam", died at Tabaran in Tus.' },
+    significance: { ar: 'صاحب إحياء علوم الدين، من أعظم المؤثرين في الفكر الإسلامي.', en: 'Author of Ihyaʾ ʿUlum al-Din and one of the most influential Muslim thinkers.' },
+    gregorian: { ar: '١٨ ديسمبر ١١١١م', en: '18 December 1111 CE' },
+    sources: ['ابن خلكان، وفيات الأعيان', 'السبكي، طبقات الشافعية الكبرى'],
+  },
+  {
+    id: 'camel',
+    m: 6,
+    d: null,
+    y: 36,
+    title: { ar: 'وقعة الجمل', en: 'Battle of the Camel' },
+    summary: { ar: 'القتال قرب البصرة بين جيش علي بن أبي طالب وجيش طلحة والزبير ومعهم عائشة رضي الله عنهم.', en: 'Fighting near Basra between the army of ʿAli and that of Talha and al-Zubayr, accompanied by ʿAʾisha.' },
+    significance: { ar: 'أول قتال بين المسلمين في الفتنة الأولى.', en: 'The first battle between Muslims in the First Fitna.' },
+    sources: ['تاريخ الطبري، حوادث سنة ٣٦هـ'],
+  },
+
+  /* ───────── Rajab ───────── */
+  {
+    id: 'tabuk',
+    m: 7,
+    d: null,
+    y: 9,
+    title: { ar: 'غزوة تبوك', en: 'Expedition of Tabuk' },
+    summary: { ar: 'خرج النبي ﷺ في جيش العسرة إلى تبوك في حرٍّ شديد، ولم يقع قتال.', en: 'The Prophet ﷺ led the "army of hardship" to Tabuk in intense heat; no battle took place.' },
+    significance: { ar: 'آخر غزوات النبي ﷺ، ونزلت فيها آيات من سورة التوبة.', en: "The Prophet's ﷺ last expedition; verses of Surat al-Tawba relate to it." },
+    sources: ['صحيح البخاري، كتاب المغازي، باب غزوة تبوك', 'ابن هشام، السيرة النبوية'],
+  },
+  {
+    id: 'yarmouk',
+    m: 7,
+    d: null,
+    y: 15,
+    disputed: true,
+    title: { ar: 'معركة اليرموك', en: 'Battle of Yarmouk' },
+    summary: { ar: 'انتصر المسلمون بقيادة خالد بن الوليد وأبي عبيدة على جيش الروم الكبير عند نهر اليرموك.', en: 'Muslim forces under Khalid ibn al-Walid and Abu ʿUbayda defeated a large Byzantine army at the Yarmouk river.' },
+    significance: { ar: 'حسمت فتح الشام.', en: 'Decided the conquest of Syria.' },
+    note: { ar: 'الأشهر أنها في رجب سنة ١٥هـ، وجعلها الطبري في رواية سنة ١٣هـ.', en: 'Usually dated Rajab 15 AH; one account in al-Tabari places it in 13 AH.' },
+    sources: ['تاريخ الطبري', 'البلاذري، فتوح البلدان'],
+  },
+  {
+    id: 'shafii-death',
+    m: 7,
+    d: null,
+    y: 204,
+    title: { ar: 'وفاة الإمام الشافعي بمصر', en: 'Death of Imam al-Shafiʿi in Egypt' },
+    summary: { ar: 'توفي الإمام محمد بن إدريس الشافعي بالفسطاط آخر ليلة من رجب، ودُفن بالقرافة.', en: 'Imam al-Shafiʿi died in Fustat on the last night of Rajab and was buried in the Qarafa.' },
+    significance: { ar: 'واضع علم أصول الفقه (الرسالة) وإمام المذهب الشافعي.', en: 'Founder of usul al-fiqh (al-Risala) and of the Shafiʿi school.' },
+    sources: ['البيهقي، مناقب الشافعي', 'ابن خلكان، وفيات الأعيان'],
+  },
+  {
+    id: 'isra',
+    m: 7,
+    d: 27,
+    y: -1,
+    yLabel: { ar: 'قبل الهجرة', en: 'before the Hijra' },
+    disputed: true,
+    title: { ar: 'الإسراء والمعراج (التاريخ المشهور)', en: "al-Isra' and al-Miʿraj (popular date)" },
+    summary: { ar: 'أُسري بالنبي ﷺ من المسجد الحرام إلى المسجد الأقصى ثم عُرج به، وفُرضت الصلوات الخمس.', en: 'The Night Journey from al-Masjid al-Haram to al-Aqsa and the Ascension; the five daily prayers were prescribed.' },
+    significance: { ar: 'فرض الصلاة، وثبوت مكانة المسجد الأقصى (الإسراء ١).', en: 'The prescription of prayer and the sanctity of al-Aqsa (Q 17:1).' },
+    note: {
+      ar: 'الحدث ثابت بالقرآن والسنة، أما تاريخه فمختلف فيه كثيرًا (ربيع الأول، رجب، رمضان وغيرها)، وتعيين ٢٧ رجب مشهور ولا يثبت بنص صحيح.',
+      en: 'The event is established by the Qurʾan and Sunna; its date is widely disputed (Rabiʿ al-Awwal, Rajab, Ramadan and others). 27 Rajab is popular but not established by authentic text.',
+    },
+    sources: ['القرآن الكريم، الإسراء ١', 'صحيح البخاري، كتاب الصلاة، باب كيف فُرضت الصلاة', 'ابن حجر، فتح الباري (باب المعراج)'],
+  },
+  {
+    id: 'jerusalem-583',
+    m: 7,
+    d: 27,
+    y: 583,
+    title: { ar: 'تحرير بيت المقدس على يد صلاح الدين', en: 'Recovery of Jerusalem by Salah al-Din' },
+    summary: { ar: 'دخل صلاح الدين القدس صلحًا بعد ٨٨ عامًا من احتلال الصليبيين.', en: 'Salah al-Din entered Jerusalem by capitulation after 88 years of Crusader rule.' },
+    significance: { ar: 'عودة المسجد الأقصى إلى المسلمين.', en: 'The return of al-Aqsa to Muslim hands.' },
+    gregorian: { ar: '٢ أكتوبر ١١٨٧م', en: '2 October 1187 CE' },
+    sources: ['ابن شداد، النوادر السلطانية', 'العماد الأصفهاني، الفتح القسي في الفتح القدسي'],
+  },
+  {
+    id: 'nawawi-death',
+    m: 7,
+    d: 24,
+    y: 676,
+    title: { ar: 'وفاة الإمام النووي', en: 'Death of Imam al-Nawawi' },
+    summary: { ar: 'توفي الإمام يحيى بن شرف النووي في بلدته نوى بالشام.', en: 'Imam Yahya ibn Sharaf al-Nawawi died in his hometown of Nawa, Syria.' },
+    significance: { ar: 'صاحب رياض الصالحين والأربعين النووية وشرح صحيح مسلم.', en: 'Author of Riyad al-Salihin, the Forty Hadith and the commentary on Sahih Muslim.' },
+    sources: ['ابن العطار، تحفة الطالبين في ترجمة الإمام النووي', 'الذهبي، تاريخ الإسلام'],
+  },
+  {
+    id: 'muslim-death',
+    m: 7,
+    d: 25,
+    y: 261,
+    title: { ar: 'وفاة الإمام مسلم بن الحجاج', en: 'Death of Imam Muslim ibn al-Hajjaj' },
+    summary: { ar: 'توفي صاحب الصحيح مسلم بن الحجاج بنيسابور.', en: 'Imam Muslim, compiler of the Sahih, died in Nishapur.' },
+    significance: { ar: 'صحيح مسلم ثاني أصح كتب الحديث عند جمهور العلماء.', en: 'His Sahih is regarded by most scholars as the second most authentic hadith collection.' },
+    sources: ['الخطيب البغدادي، تاريخ بغداد', 'الذهبي، سير أعلام النبلاء'],
+  },
+  {
+    id: 'marj-dabiq',
+    m: 7,
+    d: 25,
+    y: 922,
+    title: { ar: 'معركة مرج دابق', en: 'Battle of Marj Dabiq' },
+    summary: { ar: 'هزم السلطان العثماني سليم الأول المماليك شمال حلب، وقُتل السلطان قانصوه الغوري.', en: 'Ottoman Sultan Selim I defeated the Mamluks north of Aleppo; Sultan Qansuh al-Ghawri was killed.' },
+    significance: { ar: 'بداية سقوط الدولة المملوكية ودخول الشام في الحكم العثماني.', en: 'The beginning of the end of the Mamluk Sultanate and of Ottoman rule in Syria.' },
+    gregorian: { ar: '٢٤ أغسطس ١٥١٦م', en: '24 August 1516 CE' },
+    sources: ['ابن إياس، بدائع الزهور في وقائع الدهور'],
+  },
+
+  /* ───────── Shaʿban ───────── */
+  {
+    id: 'ramadan-prescribed',
+    m: 8,
+    d: null,
+    y: 2,
+    title: { ar: 'فرض صيام شهر رمضان', en: 'Fasting of Ramadan prescribed' },
+    summary: { ar: 'نزلت آيات فرض الصيام، فصام النبي ﷺ تسع رمضانات.', en: 'The verses prescribing fasting were revealed; the Prophet ﷺ fasted nine Ramadans.' },
+    significance: { ar: 'فريضة الركن الرابع من أركان الإسلام (البقرة ١٨٣–١٨٥).', en: 'The fourth pillar of Islam (Q 2:183–185).' },
+    sources: ['ابن سعد، الطبقات الكبرى', 'ابن القيم، زاد المعاد'],
+  },
+  {
+    id: 'cairo-founded',
+    m: 8,
+    d: 17,
+    y: 358,
+    title: { ar: 'تأسيس مدينة القاهرة', en: 'Foundation of Cairo' },
+    summary: { ar: 'دخل القائد جوهر الصقلي الفسطاط واختط مدينة القاهرة للفاطميين.', en: 'General Jawhar al-Siqilli entered Fustat and laid out the new city of al-Qahira for the Fatimids.' },
+    significance: { ar: 'نشأة القاهرة التي صارت من أعظم حواضر العالم الإسلامي.', en: 'The birth of Cairo, one of the great capitals of the Muslim world.' },
+    gregorian: { ar: 'يوليو ٩٦٩م', en: 'July 969 CE' },
+    sources: ['المقريزي، المواعظ والاعتبار بذكر الخطط والآثار'],
+  },
+
+  /* ───────── Ramadan ───────── */
+  {
+    id: 'revelation',
+    m: 9,
+    d: null,
+    y: -13,
+    yLabel: { ar: 'نحو ١٣ ق.هـ', en: 'c. 13 BH' },
+    title: { ar: 'بدء نزول الوحي في غار حراء', en: 'Beginning of the Revelation in the Cave of Hiraʾ' },
+    summary: { ar: 'نزل جبريل عليه السلام على النبي ﷺ بأول آيات سورة العلق.', en: 'Jibril brought the Prophet ﷺ the first verses of Surat al-ʿAlaq.' },
+    significance: { ar: 'بدء البعثة النبوية؛ وأُنزل القرآن في رمضان (البقرة ١٨٥).', en: 'The beginning of prophethood; the Qurʾan was sent down in Ramadan (Q 2:185).' },
+    note: { ar: 'الشهر رمضان بنص القرآن، واختُلف في اليوم (١٧، ٢١، ٢٤ وغيرها).', en: 'The month is Ramadan per the Qurʾan; the day is disputed (17th, 21st, 24th and others).' },
+    sources: ['صحيح البخاري، كتاب بدء الوحي (الحديث ٣)', 'ابن هشام، السيرة النبوية'],
+  },
+  {
+    id: 'khadija-death',
+    m: 9,
+    d: null,
+    y: -3,
+    yLabel: { ar: 'نحو ٣ ق.هـ', en: 'c. 3 BH' },
+    disputed: true,
+    title: { ar: 'وفاة أم المؤمنين خديجة رضي الله عنها', en: 'Death of Khadija, Mother of the Believers' },
+    summary: { ar: 'توفيت خديجة بنت خويلد بمكة قبل الهجرة بثلاث سنين.', en: 'Khadija bint Khuwaylid died in Makkah three years before the Hijra.' },
+    significance: { ar: 'أول من آمن، وسُمّي عام وفاتها ووفاة أبي طالب عام الحزن.', en: 'The first believer; the year of her and Abu Talib’s deaths is known as the Year of Sorrow.' },
+    note: { ar: 'كونها قبل الهجرة بثلاث سنين في صحيح البخاري؛ وتعيين رمضان قول جماعة من أهل السير.', en: 'Three years before the Hijra is in al-Bukhari; Ramadan is the view of several biographers.' },
+    sources: ['صحيح البخاري، كتاب مناقب الأنصار، باب تزويج النبي ﷺ خديجة', 'ابن سعد، الطبقات الكبرى'],
+  },
+  {
+    id: 'badr',
+    m: 9,
+    d: 17,
+    y: 2,
+    disputed: true,
+    title: { ar: 'غزوة بدر الكبرى', en: 'Battle of Badr' },
+    summary: { ar: 'انتصر المسلمون وهم نحو ٣١٣ رجلًا على جيش قريش عند ماء بدر.', en: 'About 313 Muslims defeated the Quraysh army at the wells of Badr.' },
+    significance: { ar: 'يوم الفرقان؛ أول نصر حاسم للمسلمين (آل عمران ١٢٣، الأنفال ٤١).', en: 'Yawm al-Furqan, the first decisive Muslim victory (Q 3:123, 8:41).' },
+    note: { ar: 'الأشهر ١٧ رمضان، وقيل ١٩.', en: 'The 17th is best known; the 19th is also reported.' },
+    sources: ['ابن هشام، السيرة النبوية', 'ابن سعد، الطبقات الكبرى', 'صحيح البخاري، كتاب المغازي'],
+  },
+  {
+    id: 'aisha-death',
+    m: 9,
+    d: 17,
+    y: 58,
+    disputed: true,
+    title: { ar: 'وفاة أم المؤمنين عائشة رضي الله عنها', en: 'Death of ʿAʾisha, Mother of the Believers' },
+    summary: { ar: 'توفيت عائشة بنت أبي بكر بالمدينة ودُفنت بالبقيع.', en: 'ʿAʾisha bint Abi Bakr died in Madinah and was buried in al-Baqiʿ.' },
+    significance: { ar: 'من أكثر الصحابة رواية للحديث وأعلمهم بالفقه.', en: 'Among the foremost narrators of hadith and jurists among the Companions.' },
+    note: { ar: 'الأشهر سنة ٥٨هـ، وقيل ٥٧هـ.', en: '58 AH is best known; 57 AH is also reported.' },
+    sources: ['ابن سعد، الطبقات الكبرى', 'الذهبي، سير أعلام النبلاء'],
+  },
+  {
+    id: 'fath-makkah',
+    m: 9,
+    d: 20,
+    y: 8,
+    disputed: true,
+    title: { ar: 'فتح مكة', en: 'Conquest of Makkah' },
+    summary: { ar: 'دخل النبي ﷺ مكة في نحو عشرة آلاف، وطهّر الكعبة من الأصنام، وعفا عن أهلها.', en: 'The Prophet ﷺ entered Makkah with about ten thousand, cleared the Kaʿba of idols and pardoned its people.' },
+    significance: { ar: 'الفتح الأعظم، ودخل الناس بعده في دين الله أفواجًا (سورة النصر).', en: 'The Great Conquest, after which people entered Islam in crowds (Surat al-Nasr).' },
+    note: { ar: 'الخروج من المدينة في رمضان ثابت؛ ويذكر ابن سعد الدخول لعشرين منه، وفيه أقوال أخرى.', en: 'Departure in Ramadan is authentic; Ibn Saʿd gives entry on the 20th; other dates are reported.' },
+    sources: ['صحيح البخاري، كتاب المغازي، باب غزوة الفتح في رمضان', 'ابن سعد، الطبقات الكبرى'],
+  },
+  {
+    id: 'ali-death',
+    m: 9,
+    d: 21,
+    y: 40,
+    disputed: true,
+    title: { ar: 'وفاة أمير المؤمنين علي بن أبي طالب رضي الله عنه', en: 'Death of ʿAli ibn Abi Talib' },
+    summary: { ar: 'طعنه عبد الرحمن بن ملجم عند صلاة الفجر بالكوفة، وتوفي بعدها بيومين.', en: 'Stabbed by ʿAbd al-Rahman ibn Muljam at the dawn prayer in Kufa, he died two days later.' },
+    significance: { ar: 'نهاية عهد الخلفاء الراشدين الأربعة.', en: 'The end of the era of the four Rightly Guided Caliphs.' },
+    note: { ar: 'الأشهر أنه طُعن ليلة ١٩ وتوفي ٢١ رمضان، وقيل ١٧.', en: 'Usually stabbed on the 19th and died on the 21st; the 17th is also reported.' },
+    sources: ['تاريخ الطبري، حوادث سنة ٤٠هـ', 'ابن سعد، الطبقات الكبرى'],
+  },
+  {
+    id: 'azhar',
+    m: 9,
+    d: 7,
+    y: 361,
+    title: { ar: 'أول صلاة في الجامع الأزهر', en: 'First prayer in al-Azhar Mosque' },
+    summary: { ar: 'أُقيمت أول صلاة جمعة في الجامع الأزهر بالقاهرة.', en: 'The first Friday prayer was held in al-Azhar Mosque in Cairo.' },
+    significance: { ar: 'بداية الأزهر الذي صار أقدم جامعة قائمة في العالم الإسلامي.', en: 'The start of al-Azhar, today the oldest continuously operating institution of learning in the Muslim world.' },
+    gregorian: { ar: 'يونيو ٩٧٢م', en: 'June 972 CE' },
+    sources: ['المقريزي، المواعظ والاعتبار بذكر الخطط والآثار'],
+  },
+  {
+    id: 'ain-jalut',
+    m: 9,
+    d: 25,
+    y: 658,
+    title: { ar: 'معركة عين جالوت', en: 'Battle of ʿAyn Jalut' },
+    summary: { ar: 'هزم جيش المماليك بقيادة السلطان قطز والظاهر بيبرس المغول في فلسطين.', en: 'The Mamluk army under Sultan Qutuz and Baybars defeated the Mongols in Palestine.' },
+    significance: { ar: 'أوقفت الزحف المغولي وحمت مصر والشام.', en: 'Halted the Mongol advance and saved Egypt and Syria.' },
+    gregorian: { ar: '٣ سبتمبر ١٢٦٠م', en: '3 September 1260 CE' },
+    sources: ['المقريزي، السلوك لمعرفة دول الملوك', 'ابن كثير، البداية والنهاية'],
+  },
+  {
+    id: 'ibn-khaldun-death',
+    m: 9,
+    d: null,
+    y: 808,
+    title: { ar: 'وفاة ابن خلدون في القاهرة', en: 'Death of Ibn Khaldun in Cairo' },
+    summary: { ar: 'توفي المؤرخ عبد الرحمن بن خلدون في القاهرة وهو قاضي قضاة المالكية.', en: 'The historian ʿAbd al-Rahman ibn Khaldun died in Cairo while serving as chief Maliki judge.' },
+    significance: { ar: 'صاحب المقدمة، ورائد علم العمران والتاريخ الاجتماعي.', en: 'Author of the Muqaddima and pioneer of social history.' },
+    gregorian: { ar: 'مارس ١٤٠٦م', en: 'March 1406 CE' },
+    sources: ['السخاوي، الضوء اللامع لأهل القرن التاسع'],
+  },
+
+  /* ───────── Shawwal ───────── */
+  {
+    id: 'bukhari-death',
+    m: 10,
+    d: 1,
+    y: 256,
+    title: { ar: 'وفاة الإمام البخاري', en: 'Death of Imam al-Bukhari' },
+    summary: { ar: 'توفي الإمام محمد بن إسماعيل البخاري ليلة عيد الفطر في خَرْتَنْك قرب سمرقند.', en: 'Imam al-Bukhari died on the night of Eid al-Fitr at Khartank near Samarqand.' },
+    significance: { ar: 'صاحب الجامع الصحيح، أصح كتاب بعد كتاب الله عند جمهور العلماء.', en: 'Compiler of al-Jamiʿ al-Sahih, regarded by most as the most authentic book after the Qurʾan.' },
+    sources: ['الخطيب البغدادي، تاريخ بغداد', 'ابن حجر، هدي الساري مقدمة فتح الباري'],
+  },
+  {
+    id: 'uhud',
+    m: 10,
+    d: 15,
+    y: 3,
+    disputed: true,
+    title: { ar: 'غزوة أحد', en: 'Battle of Uhud' },
+    summary: { ar: 'التقى المسلمون بقريش عند جبل أحد، ونزل الرماة عن مواقعهم فتحوّل النصر، واستُشهد حمزة رضي الله عنه.', en: 'Muslims met the Quraysh at Mount Uhud; the archers left their posts, the tide turned, and Hamza was martyred.' },
+    significance: { ar: 'درس في الطاعة والثبات (آل عمران ١٢١–١٧٩).', en: 'A lesson in obedience and steadfastness (Q 3:121–179).' },
+    note: { ar: 'عند ابن إسحاق يوم السبت للنصف من شوال، وقيل لسبع أو لإحدى عشرة خلت منه.', en: 'Ibn Ishaq: Saturday, mid-Shawwal; other reports give the 7th or 11th.' },
+    sources: ['ابن هشام، السيرة النبوية', 'ابن سعد، الطبقات الكبرى'],
+  },
+  {
+    id: 'khandaq',
+    m: 10,
+    d: null,
+    y: 5,
+    disputed: true,
+    title: { ar: 'غزوة الخندق (الأحزاب)', en: 'Battle of the Trench (al-Ahzab)' },
+    summary: { ar: 'حفر المسلمون خندقًا حول المدينة بإشارة سلمان الفارسي، وحاصرتها الأحزاب ثم انصرفت.', en: 'Muslims dug a trench around Madinah on Salman al-Farisi’s advice; the confederate siege collapsed.' },
+    significance: { ar: 'آخر هجوم كبير لقريش على المدينة (الأحزاب ٩–٢٥).', en: 'The last major Qurayshi offensive against Madinah (Q 33:9–25).' },
+    note: { ar: 'ابن إسحاق: شوال سنة ٥هـ؛ وموسى بن عقبة: سنة ٤هـ.', en: 'Ibn Ishaq: Shawwal 5 AH; Musa ibn ʿUqba: 4 AH.' },
+    sources: ['ابن هشام، السيرة النبوية', 'صحيح البخاري، كتاب المغازي، باب غزوة الخندق'],
+  },
+  {
+    id: 'hunayn',
+    m: 10,
+    d: null,
+    y: 8,
+    title: { ar: 'غزوة حنين', en: 'Battle of Hunayn' },
+    summary: { ar: 'واجه المسلمون هوازن وثقيف في وادي حنين بعد فتح مكة، فانهزموا أولًا ثم ثبتوا وانتصروا.', en: 'After the conquest of Makkah, Muslims faced Hawazin and Thaqif at Hunayn; initially routed, they rallied and won.' },
+    significance: { ar: 'نزل فيها: ﴿ويوم حنين إذ أعجبتكم كثرتكم﴾ (التوبة ٢٥).', en: 'Referred to in Q 9:25 on reliance on numbers.' },
+    sources: ['ابن هشام، السيرة النبوية', 'صحيح البخاري، كتاب المغازي، باب غزوة حنين'],
+  },
+
+  /* ───────── Dhu al-Qaʿdah ───────── */
+  {
+    id: 'hudaybiyyah',
+    m: 11,
+    d: null,
+    y: 6,
+    title: { ar: 'صلح الحديبية وبيعة الرضوان', en: 'Treaty of Hudaybiyyah and the Pledge of Ridwan' },
+    summary: { ar: 'خرج النبي ﷺ معتمرًا فمُنع من مكة، فبايعه الصحابة تحت الشجرة، ثم عُقد الصلح مع قريش.', en: 'Prevented from performing ʿUmra, the Prophet ﷺ received the Pledge under the Tree, then concluded a truce with Quraysh.' },
+    significance: { ar: 'سمّاه القرآن فتحًا مبينًا (الفتح ١، ١٨).', en: 'Called a "clear victory" in the Qurʾan (Q 48:1, 48:18).' },
+    sources: ['صحيح البخاري، كتاب الشروط', 'ابن هشام، السيرة النبوية'],
+  },
+  {
+    id: 'ibn-taymiyya-death',
+    m: 11,
+    d: 20,
+    y: 728,
+    title: { ar: 'وفاة شيخ الإسلام ابن تيمية', en: 'Death of Ibn Taymiyya' },
+    summary: { ar: 'توفي أحمد بن عبد الحليم ابن تيمية سجينًا في قلعة دمشق، وشيّعه جمع عظيم.', en: 'Ibn Taymiyya died imprisoned in the Citadel of Damascus; a vast crowd attended his funeral.' },
+    significance: { ar: 'من أكثر العلماء أثرًا في الفقه والعقيدة.', en: 'One of the most influential scholars in jurisprudence and theology.' },
+    gregorian: { ar: '٢٦ سبتمبر ١٣٢٨م', en: '26 September 1328 CE' },
+    sources: ['ابن كثير، البداية والنهاية', 'ابن عبد الهادي، العقود الدرية'],
+  },
+
+  /* ───────── Dhu al-Hijjah ───────── */
+  {
+    id: 'farewell-arafah',
+    m: 12,
+    d: 9,
+    y: 10,
+    title: { ar: 'خطبة حجة الوداع بعرفة ونزول ﴿اليوم أكملت لكم دينكم﴾', en: 'Farewell Sermon at ʿArafah and revelation of "This day I have perfected your religion"' },
+    summary: { ar: 'خطب النبي ﷺ الناس بعرفة يوم الجمعة في حجته الوحيدة، ونزلت آية إكمال الدين.', en: 'On Friday at ʿArafah, during his only Hajj, the Prophet ﷺ addressed the people and Q 5:3 was revealed.' },
+    significance: { ar: 'إعلان حرمة الدماء والأموال والأعراض، وإكمال الدين.', en: 'Proclaimed the sanctity of life, property and honour, and the completion of the religion.' },
+    sources: ['صحيح البخاري ٤٥ (حديث عمر في نزول المائدة ٣)', 'صحيح مسلم ١٢١٨ (حديث جابر في صفة الحج)'],
+  },
+  {
+    id: 'uthman-death',
+    m: 12,
+    d: 18,
+    y: 35,
+    disputed: true,
+    title: { ar: 'استشهاد الخليفة عثمان بن عفان رضي الله عنه', en: 'Assassination of the Caliph ʿUthman ibn ʿAffan' },
+    summary: { ar: 'قُتل عثمان في داره بالمدينة بعد حصار، وهو يقرأ القرآن.', en: 'ʿUthman was killed in his house in Madinah after a siege, while reading the Qurʾan.' },
+    significance: { ar: 'جامع المصحف؛ وكان مقتله بداية الفتنة الأولى.', en: 'Compiler of the standard Muṣḥaf; his killing began the First Fitna.' },
+    note: { ar: 'الأشهر ١٨ ذي الحجة، وفيه أقوال أخرى قليلة.', en: 'The 18th is best known; a few other dates are reported.' },
+    sources: ['تاريخ الطبري، حوادث سنة ٣٥هـ', 'ابن سعد، الطبقات الكبرى'],
+  },
+  {
+    id: 'umar-stabbed',
+    m: 12,
+    d: 26,
+    y: 23,
+    disputed: true,
+    title: { ar: 'طعن أمير المؤمنين عمر بن الخطاب رضي الله عنه', en: 'Stabbing of the Caliph ʿUmar ibn al-Khattab' },
+    summary: { ar: 'طعنه أبو لؤلؤة المجوسي في صلاة الفجر، وتوفي بعد أيام، ودُفن مستهل المحرم سنة ٢٤هـ.', en: 'Abu Luʾluʾa stabbed him during the dawn prayer; he died days later and was buried at the start of Muharram 24 AH.' },
+    significance: { ar: 'نهاية خلافة اتسعت فيها الدولة ودُوّنت الدواوين واعتُمد التقويم الهجري.', en: 'The end of a caliphate that expanded the state, created the diwans and adopted the Hijri calendar.' },
+    note: { ar: 'عند الطبري: طُعن يوم الأربعاء لأربع بقين من ذي الحجة؛ وفي يوم الوفاة خلاف.', en: 'Al-Tabari: stabbed on Wednesday with four nights of Dhu al-Hijjah remaining; the day of death is disputed.' },
+    sources: ['تاريخ الطبري، حوادث سنة ٢٣هـ', 'صحيح البخاري، كتاب فضائل الصحابة، باب قصة البيعة'],
+  },
+  {
+    id: 'ibn-hajar-death',
+    m: 12,
+    d: 28,
+    y: 852,
+    title: { ar: 'وفاة الحافظ ابن حجر العسقلاني', en: 'Death of Ibn Hajar al-ʿAsqalani' },
+    summary: { ar: 'توفي أمير المؤمنين في الحديث ابن حجر العسقلاني في القاهرة.', en: 'The great hadith master Ibn Hajar al-ʿAsqalani died in Cairo.' },
+    significance: { ar: 'صاحب فتح الباري شرح صحيح البخاري.', en: 'Author of Fath al-Bari, the classic commentary on Sahih al-Bukhari.' },
+    sources: ['السخاوي، الجواهر والدرر في ترجمة شيخ الإسلام ابن حجر'],
+  },
+  {
+    id: 'ridaniyya',
+    m: 12,
+    d: 29,
+    y: 922,
+    title: { ar: 'معركة الريدانية', en: 'Battle of Ridaniyya' },
+    summary: { ar: 'هزم السلطان سليم الأول السلطان طومان باي عند الريدانية (العباسية حاليًا) بالقاهرة.', en: 'Selim I defeated Sultan Tumanbay at Ridaniyya (today’s ʿAbbasiyya) in Cairo.' },
+    significance: { ar: 'سقوط الدولة المملوكية ودخول مصر في الحكم العثماني.', en: 'The fall of the Mamluk Sultanate and the start of Ottoman rule in Egypt.' },
+    gregorian: { ar: 'يناير ١٥١٧م', en: 'January 1517 CE' },
+    sources: ['ابن إياس، بدائع الزهور في وقائع الدهور'],
+  },
+];
+
+export function eventsForDay(m: number, d: number): HistEvent[] {
+  return HISTORY.filter((e) => e.m === m && e.d === d).sort((a, b) => a.y - b.y);
+}
+
+export function eventsForMonthOnly(m: number): HistEvent[] {
+  return HISTORY.filter((e) => e.m === m && e.d === null).sort((a, b) => a.y - b.y);
+}
+
+export function daysWithEvents(m: number): Set<number> {
+  return new Set(HISTORY.filter((e) => e.m === m && e.d !== null).map((e) => e.d as number));
+}
