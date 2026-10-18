@@ -30,7 +30,7 @@ console.log('\n1. Prayer times (Fajr Sunrise Dhuhr Asr Maghrib Isha)');
 const ref = row('Cairo [reference]', 30.0444, 31.2357, 'Africa/Cairo', '2026-10-11', 'Egyptian');
 ok(ref.join(' ') === '05:28 06:54 12:42 16:00 18:29 19:46', 'Cairo 11/10/2026 matches published Egyptian schedule (Akhbar El-Yom) on all 6 times');
 const c18 = row('Cairo', 30.0444, 31.2357, 'Africa/Cairo', '2026-10-18', 'Egyptian');
-ok(c18[0] === '05:32' && c18[4] === '18:21' && c18[5] === '19:39', 'Cairo 18/10/2026 Fajr/Maghrib/Isha = AlAdhan method 5');
+ok(c18[0] === '05:32' && c18[1] === '06:58' && c18[4] === '18:21' && c18[5] === '19:39', 'Cairo 18/10/2026: Fajr 05:32, Sunrise 06:58 (floored, Egyptian convention), Maghrib 18:21, Isha 19:39');
 row('Tukh, Qalyubia', 30.3539, 31.2014, 'Africa/Cairo', '2026-10-18', 'Egyptian');
 const mk = row('Makkah', 21.4225, 39.8262, 'Asia/Riyadh', '2026-10-18', 'UmmAlQura');
 row('Madinah', 24.4672, 39.6111, 'Asia/Riyadh', '2026-10-18', 'UmmAlQura');
