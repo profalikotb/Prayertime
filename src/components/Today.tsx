@@ -12,6 +12,8 @@ import { daysPhrase } from '@/lib/format';
 import { significanceFor } from '@/data/significance';
 import { eventsForDay, eventsForMonthOnly } from '@/data/history';
 import EventCard from './EventCard';
+import { ClinicCard, LogCard, LogCheck } from './DailyCards';
+import ShareCard from './ShareCard';
 import { CITIES } from '@/data/cities';
 
 export default function Today() {
@@ -23,12 +25,15 @@ export default function Today() {
           <Hero />
           <LocationNotice />
           <PrayerList />
+          <LogCard />
         </div>
         <div className="grid gap-3 xl:grid-cols-2 xl:items-start">
+          <ClinicCard />
           <RamadanCard />
           <Occasions />
           <Significance />
           <History />
+          <ShareCard />
           <InstallHint />
         </div>
       </div>
@@ -247,6 +252,7 @@ function PrayerList() {
                 {isNext && <p className="tnum text-[11px] font-semibold text-gold">{f.countdown(at.getTime() - now.getTime())}</p>}
                 {isCurrent && <p className="text-[11px] font-semibold text-emerald">{t.now}</p>}
               </div>
+              <LogCheck k={k} />
               <p className={`tnum flex items-baseline gap-1 ${sunrise ? 'text-[15px] font-semibold text-muted' : 'text-[20px] font-extrabold'}`}>
                 <span>{tp.hm}</span>
                 {tp.ap && <span className="text-[12px] font-bold text-muted">{tp.ap}</span>}
