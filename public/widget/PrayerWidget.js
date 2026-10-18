@@ -1,6 +1,10 @@
 // مواقيت الصلاة – أ.د. على قطب · Scriptable widget (iOS Lock Screen + Home Screen)
-// Lock Screen: rectangular (next prayer + live countdown + all times), inline, circular.
-// Home Screen: small / medium / large.
+// Lock Screen (rectangular):
+//   • Parameter empty  → NEXT PRAYER: big name + time + big live countdown
+//   • Parameter "times" → TODAY: all five times in large type
+//   Inline (above the clock) and circular also supported.
+//   Colour on the Lock Screen follows the clock colour you choose in Customize (iOS tints all lock widgets).
+// Home Screen / StandBy: small, medium, large — full colour, large type.
 // Same astronomy & conventions as the web app: Egyptian Survey (19.5°/17.5°) in Egypt,
 // Umm al-Qura (18.5° / Maghrib+90, +120 in Ramadan) in Saudi Arabia, MWL elsewhere;
 // prayers rounded to the nearest minute, sunrise rounded down.
@@ -93,99 +97,187 @@ const tm = new Date(now.getTime() + 86400000);
 const tomorrow = times(tm.getFullYear(), tm.getMonth() + 1, tm.getDate(), loc.lat, loc.lng, M);
 
 let nextKey = ORDER.find((k) => today[k] > now);
-let nextAt = nextKey ? today[nextKey] : tomorrow.fajr;
+const nextAt = nextKey ? today[nextKey] : tomorrow.fajr;
 if (!nextKey) nextKey = 'fajr';
+const prevAt = (() => {
+  const passed = ORDER.filter((k) => today[k] <= now);
+  return passed.length ? today[passed[passed.length - 1]] : new Date(today.fajr.getTime() - 9 * 3600000);
+})();
 const isFri = now.getDay() === 5;
 const label = (k) => (k === 'dhuhr' && isFri ? 'الجمعة' : AR[k]);
-const fmt = (d) => d.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' });
-const short = (d) => d.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' }).replace(/\s?[صم]$/, '');
+const hm = (d) => d.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' }).replace(/\s?[صم]$/, '');
+const ap = (d) => (d.getHours() < 12 ? 'ص' : 'م');
+const minsLeft = Math.round((nextAt - now) / 60000);
+const soon = minsLeft <= 15; // "smart": highlight the last 15 minutes before a prayer
+let hijri = '';
+try {
+  hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day: 'numeric', month: 'long' }).format(now);
+} catch (e) {}
 
-const family = config.widgetFamily || 'accessoryRectangular';
+const param = ((args.widgetParameter || '') + '').trim().toLowerCase();
+const family = config.widgetFamily || 'large';
 const w = new ListWidget();
 w.url = APP_URL;
-w.refreshAfterDate = new Date(nextAt.getTime() + 30000); // roll over right after the next prayer
+// refresh: right after the next prayer, and 15 min before it (to switch to the "soon" style)
+const preSoon = new Date(nextAt.getTime() - 15 * 60000);
+w.refreshAfterDate = preSoon > now ? preSoon : new Date(nextAt.getTime() + 30000);
+
+const GOLD = new Color('#f2cf7a');
+const IVORY = new Color('#fbf5e6');
+const DIM = new Color('#fbf5e6', 0.6);
+const ALERT = new Color('#ff9f6b');
+const COLORS = { fajr: '#4b6cb7', sunrise: '#c27c4a', dhuhr: '#0e7a5f', asr: '#b07d1f', maghrib: '#b5523b', isha: '#1f2f6b' };
+
+function bg(widget, key) {
+  const g = new LinearGradient();
+  g.colors = [new Color(COLORS[key]), new Color('#061418')];
+  g.locations = [0, 1];
+  widget.backgroundGradient = g;
+}
+function txt(stack, s, size, opts = {}) {
+  const t = stack.addText(s);
+  t.font = opts.bold === false ? Font.mediumSystemFont(size) : opts.rounded ? Font.boldRoundedSystemFont(size) : Font.boldSystemFont(size);
+  if (opts.color) t.textColor = opts.color;
+  if (opts.opacity !== undefined) t.textOpacity = opts.opacity;
+  t.minimumScaleFactor = opts.min || 0.5;
+  t.lineLimit = 1;
+  if (opts.center) t.centerAlignText();
+  if (opts.right) t.rightAlignText();
+  return t;
+}
+function timer(stack, size, color) {
+  const d = stack.addDate(nextAt);
+  d.applyTimerStyle(); // ticks every second, rendered by iOS
+  d.font = Font.boldRoundedSystemFont(size);
+  if (color) d.textColor = color;
+  d.minimumScaleFactor = 0.5;
+  d.lineLimit = 1;
+  return d;
+}
 
 if (family === 'accessoryInline') {
-  const t = w.addText(`🕌 ${label(nextKey)} ${short(nextAt)}`);
-  t.font = Font.semiboldSystemFont(14);
+  txt(w, `🕌 ${label(nextKey)} ${hm(nextAt)} ${ap(nextAt)}`, 15);
 } else if (family === 'accessoryCircular') {
   w.addAccessoryWidgetBackground = true;
-  const n = w.addText(label(nextKey));
-  n.font = Font.boldSystemFont(12);
-  n.centerAlignText();
-  n.minimumScaleFactor = 0.6;
-  const tt = w.addText(short(nextAt));
-  tt.font = Font.semiboldRoundedSystemFont(13);
-  tt.centerAlignText();
-  tt.minimumScaleFactor = 0.6;
+  txt(w, label(nextKey).replace('ال', ''), 13, { center: true });
+  txt(w, hm(nextAt), 17, { center: true, rounded: true });
+} else if (family === 'accessoryRectangular' && param === 'times') {
+  // TODAY: 5 prayers, 2 rows, large type; next prayer at full brightness, passed ones dimmed
+  w.setPadding(0, 2, 0, 2);
+  const rows = [['fajr', 'dhuhr', 'asr'], ['maghrib', 'isha']];
+  rows.forEach((row, ri) => {
+    const r = w.addStack();
+    r.centerAlignContent();
+    row.forEach((k, i) => {
+      const c = r.addStack();
+      c.layoutVertically();
+      const on = k === nextKey;
+      const done = today[k] <= now;
+      txt(c, label(k).replace('ال', ''), 11, { bold: on, opacity: done && !on ? 0.5 : 0.85 });
+      txt(c, hm(today[k]), on ? 19 : 17, { rounded: true, opacity: done && !on ? 0.5 : 1 });
+      if (i < row.length - 1) r.addSpacer();
+    });
+    if (ri === 0) w.addSpacer(2);
+  });
 } else if (family === 'accessoryRectangular') {
+  // NEXT PRAYER: name + time on top, huge countdown below
+  w.setPadding(0, 2, 0, 2);
   const top = w.addStack();
   top.centerAlignContent();
-  const nm = top.addText(`${label(nextKey)} ${short(nextAt)}`);
-  nm.font = Font.boldSystemFont(15);
-  nm.minimumScaleFactor = 0.7;
+  txt(top, (soon ? '⏰ ' : '') + label(nextKey), 22, { min: 0.6 });
   top.addSpacer();
-  const cd = top.addDate(nextAt);
-  cd.applyTimerStyle(); // live countdown, updated by iOS every second
-  cd.font = Font.semiboldRoundedSystemFont(14);
-  cd.rightAlignText();
-  w.addSpacer(3);
-  const row = w.addStack();
-  for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']) {
-    const col = row.addStack();
-    col.layoutVertically();
-    const a = col.addText(AR[k].replace('ال', ''));
-    a.font = Font.systemFont(9);
-    a.textOpacity = k === nextKey ? 1 : 0.65;
-    const b = col.addText(short(today[k] > now || k !== nextKey ? today[k] : nextAt));
-    b.font = k === nextKey ? Font.boldSystemFont(11) : Font.systemFont(11);
-    b.minimumScaleFactor = 0.7;
-    if (k !== 'isha') row.addSpacer();
-  }
-} else {
-  // Home Screen
-  const gold = new Color('#e8c77a');
-  const g = new LinearGradient();
-  g.colors = [new Color('#0b3b33'), new Color('#07141a')];
-  g.locations = [0, 1];
-  w.backgroundGradient = g;
-  w.setPadding(12, 14, 12, 14);
-  const head = w.addStack();
-  const city = head.addText(loc.name || 'مواقيت الصلاة');
-  city.font = Font.semiboldSystemFont(11);
-  city.textColor = new Color('#ffffff', 0.7);
-  city.lineLimit = 1;
-  head.addSpacer();
-  const ml = head.addText(LABEL[M] || '');
-  ml.font = Font.systemFont(9);
-  ml.textColor = new Color('#ffffff', 0.45);
-  w.addSpacer(4);
-  const nx = w.addText(`${label(nextKey)} · ${fmt(nextAt)}`);
-  nx.font = Font.boldSystemFont(family === 'small' ? 16 : 18);
-  nx.textColor = gold;
-  nx.minimumScaleFactor = 0.7;
-  const cd = w.addDate(nextAt);
-  cd.applyTimerStyle();
-  cd.font = Font.boldRoundedSystemFont(family === 'small' ? 24 : 28);
-  cd.textColor = Color.white();
+  txt(top, `${hm(nextAt)} ${ap(nextAt)}`, 17, { rounded: true, opacity: 0.85 });
+  const bot = w.addStack();
+  bot.centerAlignContent();
+  txt(bot, 'بعد', 14, { bold: false, opacity: 0.8 });
+  bot.addSpacer(6);
+  timer(bot, 30);
+  bot.addSpacer();
+} else if (family === 'small') {
+  bg(w, nextKey);
+  w.setPadding(14, 14, 12, 14);
+  txt(w, loc.name || 'مواقيت الصلاة', 12, { color: DIM, bold: false });
   w.addSpacer();
-  const keys = family === 'small' ? ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] : ORDER;
-  const grid = w.addStack();
-  if (family === 'small') grid.layoutVertically();
-  for (const k of keys) {
-    const r = grid.addStack();
-    if (family !== 'small') r.layoutVertically();
-    const a = r.addText(label(k));
-    a.font = Font.systemFont(family === 'small' ? 10 : 10);
-    a.textColor = k === nextKey ? gold : new Color('#ffffff', 0.7);
-    if (family === 'small') r.addSpacer();
-    const b = r.addText(short(today[k]));
-    b.font = k === nextKey ? Font.boldSystemFont(11) : Font.systemFont(11);
-    b.textColor = k === nextKey ? gold : Color.white();
-    if (family !== 'small' && k !== 'isha') grid.addSpacer();
+  txt(w, label(nextKey), 30, { color: soon ? ALERT : GOLD });
+  txt(w, `${hm(nextAt)} ${ap(nextAt)}`, 18, { color: IVORY, rounded: true });
+  w.addSpacer(4);
+  timer(w, 28, IVORY);
+} else {
+  // MEDIUM / LARGE (also StandBy): coloured by the coming prayer, big type, progress bar
+  bg(w, nextKey);
+  const large = family === 'large' || family === 'extraLarge';
+  w.setPadding(16, 18, 14, 18);
+  const head = w.addStack();
+  head.centerAlignContent();
+  txt(head, loc.name || 'مواقيت الصلاة', 13, { color: DIM, bold: false });
+  head.addSpacer();
+  if (hijri) txt(head, hijri + ' هـ', 13, { color: GOLD, bold: false });
+  w.addSpacer(large ? 10 : 6);
+
+  const hero = w.addStack();
+  hero.centerAlignContent();
+  const left = hero.addStack();
+  left.layoutVertically();
+  txt(left, (soon ? '⏰ ' : '') + 'الصلاة القادمة', 13, { color: DIM, bold: false });
+  txt(left, label(nextKey), large ? 40 : 32, { color: soon ? ALERT : GOLD });
+  hero.addSpacer();
+  const right = hero.addStack();
+  right.layoutVertically();
+  txt(right, `${hm(nextAt)} ${ap(nextAt)}`, large ? 22 : 18, { color: IVORY, rounded: true, right: true });
+  timer(right, large ? 34 : 28, IVORY);
+
+  // progress since previous prayer, drawn as an image bar
+  const frac = Math.max(0, Math.min(1, (now - prevAt) / (nextAt - prevAt)));
+  const dc = new DrawContext();
+  dc.size = new Size(600, 10);
+  dc.opaque = false;
+  dc.respectScreenScale = true;
+  dc.setFillColor(new Color('#ffffff', 0.18));
+  const pathBg = new Path();
+  pathBg.addRoundedRect(new Rect(0, 0, 600, 10), 5, 5);
+  dc.addPath(pathBg);
+  dc.fillPath();
+  const pathFg = new Path();
+  pathFg.addRoundedRect(new Rect(0, 0, Math.max(10, 600 * frac), 10), 5, 5);
+  dc.addPath(pathFg);
+  dc.setFillColor(GOLD);
+  dc.fillPath();
+  w.addSpacer(large ? 10 : 6);
+  const bar = w.addImage(dc.getImage());
+  bar.imageSize = new Size(large ? 320 : 300, 6);
+  bar.centerAlignImage();
+  w.addSpacer(large ? 12 : 8);
+
+  if (large) {
+    for (const k of ORDER) {
+      const r = w.addStack();
+      r.centerAlignContent();
+      r.setPadding(5, 10, 5, 10);
+      r.cornerRadius = 10;
+      const on = k === nextKey;
+      const done = today[k] <= now && !on;
+      if (on) r.backgroundColor = new Color('#ffffff', 0.16);
+      const c = on ? GOLD : k === 'sunrise' ? DIM : IVORY;
+      txt(r, label(k), k === 'sunrise' ? 16 : 20, { color: c, opacity: done ? 0.55 : 1 });
+      r.addSpacer();
+      txt(r, `${hm(today[k])} ${ap(today[k])}`, k === 'sunrise' ? 16 : 21, { color: c, rounded: true, opacity: done ? 0.55 : 1 });
+      w.addSpacer(2);
+    }
+  } else {
+    const grid = w.addStack();
+    for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha']) {
+      const c = grid.addStack();
+      c.layoutVertically();
+      const on = k === nextKey;
+      const done = today[k] <= now && !on;
+      txt(c, label(k).replace('ال', ''), 12, { color: on ? GOLD : DIM, bold: on, center: true });
+      txt(c, hm(today[k]), on ? 19 : 17, { color: on ? GOLD : IVORY, rounded: true, opacity: done ? 0.55 : 1, center: true });
+      if (k !== 'isha') grid.addSpacer();
+    }
   }
+  w.addSpacer();
 }
 
 if (config.runsInWidget || config.runsInAccessoryWidget) Script.setWidget(w);
-else await w.presentMedium();
+else await w.presentLarge();
 Script.complete();
