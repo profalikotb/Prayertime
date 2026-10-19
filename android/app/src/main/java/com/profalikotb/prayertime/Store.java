@@ -23,4 +23,12 @@ final class Store {
         e.apply();
     }
     static void setNotify(Context c, boolean on) { p(c).edit().putBoolean("notify", on).apply(); }
+
+    /** Official Hijri month starts (JSON published by the web app) + when they were last fetched. */
+    static String officialJson(Context c) { return p(c).getString("official", HijriCalc.BUILT_IN); }
+    static long officialFetchedAt(Context c) { return p(c).getLong("officialAt", 0); }
+    static void setOfficial(Context c, String json) {
+        p(c).edit().putString("official", json).putLong("officialAt", System.currentTimeMillis()).apply();
+    }
+    static void touchOfficial(Context c) { p(c).edit().putLong("officialAt", System.currentTimeMillis()).apply(); }
 }

@@ -5,8 +5,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.chrono.HijrahDate;
-import java.time.temporal.ChronoField;
 
 /** Today's prayer schedule at the stored location, plus everything the widgets display. */
 final class Day {
@@ -22,11 +20,15 @@ final class Day {
     final long nextAt, prevAt;
     final boolean nextIsTomorrow, friday;
     final String hijri, city, methodLabel;
+    final boolean hijriOfficial;
+    private final HijriCalc hc;
 
     Day(Context c) {
         now = System.currentTimeMillis();
         double lat = Store.lat(c), lng = Store.lng(c);
-        String method = methodFor(lat, lng, Store.country(c));
+        String cc = Store.country(c);
+        String method = methodFor(lat, lng, cc);
+        hc = calc(Store.officialJson(c), "SA".equalsIgnoreCase(cc) ? "SA" : "EG".equalsIgnoreCase(cc) || cc.isEmpty() ? "EG" : "");
         ZoneId zone = ZoneId.systemDefault();
         LocalDate d = LocalDate.now(zone);
         today = PrayerEngine.compute(d, lat, lng, PrayerEngine.method(method), isRamadan(d));
@@ -40,7 +42,9 @@ final class Day {
         for (int i = 0; i < 6; i++) if (today[i] <= now) p = today[i];
         prevAt = p;
         friday = d.getDayOfWeek().getValue() == 5;
-        hijri = hijriText(d);
+        HijriCalc.Result hr = hc.of(d);
+        hijriOfficial = hr.official;
+        hijri = arabic(hr.d + " " + HIJRI_MONTHS[hr.m - 1] + " " + hr.y) + " هـ" + (hr.official ? " ✓" : "");
         city = Store.city(c);
         methodLabel = "Egyptian".equals(method) ? "الهيئة المصرية" : "UmmAlQura".equals(method) ? "أم القرى" : "";
     }
@@ -52,21 +56,25 @@ final class Day {
         return "MuslimWorldLeague";
     }
 
-    static boolean isRamadan(LocalDate d) {
+    private boolean isRamadan(LocalDate d) {
         try {
-            return HijrahDate.from(d).get(ChronoField.MONTH_OF_YEAR) == 9;
+            return hc.of(d).m == 9;
         } catch (Exception e) {
             return false;
         }
     }
 
-    static String hijriText(LocalDate d) {
-        try {
-            HijrahDate h = HijrahDate.from(d);
-            return arabic(h.get(ChronoField.DAY_OF_MONTH) + " " + HIJRI_MONTHS[h.get(ChronoField.MONTH_OF_YEAR) - 1] + " " + h.get(ChronoField.YEAR_OF_ERA)) + " هـ";
-        } catch (Exception e) {
-            return "";
+    private static String cacheKey;
+    private static HijriCalc cache;
+
+    /** Hijri calculator for a country profile ("EG", "SA", or "" = plain Umm al-Qura), cached per data version. */
+    static synchronized HijriCalc calc(String json, String profile) {
+        String k = profile + "|" + json.hashCode();
+        if (!k.equals(cacheKey)) {
+            cache = new HijriCalc(profile.isEmpty() ? new java.util.ArrayList<>() : HijriCalc.parse(json, profile));
+            cacheKey = k;
         }
+        return cache;
     }
 
     String label(int i) { return i == 2 && friday && !nextIsTomorrow ? "الجمعة" : AR[i]; }

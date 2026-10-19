@@ -5,6 +5,7 @@
   "description": "مواقيت الصلاة – أ.د. على قطب · Prayer times, Hijri calendar, Qibla and Islamic history PWA",
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/copy-official.mjs",
     "build": "next build",
     "widget": "node scripts/build-widget.mjs",
     "start": "npx serve out",

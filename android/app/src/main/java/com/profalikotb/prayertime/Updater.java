@@ -35,6 +35,7 @@ final class Updater {
 
     static void updateAll(Context c) {
         followLocation(c);
+        refreshOfficial(c);
         Day d = new Day(c);
         AppWidgetManager m = AppWidgetManager.getInstance(c);
         int[] large = m.getAppWidgetIds(new ComponentName(c, LargeWidget.class));
@@ -125,6 +126,46 @@ final class Updater {
                 .setContentIntent(openApp(c))
                 .build();
         nm.notify(NOTIF_ID, n);
+    }
+
+    /**
+     * Fetches the official (Dar al-Ifta) Hijri month starts from the web app at most every 6 hours,
+     * in the background; on success re-renders. Offline → the last saved copy (or the built-in one) is used.
+     */
+    private static volatile boolean fetching;
+
+    private static void refreshOfficial(Context c) {
+        if (fetching || System.currentTimeMillis() - Store.officialFetchedAt(c) < 6 * 3600_000L) return;
+        fetching = true;
+        Context app = c.getApplicationContext();
+        new Thread(() -> {
+            java.net.HttpURLConnection con = null;
+            try {
+                con = (java.net.HttpURLConnection) new java.net.URL(Day.APP_URL + "/data/official-hijri.json").openConnection();
+                con.setConnectTimeout(8000);
+                con.setReadTimeout(8000);
+                con.setUseCaches(false);
+                if (con.getResponseCode() == 200) {
+                    String body;
+                    try (java.io.InputStream in = con.getInputStream()) {
+                        java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+                        byte[] chunk = new byte[8192];
+                        for (int n; (n = in.read(chunk)) > 0; ) buf.write(chunk, 0, n);
+                        body = buf.toString("UTF-8");
+                    }
+                    if (!HijriCalc.parse(body, "EG").isEmpty()) {
+                        boolean changed = !body.equals(Store.officialJson(app));
+                        Store.setOfficial(app, body);
+                        if (changed) updateAll(app);
+                    } else Store.touchOfficial(app);
+                }
+            } catch (Exception ignored) {
+                // offline: retry on the next refresh
+            } finally {
+                if (con != null) con.disconnect();
+                fetching = false;
+            }
+        }).start();
     }
 
     /** Refresh 15 min before the next prayer, right after it, and just after midnight. */

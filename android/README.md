@@ -9,6 +9,7 @@ verified identical to the web app on 30,840 times (14 cities × 366 days, incl. 
 | **Large widget** (4×4, resizable) | colour theme per prayer, city + Hijri date, next prayer 40 sp, live countdown 34 sp, progress bar, 6 times (next highlighted, past dimmed) |
 | **Next-prayer widget** (4×2, resizable) | next prayer 44 sp + time + live 40 sp countdown |
 | **Lock-screen notification** | ongoing notification with live countdown + all times (toggle in app) |
+| Hijri date | same rules as the web app — official Dar al-Ifta dates (read from `/data/official-hijri.json` every 6 h, cached offline) over Umm al-Qura; verified identical on 4,800 days |
 | Updates | exact alarms 15 min before / after each prayer and at midnight; boot, time and timezone changes; silently follows location |
 
 ## Build
