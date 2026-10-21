@@ -100,6 +100,8 @@ export interface Settings {
   hijriConfirmedAt: Record<Profile, string | null>;
   notify: NotifyPrefs;
   clinics: import('./clinics').Clinic[];
+  /** set once the legacy sample clinics have been removed */
+  scheduleClean?: boolean;
   /** footer line printed on shared prayer-time cards */
   shareFooter: string;
 }

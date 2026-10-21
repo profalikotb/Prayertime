@@ -1,5 +1,5 @@
 import type { Adjustments, Place, Settings } from './types';
-import { DEFAULT_CLINICS } from './clinics';
+import { DEFAULT_CLINICS, LEGACY_SAMPLE_IDS } from './clinics';
 
 const KEY = 'pakpt.settings.v1';
 const PLACE_KEY = 'pakpt.place.v1';
@@ -22,6 +22,7 @@ export function defaultSettings(): Settings {
     hijriOffset: { EG: null, SA: null, OTHER: null },
     hijriConfirmedAt: { EG: null, SA: null, OTHER: null },
     clinics: DEFAULT_CLINICS.map((c) => ({ ...c, days: [...c.days] })),
+    scheduleClean: true,
     shareFooter: 'أ.د. على قطب على · أستاذ جراحة المخ والأعصاب – جامعة عين شمس',
     notify: {
       enabled: false,
@@ -73,7 +74,14 @@ export function loadSettings(): Settings {
   try {
     const parsed = JSON.parse(raw);
     if (parsed?.v !== 1) return defaultSettings();
-    return merge(defaultSettings(), parsed);
+    const st = merge(defaultSettings(), parsed);
+    if (!parsed.scheduleClean) {
+      // one-time upgrade: drop the sample clinics that earlier versions pre-filled
+      st.clinics = (Array.isArray(parsed.clinics) ? parsed.clinics : []).filter((c: { id?: string }) => !LEGACY_SAMPLE_IDS.includes(c?.id ?? ''));
+      st.scheduleClean = true;
+      saveSettings(st);
+    }
+    return st;
   } catch {
     return defaultSettings();
   }

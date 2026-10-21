@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import { useApp } from './ctx';
 import { Card, Icon } from './ui';
-import { clinicPlans } from '@/lib/clinics';
+import { clinicPlans, kindOf } from '@/lib/clinics';
 import { wallClock, sameDay, weekday } from '@/lib/civil';
 import { PRAYER_NAMES } from '@/lib/i18n';
 import { LOG_PRAYERS, done, stats, toggle, usePrayerLog, type LogPrayer } from '@/lib/prayerLog';
@@ -10,17 +10,36 @@ import type { PrayerKey } from '@/lib/types';
 
 /* ---------------- Clinic day planner ---------------- */
 export function ClinicCard() {
-  const { s, f, today, times, now, place } = useApp();
+  const { s, f, today, times, now, place, go } = useApp();
   const ar = s.lang === 'ar';
   const names = PRAYER_NAMES[s.lang];
+  const openSchedule = () => {
+    go('settings');
+    setTimeout(() => document.getElementById('schedule')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 250);
+  };
   const plans = useMemo(() => {
     const w = wallClock(times.today.dhuhr, place.tz);
     return clinicPlans(today, times.today, w.h * 60 + w.min, s.clinics ?? []);
   }, [today, times, place.tz, s.clinics]);
-  if (!plans.length) return null;
+  if (!plans.length)
+    return (s.clinics ?? []).length ? null : (
+      <button type="button" onClick={openSchedule} className="card flex w-full items-center gap-2 p-3 text-start text-[13px] font-bold text-emerald xl:col-span-2">
+        <Icon name="calendar" className="h-4 w-4" />
+        {ar ? '＋ أضف مواعيدك (عيادات، عمليات، محاضرات، دراسة) لربطها بمواقيت الصلاة' : '＋ Add your schedule to plan around prayers'}
+      </button>
+    );
   const t = now.getTime();
   return (
-    <Card title={ar ? 'اليوم في العيادة' : 'Clinic today'} icon="pin" className="xl:col-span-2">
+    <Card
+      title={ar ? 'جدول اليوم' : "Today's schedule"}
+      icon="calendar"
+      className="xl:col-span-2"
+      action={
+        <button type="button" onClick={openSchedule} className="chip bg-emerald/10 text-emerald">
+          {ar ? 'تعديل' : 'Edit'}
+        </button>
+      }
+    >
       <div className="grid gap-3">
         {plans.map((p) => {
           const over = t > p.endAt.getTime();
@@ -29,7 +48,11 @@ export function ClinicCard() {
           return (
             <div key={p.clinic.id} className={`rounded-xl border p-3 ${inSession ? 'border-emerald/50 bg-emerald/5' : 'border-line/10'} ${over ? 'opacity-50' : ''}`}>
               <div className="flex items-center gap-2">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[17px]" style={{ background: kindOf(p.clinic).color + '22' }}>
+                  {kindOf(p.clinic).emoji}
+                </span>
                 <p className="flex-1 text-[15px] font-bold">{p.clinic.name}</p>
+                {p.clinic.mapUrl && (
                 <a
                   href={p.clinic.mapUrl}
                   target="_blank"
@@ -39,6 +62,7 @@ export function ClinicCard() {
                 >
                   <Icon name="pin" className="h-4 w-4" />
                 </a>
+                )}
               </div>
               <p className="tnum mt-0.5 text-[12.5px] text-muted">
                 {f.time(p.startAt)} – {f.time(p.endAt)} · {ar ? 'التحرك' : 'leave'} {f.time(p.leaveAt)}
@@ -79,7 +103,7 @@ export function ClinicCard() {
           );
         })}
       </div>
-      <p className="mt-2 text-[10.5px] text-muted">{ar ? 'المواعيد ووقت الطريق قابلة للتعديل من الإعدادات ← العيادات.' : 'Hours and travel time are editable in Settings → Clinics.'}</p>
+      <p className="mt-2 text-[10.5px] text-muted">{ar ? 'أضف أو عدّل مواعيدك (عيادات، عمليات، محاضرات، دراسة) من زر «تعديل».' : 'Add or edit entries with the Edit button.'}</p>
     </Card>
   );
 }

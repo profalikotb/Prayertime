@@ -1,52 +1,77 @@
 import type { CivilDate, PrayerKey, PrayerTimesDay } from './types';
 import { weekday } from './civil';
 
-/** A recurring clinic session. days: 0 = Sunday … 6 = Saturday. Times are local wall-clock "HH:MM". */
+export type ScheduleKind = 'clinic' | 'surgery' | 'lecture' | 'study' | 'work' | 'other';
+
+export const KINDS: { k: ScheduleKind; ar: string; en: string; emoji: string; color: string }[] = [
+  { k: 'clinic', ar: 'عيادة', en: 'Clinic', emoji: '🩺', color: '#0e8a6a' },
+  { k: 'surgery', ar: 'عمليات', en: 'Surgery', emoji: '🏥', color: '#c2523b' },
+  { k: 'lecture', ar: 'محاضرة', en: 'Lecture', emoji: '🎓', color: '#4b6cb7' },
+  { k: 'study', ar: 'دراسة', en: 'Study', emoji: '📚', color: '#8a5cc2' },
+  { k: 'work', ar: 'عمل', en: 'Work', emoji: '💼', color: '#c08a1e' },
+  { k: 'other', ar: 'أخرى', en: 'Other', emoji: '📌', color: '#5e6b66' },
+];
+
+/**
+ * One schedule entry — clinic, surgery list, lecture, study session, work, anything.
+ *  repeat 'weekly': on `days` (0 = Sunday … 6 = Saturday), optionally only between `from` and `until`
+ *  repeat 'once'  : only on `date`
+ * Times are local wall-clock "HH:MM".
+ */
 export interface Clinic {
   id: string;
   name: string;
+  kind?: ScheduleKind;
+  repeat?: 'weekly' | 'once';
   days: number[];
+  date?: string;
+  from?: string;
+  until?: string;
   start: string;
   end: string;
-  /** travel time from home, minutes — used to compute when you must leave */
+  /** travel time, minutes — used to compute when you must leave */
   travelMin: number;
   mapUrl: string;
   enabled: boolean;
 }
 
-/** Defaults — the hours are placeholders; edit them in Settings → العيادات. */
-export const DEFAULT_CLINICS: Clinic[] = [
-  {
-    id: 'heliopolis',
-    name: 'عيادة مصر الجديدة',
-    days: [6, 0, 2],
-    start: '19:00',
-    end: '22:00',
+export function newEntry(kind: ScheduleKind = 'clinic', date?: string): Clinic {
+  return {
+    id: `e${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+    name: '',
+    kind,
+    repeat: date ? 'once' : 'weekly',
+    days: [],
+    date,
+    start: '09:00',
+    end: '12:00',
     travelMin: 30,
-    mapUrl: 'https://maps.app.goo.gl/kneM2xHcoW8rMNJ5A',
+    mapUrl: '',
     enabled: true,
-  },
-  {
-    id: 'wadi',
-    name: 'مستشفى وادي النيل',
-    days: [1],
-    start: '10:00',
-    end: '13:00',
-    travelMin: 30,
-    mapUrl: 'https://maps.app.goo.gl/HtfDCkk2QfTLGgNU7',
-    enabled: true,
-  },
-  {
-    id: 'toukh',
-    name: 'عيادة طوخ',
-    days: [5],
-    start: '14:00',
-    end: '18:00',
-    travelMin: 45,
-    mapUrl: 'https://maps.app.goo.gl/UGxQ1xMsdCmEj2oS7',
-    enabled: true,
-  },
-];
+  };
+}
+
+export function kindOf(c: Clinic) {
+  return KINDS.find((k) => k.k === (c.kind ?? 'clinic')) ?? KINDS[0];
+}
+
+const iso = (d: CivilDate) => `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+
+/** Does this entry take place on the given civil day? */
+export function occursOn(c: Clinic, day: CivilDate): boolean {
+  if (!c.enabled) return false;
+  const k = iso(day);
+  if ((c.repeat ?? 'weekly') === 'once') return c.date === k;
+  if (c.from && k < c.from) return false;
+  if (c.until && k > c.until) return false;
+  return c.days.includes(weekday(day));
+}
+
+/** The schedule starts empty — every entry is added by the user in Settings → جدولي. */
+export const DEFAULT_CLINICS: Clinic[] = [];
+
+/** ids of the sample entries shipped in earlier versions — removed once on upgrade */
+export const LEGACY_SAMPLE_IDS = ['heliopolis', 'wadi', 'toukh'];
 
 const OBL: PrayerKey[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
@@ -85,7 +110,7 @@ export function clinicPlans(day: CivilDate, t: PrayerTimesDay, dhuhrWallMin: num
   const wd = weekday(day);
   const out: ClinicPlan[] = [];
   for (const c of clinics) {
-    if (!c.enabled || !c.days.includes(wd)) continue;
+    if (!occursOn(c, day)) continue;
     const startAt = instantAt(c.start, t.dhuhr, dhuhrWallMin);
     const endAt = instantAt(c.end, t.dhuhr, dhuhrWallMin);
     const leaveAt = new Date(startAt.getTime() - c.travelMin * 60000);
