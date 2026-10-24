@@ -1,0 +1,43 @@
+name: Android APK
+
+on:
+  push:
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Build signed APK
+        working-directory: android
+        run: gradle assembleRelease --no-daemon --stacktrace
+      - name: Rename
+        run: cp android/app/build/outputs/apk/release/app-release.apk PrayerTime.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PrayerTime-apk
+          path: PrayerTime.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: مواقيت الصلاة – تطبيق أندرويد (أحدث إصدار)
+          body: |
+            حمّل PrayerTime.apk على هاتف أندرويد وثبّته، ثم افتح التطبيق واضغط «إضافة الودجت».
+            Build ${{ github.run_number }}
+          files: PrayerTime.apk
+          make_latest: true
