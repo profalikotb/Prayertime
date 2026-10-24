@@ -401,6 +401,7 @@ public class MainActivity extends Activity {
     }
 
     private String soundName(String id, boolean voice) {
+        if ("builtin".equals(id)) return Store.voiceMin(this) == 5 ? "تسجيلي" : "صوت الجهاز";
         if ("tts".equals(id)) return "صوت الجهاز";
         if ("default".equals(id)) return "صوت النظام";
         if ("silent".equals(id)) return "صامت";
@@ -423,6 +424,7 @@ public class MainActivity extends Activity {
         List<String> ids = new ArrayList<>(), names = new ArrayList<>();
         ids.add("off");
         names.add("إيقاف لهذه الصلاة");
+        if (voice) { ids.add("builtin"); names.add("تسجيلي: «باقي خمس دقائق على أذان الصلاة…»" + (Store.voiceMin(this) == 5 ? "" : " (عند ٥ دقائق فقط)")); }
         if (voice) { ids.add("tts"); names.add("صوت الجهاز يقرأ: «" + Alerts.reminderText(i, Store.voiceMin(this)) + "»"); }
         ids.add("default");
         names.add("صوت النظام");
@@ -536,7 +538,7 @@ public class MainActivity extends Activity {
         Store.Clip c = new Store.Clip("c" + System.currentTimeMillis(), name, "voice", recFile.getAbsolutePath());
         Store.addClip(this, c);
         // first recording → use it for every prayer that still uses the device voice
-        for (int i : Alerts.PRAYERS) if ("tts".equals(Store.voiceSound(this, i))) Store.setVoiceSound(this, i, "clip:" + c.id);
+        for (int i : Alerts.PRAYERS) if ("tts".equals(Store.voiceSound(this, i)) || "builtin".equals(Store.voiceSound(this, i))) Store.setVoiceSound(this, i, "clip:" + c.id);
         Store.setVoiceOn(this, true);
         Toast.makeText(this, "حُفظ التسجيل واستُخدم للتنبيه الصوتي", Toast.LENGTH_LONG).show();
         changed();

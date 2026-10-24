@@ -60,8 +60,10 @@ public class AudioService extends Service {
         am = getSystemService(AudioManager.class);
         requestFocus();
         h.postDelayed(this::finish, MAX_MS);
+        if ("builtin".equals(sound) && Store.voiceMin(this) != 5) sound = "tts"; // the recording says «five minutes»
         Store.Clip clip = Store.clip(this, sound);
-        if (clip != null && new File(clip.file).exists()) playUri(Uri.fromFile(new File(clip.file)));
+        if ("builtin".equals(sound)) playUri(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.reminder_5min));
+        else if (clip != null && new File(clip.file).exists()) playUri(Uri.fromFile(new File(clip.file)));
         else if ("tts".equals(sound) && text != null) speak(text);
         else playUri(RingtoneManager.getDefaultUri(voice ? RingtoneManager.TYPE_NOTIFICATION : RingtoneManager.TYPE_ALARM));
         return START_NOT_STICKY;

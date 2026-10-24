@@ -61,7 +61,7 @@ final class Store {
     /* ---------------- alerts ---------------- */
     static boolean alertsOn(Context c) { return p(c).getBoolean("alerts", true); }
     static void setAlertsOn(Context c, boolean v) { p(c).edit().putBoolean("alerts", v).apply(); }
-    static boolean voiceOn(Context c) { return p(c).getBoolean("voice", false); }
+    static boolean voiceOn(Context c) { return p(c).getBoolean("voice", true); }
     static void setVoiceOn(Context c, boolean v) { p(c).edit().putBoolean("voice", v).apply(); }
     static int voiceMin(Context c) { return p(c).getInt("voiceMin", 5); }
     static void setVoiceMin(Context c, int v) { p(c).edit().putInt("voiceMin", v).apply(); }
@@ -70,8 +70,8 @@ final class Store {
     static void setVoiceFor(Context c, int i, boolean v) { p(c).edit().putBoolean("voiceOn" + i, v).apply(); }
     static boolean adhanFor(Context c, int i) { return p(c).getBoolean("adhanOn" + i, true); }
     static void setAdhanFor(Context c, int i, boolean v) { p(c).edit().putBoolean("adhanOn" + i, v).apply(); }
-    /** sound id: "tts" | "default" | "silent" | "clip:<id>" */
-    static String voiceSound(Context c, int i) { return p(c).getString("voiceSnd" + i, "tts"); }
+    /** sound id: "builtin" (res/raw/reminder_5min — «باقي خمس دقائق…») | "tts" | "default" | "silent" | "clip:<id>" */
+    static String voiceSound(Context c, int i) { return p(c).getString("voiceSnd" + i, "builtin"); }
     static void setVoiceSound(Context c, int i, String v) { p(c).edit().putString("voiceSnd" + i, v).apply(); }
     static String adhanSound(Context c, int i) { return p(c).getString("adhanSnd" + i, "default"); }
     static void setAdhanSound(Context c, int i, String v) { p(c).edit().putString("adhanSnd" + i, v).apply(); }
