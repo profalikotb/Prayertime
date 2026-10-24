@@ -29,7 +29,7 @@ export interface AppState {
   go: (tab: Tab) => void;
 }
 
-export type Tab = 'today' | 'calendar' | 'quran' | 'qibla' | 'settings';
+export type Tab = 'today' | 'calendar' | 'quran' | 'qibla' | 'settings' | 'islamic';
 
 export const Ctx = createContext<AppState | null>(null);
 

@@ -1,5 +1,5 @@
-import { CalculationMethod, Coordinates, HighLatitudeRule, Madhab, PrayerTimes, Rounding } from 'adhan';
-import type { Adjustments, CivilDate, MethodKey, Place, PrayerKey, PrayerTimesDay, Profile, Settings } from './types';
+import { CalculationMethod, CalculationParameters, Coordinates, HighLatitudeRule, Madhab, PrayerTimes, Rounding } from 'adhan';
+import type { Adjustments, CivilDate, CustomAngles, HighLat, MethodKey, Place, PrayerKey, PrayerTimesDay, Profile, Settings } from './types';
 import { OBLIGATORY, PRAYER_KEYS } from './types';
 import { addDays } from './civil';
 import { autoMethod } from './methods';
@@ -19,6 +19,51 @@ export interface PrayerOptions {
   adjustments: Adjustments;
   /** true when the Hijri month is Ramadan (Umm al-Qura Isha = 120 min) */
   ramadan: boolean;
+  /** default 'auto' */
+  highLat?: HighLat;
+  /** used only when method === 'Custom' */
+  custom?: CustomAngles;
+}
+
+/**
+ * adhan parameters for a method key. FCNA (13°/13°) and UOIF (12°/12°) are not adhan presets,
+ * so they are built on CalculationMethod.Other() — same engine, only the angles differ.
+ */
+export function methodParams(method: MethodKey, custom?: CustomAngles): CalculationParameters {
+  if (method === 'FCNA' || method === 'UOIF' || method === 'Custom') {
+    const p = CalculationMethod.Other();
+    const a = method === 'FCNA' ? { fajr: 13, isha: 13, ishaInterval: 0 } : method === 'UOIF' ? { fajr: 12, isha: 12, ishaInterval: 0 } : (custom ?? { fajr: 18, isha: 17, ishaInterval: 0 });
+    p.fajrAngle = a.fajr;
+    p.ishaAngle = a.ishaInterval > 0 ? 0 : a.isha;
+    p.ishaInterval = a.ishaInterval > 0 ? a.ishaInterval : 0;
+    return p;
+  }
+  const p = CalculationMethod[method]();
+  // Egyptian Survey published schedules use true Dhuhr (no +1 min safety margin).
+  // Verified against the published Cairo schedule for 11/10/2026 (all six times match).
+  if (method === 'Egyptian') p.methodAdjustments = { ...p.methodAdjustments, dhuhr: 0 };
+  return p;
+}
+
+/** Above ~48° the twilight angles stop being reached in summer — that is where the rule actually changes times. */
+export const isHighLatitude = (lat: number) => Math.abs(lat) >= 48;
+
+/**
+ * The chosen rule is applied only at high latitudes (≥ 48°). Below that adhan's default (middle of the night)
+ * is kept: it never binds there, whereas e.g. "1/7 of the night" WOULD move Cairo's summer Fajr ~20 min later.
+ */
+export function highLatRule(rule: HighLat | undefined, coords: Coordinates) {
+  if (!isHighLatitude(coords.latitude)) return HighLatitudeRule.recommended(coords);
+  switch (rule) {
+    case 'middle':
+      return HighLatitudeRule.MiddleOfTheNight;
+    case 'seventh':
+      return HighLatitudeRule.SeventhOfTheNight;
+    case 'twilight':
+      return HighLatitudeRule.TwilightAngle;
+    default:
+      return HighLatitudeRule.recommended(coords);
+  }
 }
 
 /**
@@ -27,13 +72,10 @@ export interface PrayerOptions {
  */
 export function computeDay(date: CivilDate, place: Pick<Place, 'lat' | 'lng'>, o: PrayerOptions): PrayerTimesDay {
   const coords = new Coordinates(place.lat, place.lng);
-  const p = CalculationMethod[o.method]();
-  // Egyptian Survey published schedules use true Dhuhr (no +1 min safety margin).
-  // Verified against the published Cairo schedule for 11/10/2026 (all six times match).
-  if (o.method === 'Egyptian') p.methodAdjustments = { ...p.methodAdjustments, dhuhr: 0 };
+  const p = methodParams(o.method, o.custom);
   if (o.method === 'UmmAlQura' && o.ramadan) p.ishaInterval = 120;
   p.madhab = o.madhab === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi;
-  p.highLatitudeRule = HighLatitudeRule.recommended(coords);
+  p.highLatitudeRule = highLatRule(o.highLat, coords);
   // Rounded manually below: prayers → nearest minute, sunrise → floor (matches published Egyptian schedules)
   p.rounding = Rounding.None;
   p.adjustments = { ...o.adjustments };

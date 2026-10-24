@@ -13,6 +13,35 @@ export function manualPlace(id: string | null): Place | null {
   return c ? placeFromCity(c, 'manual') : null;
 }
 
+/**
+ * Approximate place without any network call or permission: the device timezone → the bundled
+ * city in that timezone (or the country's main city). Clearly labelled «approximate» in the UI.
+ */
+export function approxPlace(): Place | null {
+  const tz = deviceTz();
+  if (!isValidTz(tz)) return null;
+  const c = CITIES.find((x) => x.tz === tz) ?? CITIES.find((x) => x.cc === TZ_COUNTRY[tz]);
+  return c ? { ...placeFromCity(c, 'approx'), tz } : null;
+}
+
+const DENIED_KEY = 'pakpt.geoDenied';
+/** Remember a denial so the app never re-prompts on its own; only the user's ↻ tap asks again. */
+export function geoDeniedBefore(): boolean {
+  try {
+    return localStorage.getItem(DENIED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+export function setGeoDenied(v: boolean) {
+  try {
+    if (v) localStorage.setItem(DENIED_KEY, '1');
+    else localStorage.removeItem(DENIED_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export type GpsError = 'denied' | 'unavailable' | 'timeout' | 'unsupported';
 
 export function getPosition(timeoutMs = 12000): Promise<{ lat: number; lng: number; acc: number }> {
@@ -111,4 +140,12 @@ export async function placeFromCoords(lat: number, lng: number): Promise<Place> 
 /** Significant move → recompute (prayer times shift ~1 min per ~15–25 km). */
 export function movedEnough(a: Place, b: Place): boolean {
   return Math.abs(a.lat - b.lat) > 0.05 || Math.abs(a.lng - b.lng) > 0.05 || a.cc !== b.cc || a.tz !== b.tz;
+}
+
+/** Location precision shown next to the city name. */
+export function precisionLabel(p: Place, lang: 'ar' | 'en'): { text: string; tone: 'ok' | 'warn' | 'info' } {
+  if (p.source === 'gps') return { text: lang === 'ar' ? 'دقيق' : 'precise', tone: 'ok' };
+  if (p.source === 'manual') return { text: lang === 'ar' ? 'يدوي' : 'manual', tone: 'info' };
+  if (p.source === 'approx') return { text: lang === 'ar' ? 'تقريبي' : 'approximate', tone: 'warn' };
+  return { text: lang === 'ar' ? 'افتراضي' : 'default', tone: 'warn' };
 }

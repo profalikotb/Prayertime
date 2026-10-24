@@ -20,7 +20,10 @@ export const METHODS: MethodInfo[] = [
   { key: 'Tehran', aladhan: 7, detail: 'Fajr 17.7° · Isha 14°', name: { ar: 'معهد الجيوفيزياء – طهران', en: 'Institute of Geophysics, Tehran' } },
   { key: 'Singapore', aladhan: 11, detail: 'Fajr 20° · Isha 18°', name: { ar: 'سنغافورة / ماليزيا', en: 'MUIS Singapore / Malaysia' } },
   { key: 'NorthAmerica', aladhan: 2, detail: 'ISNA · Fajr 15° · Isha 15°', name: { ar: 'الجمعية الإسلامية لأمريكا الشمالية', en: 'ISNA (North America)' } },
+  { key: 'FCNA', aladhan: 0, detail: 'Fajr 13° · Isha 13°', name: { ar: 'مجلس الفقه لأمريكا الشمالية – كندا', en: 'FCNA recommendation (Canada)' } },
+  { key: 'UOIF', aladhan: 12, detail: 'Fajr 12° · Isha 12°', name: { ar: 'اتحاد المنظمات الإسلامية – فرنسا', en: 'UOIF / Muslims of France' } },
   { key: 'MoonsightingCommittee', aladhan: 15, detail: 'Seasonal', name: { ar: 'لجنة رؤية الهلال العالمية', en: 'Moonsighting Committee Worldwide' } },
+  { key: 'Custom', aladhan: 99, detail: 'Fajr/Isha angles set by you', name: { ar: 'زوايا مخصصة / توقيت المسجد المحلي', en: 'Custom angles / local mosque' } },
 ];
 
 export function methodInfo(k: MethodKey): MethodInfo {
@@ -47,8 +50,10 @@ const BY_COUNTRY: Record<string, MethodKey> = {
   ID: 'Singapore',
   BN: 'Singapore',
   US: 'NorthAmerica',
-  CA: 'NorthAmerica',
-  GB: 'MoonsightingCommittee',
+  CA: 'FCNA',
+  FR: 'UOIF',
+  // UK: no single national timetable — MWL default; match your mosque with the per-prayer offsets or Custom angles
+  GB: 'MuslimWorldLeague',
   IE: 'MoonsightingCommittee',
 };
 

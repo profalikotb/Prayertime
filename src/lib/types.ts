@@ -53,7 +53,20 @@ export type MethodKey =
   | 'Singapore'
   | 'Tehran'
   | 'Turkey'
-  | 'MoonsightingCommittee';
+  | 'MoonsightingCommittee'
+  | 'FCNA'
+  | 'UOIF'
+  | 'Custom';
+
+/** Twilight rule used when Fajr/Isha angles are unreachable or extreme (high latitudes). auto = adhan's recommendation (1/7 night above 48°, else middle of night) */
+export type HighLat = 'auto' | 'middle' | 'seventh' | 'twilight';
+
+export interface CustomAngles {
+  fajr: number;
+  isha: number;
+  /** minutes after Maghrib; 0 = use the Isha angle */
+  ishaInterval: number;
+}
 
 export interface Place {
   lat: number;
@@ -64,7 +77,8 @@ export interface Place {
   cc: string;
   /** IANA timezone used for all civil-date and display computations */
   tz: string;
-  source: 'gps' | 'manual' | 'default';
+  /** gps = device fix (precise) · approx = inferred from the device timezone · manual · default (Cairo) */
+  source: 'gps' | 'approx' | 'manual' | 'default';
   /** epoch ms of the fix */
   at: number;
 }
@@ -82,6 +96,24 @@ export interface NotifyPrefs {
   ramadan: boolean;
 }
 
+export type FivePrayer = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
+
+/**
+ * Personal audio. Sound ids: 'chime' (built-in synthesized bell) · 'silent' · 'legacy' (/public/adhan.mp3)
+ * · 'clip:<id>' (a recording saved on this device, IndexedDB) · 'tts' (system speech, voice reminder only).
+ */
+export interface AudioPrefs {
+  voice: {
+    enabled: boolean;
+    /** minutes before the Adhan */
+    minutes: number;
+    perPrayer: Record<FivePrayer, { on: boolean; sound: string }>;
+  };
+  adhan: Record<FivePrayer, string>;
+  /** 0–1 (iOS ignores page volume — use the hardware buttons) */
+  volume: number;
+}
+
 export interface Settings {
   v: 1;
   lang: Lang;
@@ -92,6 +124,8 @@ export interface Settings {
   manualCityId: string | null;
   method: 'auto' | MethodKey;
   madhab: 'shafi' | 'hanafi';
+  highLat: HighLat;
+  customAngles: CustomAngles;
   adjustments: Record<Profile, Adjustments>;
   hijriCountry: 'auto' | 'EG' | 'SA';
   /** null = automatic (official table + Umm al-Qura); number = manual day shift applied to Umm al-Qura */
@@ -99,6 +133,7 @@ export interface Settings {
   /** ISO timestamp of when the user confirmed a date via "set confirmed date" */
   hijriConfirmedAt: Record<Profile, string | null>;
   notify: NotifyPrefs;
+  audio: AudioPrefs;
   clinics: import('./clinics').Clinic[];
   /** set once the legacy sample clinics have been removed */
   scheduleClean?: boolean;

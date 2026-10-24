@@ -222,6 +222,18 @@ export function significanceFor(h: HijriDate, weekday: number, isAfterMaghrib: b
       refs: ['صحيح مسلم ١١٦٤'],
     });
   }
+  if (m === 1 && d === 1) {
+    out.push({
+      id: 'new-year',
+      tone: 'month',
+      title: { ar: 'بداية العام الهجري', en: 'Start of the Hijri year' },
+      body: {
+        ar: 'أول المحرم بداية السنة الهجرية. اتخذ الصحابة الهجرةَ مبدأً للتأريخ في خلافة عمر بن الخطاب رضي الله عنه، ولم يثبت تخصيص هذا اليوم بعبادة معيّنة.',
+        en: 'The 1st of Muharram opens the Hijri year. The Companions adopted the Hijra as the calendar epoch under ʿUmar ibn al-Khattab; no specific act of worship is established for this day.',
+      },
+      refs: ['صحيح البخاري ٣٩٣٤ (باب التاريخ)', 'تاريخ الطبري، حوادث سنة ١٦هـ'],
+    });
+  }
   if (m === 1 && d !== 9 && d !== 10) {
     out.push({
       id: 'muharram',

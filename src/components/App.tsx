@@ -4,11 +4,11 @@ import type { CivilDate, Place, Settings } from '@/lib/types';
 import { addDays, civilToday, key } from '@/lib/civil';
 import { hijriFor, type HijriContext } from '@/lib/hijri';
 import { computeDay, effectiveMethod, prayerState, profileFor, type PrayerOptions } from '@/lib/prayer';
-import { DICT, PRAYER_NAMES } from '@/lib/i18n';
+import { DICT } from '@/lib/i18n';
 import { makeFmt } from '@/lib/format';
 import { loadPlace, loadSettings, savePlace, saveSettings } from '@/lib/storage';
-import { DEFAULT_CITY, geoPermission, getPosition, manualPlace, movedEnough, placeFromCity, placeFromCoords } from '@/lib/location';
-import { chime, playAdhan, show, unlockAudio } from '@/lib/notify';
+import { DEFAULT_CITY, approxPlace, geoDeniedBefore, geoPermission, getPosition, manualPlace, movedEnough, placeFromCity, placeFromCoords, setGeoDenied } from '@/lib/location';
+import { unlockAudio } from '@/lib/notify';
 import { Ctx, type AppState, type LocStatus, type Tab } from './ctx';
 import { Icon } from './ui';
 import Today from './Today';
@@ -16,6 +16,8 @@ import CalendarView from './CalendarView';
 import QiblaView from './QiblaView';
 import SettingsView from './SettingsView';
 import QuranView from './QuranView';
+import IslamicToday from './IslamicToday';
+import { useAudioScheduler } from '@/lib/audioScheduler';
 
 const LOCATION_TTL = 30 * 60 * 1000;
 
@@ -34,7 +36,8 @@ export default function App() {
     const st = loadSettings();
     setS(st);
     const p = st.locationMode === 'manual' ? manualPlace(st.manualCityId) : null;
-    setPlace(p ?? loadPlace() ?? placeFromCity(DEFAULT_CITY, 'default'));
+    // order: manual → saved fix → timezone-approximate → Cairo
+    setPlace(p ?? loadPlace() ?? approxPlace() ?? placeFromCity(DEFAULT_CITY, 'default'));
     setOnline(typeof navigator === 'undefined' ? true : navigator.onLine);
     setReady(true);
   }, []);
@@ -51,10 +54,13 @@ export default function App() {
   /* ---------- location ---------- */
   const refreshLocation = useCallback(async (prompt: boolean) => {
     if (locBusy.current) return;
-    if (!prompt) {
-      const perm = await geoPermission();
-      if (perm !== 'granted') return; // never surprise the user with a prompt on resume
+    const perm = await geoPermission();
+    if (perm === 'denied') {
+      setGeoDenied(true);
+      setLocStatus('denied');
+      return; // the browser will not show a prompt anyway — never loop on a denied permission
     }
+    if (!prompt && perm !== 'granted') return; // never surprise the user with a prompt on resume
     locBusy.current = true;
     setLocStatus('locating');
     try {
@@ -62,8 +68,10 @@ export default function App() {
       const p = await placeFromCoords(pos.lat, pos.lng);
       setPlace((prev) => (prev && !movedEnough(prev, p) && prev.source === 'gps' && prev.city.ar === p.city.ar ? { ...prev, at: p.at } : p));
       savePlace(p);
+      setGeoDenied(false);
       setLocStatus('ok');
     } catch (e) {
+      if (e === 'denied') setGeoDenied(true);
       setLocStatus(e === 'denied' ? 'denied' : 'failed');
     } finally {
       locBusy.current = false;
@@ -78,7 +86,8 @@ export default function App() {
       return;
     }
     const cached = loadPlace();
-    if (!cached || cached.source !== 'gps' || Date.now() - cached.at > LOCATION_TTL) void refreshLocation(true);
+    // ask once; after a denial only the user's own tap asks again
+    if (!cached || cached.source !== 'gps' || Date.now() - cached.at > LOCATION_TTL) void refreshLocation(!geoDeniedBefore());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, s?.locationMode, s?.manualCityId]);
 
@@ -113,6 +122,17 @@ export default function App() {
       window.removeEventListener('pageshow', onVis);
     };
   }, [refreshLocation, s?.locationMode]);
+
+  /* ---------- deep links (#qibla, #islamic, #settings …) — used by the Android widget shortcuts ---------- */
+  useEffect(() => {
+    const read = () => {
+      const h = location.hash.replace('#', '') as Tab;
+      if (['today', 'calendar', 'quran', 'qibla', 'settings', 'islamic'].includes(h)) setTab(h);
+    };
+    read();
+    window.addEventListener('hashchange', read);
+    return () => window.removeEventListener('hashchange', read);
+  }, []);
 
   /* ---------- service worker ---------- */
   useEffect(() => {
@@ -149,6 +169,8 @@ export default function App() {
       madhab: s?.madhab ?? 'shafi',
       adjustments: s?.adjustments[prayerProfile] ?? { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
       ramadan: hijriFor(d, hctx).m === 9,
+      highLat: s?.highLat ?? 'auto',
+      custom: s?.customAngles,
     }),
     [method, s, prayerProfile, hctx],
   );
@@ -183,33 +205,9 @@ export default function App() {
     document.title = s.lang === 'ar' ? 'مواقيت الصلاة – أ.د. على قطب' : 'Prof Ali Kotb Prayer Time';
   }, [s, times, now]);
 
-  /* ---------- foreground reminders ---------- */
-  const fired = useRef(new Set<string>());
-  useEffect(() => {
-    if (!s?.notify.enabled || !times) return;
-    const n = s.notify;
-    const names = PRAYER_NAMES[s.lang];
-    const tNow = now.getTime();
-    const fire = (id: string, at: number, title: string, body: string, sound: 'chime' | 'adhan' | 'silent') => {
-      if (fired.current.has(id)) return;
-      if (tNow >= at && tNow - at < 90_000) {
-        fired.current.add(id);
-        void show(title, body, n.vibrate);
-        if (sound === 'adhan') void playAdhan();
-        else if (sound === 'chime') chime();
-      }
-    };
-    for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) {
-      const at = times.today[k].getTime();
-      const p = n.perPrayer[k];
-      if (p.before && n.beforeMin > 0)
-        fire(`${dayKey}-${k}-b`, at - n.beforeMin * 60000, names[k], s.lang === 'ar' ? `بعد ${n.beforeMin} دقيقة` : `In ${n.beforeMin} minutes`, n.sound === 'silent' ? 'silent' : 'chime');
-      if (p.at) fire(`${dayKey}-${k}-a`, at, names[k], s.lang === 'ar' ? `حان الآن وقت صلاة ${names[k]}` : `It is time for ${names[k]}`, n.sound);
-    }
-    if (n.ramadan && hijri.m === 9) {
-      fire(`${dayKey}-suhoor`, times.today.fajr.getTime() - 30 * 60000, s.lang === 'ar' ? 'السحور' : 'Suhoor', s.lang === 'ar' ? 'بقي ٣٠ دقيقة على الفجر' : '30 minutes until Fajr', n.sound === 'silent' ? 'silent' : 'chime');
-    }
-  }, [now, s, times, dayKey, hijri.m]);
+  /* ---------- foreground alerts: voice reminder → Adhan (see lib/audioScheduler) ---------- */
+  const fmtTime = useMemo(() => (s && place ? makeFmt(s, place.tz).time : (d: Date) => d.toISOString()), [s, place]);
+  useAudioScheduler(now, s, times, dayKey, hijri, place, fmtTime);
 
   if (!ready || !s || !place || !times || !ps) return <Splash />;
 
@@ -253,6 +251,7 @@ export default function App() {
           {tab === 'quran' && <QuranView />}
           {tab === 'qibla' && <QiblaView />}
           {tab === 'settings' && <SettingsView />}
+          {tab === 'islamic' && <IslamicToday />}
         </main>
         <nav
           className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-line/10 bg-surface/85 backdrop-blur-xl lg:static lg:mx-auto lg:mb-6 lg:max-w-md lg:rounded-2xl lg:border"

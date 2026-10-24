@@ -8,6 +8,17 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Android 11+ package visibility: needed to reach the system text-to-speech engine -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
 
     <application
         android:allowBackup="true"
@@ -47,6 +58,26 @@
         </receiver>
 
         <receiver
+            android:name=".MediumWidget"
+            android:exported="true"
+            android:label="@string/widget_medium">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_medium_info" />
+        </receiver>
+
+        <!-- exact prayer alerts (voice reminder / Adhan) — internal only -->
+        <receiver
+            android:name=".AlertReceiver"
+            android:exported="false" />
+
+        <service
+            android:name=".AudioService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <receiver
             android:name=".UpdateReceiver"
             android:exported="true">
             <intent-filter>
@@ -55,6 +86,7 @@
                 <action android:name="android.intent.action.TIME_SET" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
             </intent-filter>
         </receiver>
     </application>

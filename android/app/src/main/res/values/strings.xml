@@ -2,5 +2,6 @@
 <resources>
     <string name="app_name">مواقيت الصلاة</string>
     <string name="widget_large">مواقيت الصلاة – كبير</string>
-    <string name="widget_next">الصلاة القادمة</string>
+    <string name="widget_next">الصلاة القادمة – صغير</string>
+    <string name="widget_medium">مواقيت اليوم – متوسط</string>
 </resources>

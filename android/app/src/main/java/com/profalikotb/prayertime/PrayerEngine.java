@@ -20,7 +20,7 @@ public final class PrayerEngine {
         public int shadow = 1; // 1 = Shafi/standard, 2 = Hanafi
         public double[] methodAdj = new double[6]; // fajr, sunrise, dhuhr, asr, maghrib, isha (minutes)
         public double[] userAdj = new double[6];
-        public String highLat = "middle"; // middle | seventh | twilight
+        public String highLat = "auto"; // auto | middle | seventh | twilight (auto = 1/7 above 48°, else middle)
         public String shafaq = "general";
 
         Params(String m, double f, double i, int interval, double mg) {
@@ -42,9 +42,16 @@ public final class PrayerEngine {
             case "Singapore": p = new Params(key, 20, 18, 0, 0); p.methodAdj[2] = 1; break;
             case "Tehran": p = new Params(key, 17.7, 14, 0, 4.5); break;
             case "Turkey": p = new Params(key, 18, 17, 0, 0); p.methodAdj = new double[]{0, -7, 5, 4, 7, 0}; break;
+            case "FCNA": p = new Params(key, 13, 13, 0, 0); break;
+            case "UOIF": p = new Params(key, 12, 12, 0, 0); break;
             default: p = new Params("MuslimWorldLeague", 18, 17, 0, 0); p.methodAdj[2] = 1;
         }
         return p;
+    }
+
+    /** User-defined angles (web "Custom"): ishaInterval > 0 replaces the Isha angle. */
+    public static Params custom(double fajr, double isha, int ishaInterval) {
+        return new Params("Custom", fajr, ishaInterval > 0 ? 0 : isha, Math.max(0, ishaInterval), 0);
     }
 
     /** Country (ISO alpha-2) → method, identical to src/lib/methods.ts */
@@ -60,8 +67,10 @@ public final class PrayerEngine {
             case "IR": return "Tehran";
             case "PK": case "IN": case "BD": case "AF": return "Karachi";
             case "SG": case "MY": case "ID": case "BN": return "Singapore";
-            case "US": case "CA": return "NorthAmerica";
-            case "GB": case "IE": return "MoonsightingCommittee";
+            case "US": return "NorthAmerica";
+            case "CA": return "FCNA";
+            case "FR": return "UOIF";
+            case "IE": return "MoonsightingCommittee";
             default: return "MuslimWorldLeague";
         }
     }
@@ -233,7 +242,8 @@ public final class PrayerEngine {
      * `ramadan` switches Umm al-Qura Isha to 120 minutes.
      */
     public static long[] compute(LocalDate date, double lat, double lon, Params p, boolean ramadan) {
-        String highLat = lat > 48 ? "seventh" : "middle"; // HighLatitudeRule.recommended
+        // user rule only at high latitudes (same as the web app); below 48° adhan's recommendation = middle of the night
+        String highLat = "auto".equals(p.highLat) || p.highLat == null || Math.abs(lat) < 48 ? (lat > 48 ? "seventh" : "middle") : p.highLat;
         SolarTime st = new SolarTime(date, lat, lon);
         double dhuhr = utc(date, st.transit), sunrise = utc(date, st.sunrise), sunset = utc(date, st.sunset);
         LocalDate tm = date.plusDays(1);

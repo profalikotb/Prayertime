@@ -40,15 +40,46 @@ final class Updater {
         AppWidgetManager m = AppWidgetManager.getInstance(c);
         int[] large = m.getAppWidgetIds(new ComponentName(c, LargeWidget.class));
         int[] small = m.getAppWidgetIds(new ComponentName(c, NextWidget.class));
+        int[] medium = m.getAppWidgetIds(new ComponentName(c, MediumWidget.class));
         if (large.length > 0) m.updateAppWidget(large, large(c, d));
         if (small.length > 0) m.updateAppWidget(small, next(c, d));
+        if (medium.length > 0) m.updateAppWidget(medium, medium(c, d));
         notification(c, d);
         schedule(c, d);
+        Alerts.schedule(c, d);
     }
 
-    private static PendingIntent openApp(Context c) {
-        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(Day.APP_URL));
-        return PendingIntent.getActivity(c, 0, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+    private static PendingIntent openApp(Context c) { return openUrl(c, "", 0); }
+
+    /** Opens the full web app (optionally at a tab: #qibla, #islamic …). */
+    private static PendingIntent openUrl(Context c, String hash, int code) {
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(Day.APP_URL + (hash.isEmpty() ? "" : "/#" + hash)));
+        return PendingIntent.getActivity(c, code, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private static final int[] M_ROW = {R.id.m_row_fajr, 0, R.id.m_row_dhuhr, R.id.m_row_asr, R.id.m_row_maghrib, R.id.m_row_isha};
+    private static final int[] M_NAME = {R.id.m_name_fajr, 0, R.id.m_name_dhuhr, R.id.m_name_asr, R.id.m_name_maghrib, R.id.m_name_isha};
+    private static final int[] M_TIME = {R.id.m_time_fajr, 0, R.id.m_time_dhuhr, R.id.m_time_asr, R.id.m_time_maghrib, R.id.m_time_isha};
+
+    /** Medium: next prayer + countdown, Hijri date, the five prayers with the upcoming one highlighted. */
+    static RemoteViews medium(Context c, Day d) {
+        RemoteViews v = new RemoteViews(c.getPackageName(), R.layout.widget_medium);
+        hero(v, d);
+        v.setTextViewText(R.id.hijri, d.hijri + "  ·  " + d.city);
+        // sunrise is not a prayer: between sunrise and Dhuhr the Dhuhr cell is the highlighted one
+        int hi = d.nextIsTomorrow ? 0 : d.next == 1 ? 2 : d.next;
+        for (int i : Alerts.PRAYERS) {
+            boolean on = i == hi;
+            boolean passed = !d.nextIsTomorrow && d.today[i] <= d.now;
+            int color = on ? GOLD : passed ? FADED : IVORY;
+            v.setInt(M_ROW[i], "setBackgroundResource", on ? R.drawable.tile_on : R.drawable.tile_off);
+            v.setTextViewText(M_NAME[i], d.label(i).replaceFirst("^ال", ""));
+            v.setTextViewText(M_TIME[i], Day.shortTime(d.nextIsTomorrow ? d.tomorrow[i] : d.today[i]));
+            v.setTextColor(M_NAME[i], color);
+            v.setTextColor(M_TIME[i], color);
+        }
+        v.setOnClickPendingIntent(R.id.root, openApp(c));
+        return v;
     }
 
     private static void hero(RemoteViews v, Day d) {
@@ -67,6 +98,10 @@ final class Updater {
         hero(v, d);
         v.setTextViewText(R.id.hijri, d.hijri);
         v.setTextViewText(R.id.city, d.city);
+        v.setTextViewText(R.id.gregorian, d.gregorian + "  ·  " + d.methodLabel + (d.methodAuto ? "" : " 🔒"));
+        v.setTextViewText(R.id.islamic, d.islamicLine);
+        v.setOnClickPendingIntent(R.id.qibla, openUrl(c, "qibla", 5));
+        v.setOnClickPendingIntent(R.id.islamic, openUrl(c, "islamic", 6));
         long span = Math.max(1, d.nextAt - d.prevAt);
         v.setProgressBar(R.id.progress, 1000, (int) Math.max(0, Math.min(1000, (d.now - d.prevAt) * 1000 / span)), false);
         for (int i = 0; i < 6; i++) {
@@ -86,6 +121,7 @@ final class Updater {
     static RemoteViews next(Context c, Day d) {
         RemoteViews v = new RemoteViews(c.getPackageName(), R.layout.widget_next);
         hero(v, d);
+        v.setTextViewText(R.id.city, "📍 " + d.city);
         v.setOnClickPendingIntent(R.id.root, openApp(c));
         return v;
     }
@@ -187,7 +223,11 @@ final class Updater {
 
     /** Silently follow the phone's last known location (no prompts); infer country from timezone on long trips. */
     private static void followLocation(Context c) {
-        if (c.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) return;
+        if ("manual".equals(Store.locSource(c))) return; // a manually chosen city is never overridden
+        if (c.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if ("default".equals(Store.locSource(c))) Cities.approx(c); // no permission: timezone → nearest bundled city, labelled approximate
+            return;
+        }
         LocationManager lm = c.getSystemService(LocationManager.class);
         if (lm == null) return;
         Location best = null;
@@ -220,6 +260,12 @@ final class Updater {
             case "Europe/Istanbul": return "TR";
             case "Asia/Karachi": return "PK";
             case "Africa/Khartoum": return "SD";
+            case "Europe/London": return "GB";
+            case "Europe/Paris": return "FR";
+            case "Europe/Berlin": return "DE";
+            case "Europe/Oslo": return "NO";
+            case "America/New_York": case "America/Chicago": case "America/Denver": case "America/Los_Angeles": return "US";
+            case "America/Toronto": case "America/Vancouver": case "America/Edmonton": case "America/Winnipeg": case "America/Halifax": return "CA";
             default: return "";
         }
     }

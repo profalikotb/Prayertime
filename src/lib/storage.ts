@@ -17,12 +17,29 @@ export function defaultSettings(): Settings {
     manualCityId: null,
     method: 'auto',
     madhab: 'shafi',
+    highLat: 'auto',
+    customAngles: { fajr: 18, isha: 17, ishaInterval: 0 },
     adjustments: { EG: zero(), SA: zero(), OTHER: zero() },
     hijriCountry: 'auto',
     hijriOffset: { EG: null, SA: null, OTHER: null },
     hijriConfirmedAt: { EG: null, SA: null, OTHER: null },
     clinics: DEFAULT_CLINICS.map((c) => ({ ...c, days: [...c.days] })),
     scheduleClean: true,
+    audio: {
+      voice: {
+        enabled: false,
+        minutes: 5,
+        perPrayer: {
+          fajr: { on: true, sound: 'tts' },
+          dhuhr: { on: true, sound: 'tts' },
+          asr: { on: true, sound: 'tts' },
+          maghrib: { on: true, sound: 'tts' },
+          isha: { on: true, sound: 'tts' },
+        },
+      },
+      adhan: { fajr: 'chime', dhuhr: 'chime', asr: 'chime', maghrib: 'chime', isha: 'chime' },
+      volume: 1,
+    },
     shareFooter: 'أ.د. على قطب على · أستاذ جراحة المخ والأعصاب – جامعة عين شمس',
     notify: {
       enabled: false,
@@ -75,6 +92,10 @@ export function loadSettings(): Settings {
     const parsed = JSON.parse(raw);
     if (parsed?.v !== 1) return defaultSettings();
     const st = merge(defaultSettings(), parsed);
+    if (!parsed.audio && parsed.notify?.sound === 'adhan') {
+      // carry the old single "Adhan" choice into the new per-prayer selection
+      for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) st.audio.adhan[k] = 'legacy';
+    }
     if (!parsed.scheduleClean) {
       // one-time upgrade: drop the sample clinics that earlier versions pre-filled
       st.clinics = (Array.isArray(parsed.clinics) ? parsed.clinics : []).filter((c: { id?: string }) => !LEGACY_SAMPLE_IDS.includes(c?.id ?? ''));

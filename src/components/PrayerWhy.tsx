@@ -1,5 +1,5 @@
 'use client';
-import { CalculationMethod } from 'adhan';
+import { methodParams } from '@/lib/prayer';
 import { useApp } from './ctx';
 import { methodInfo } from '@/lib/methods';
 import { sunPosition } from '@/lib/compass';
@@ -9,13 +9,13 @@ import type { PrayerKey } from '@/lib/types';
 export default function PrayerWhy({ k }: { k: PrayerKey }) {
   const { s, f, method, place, times, hijri } = useApp();
   const ar = s.lang === 'ar';
-  const p = CalculationMethod[method]();
+  const p = methodParams(method, s.customAngles);
   const at = times.today[k];
   const sun = sunPosition(at, place.lat, place.lng);
   const adj = s.adjustments[place.cc === 'EG' ? 'EG' : place.cc === 'SA' ? 'SA' : 'OTHER'][k];
   const deg = (v: number) => f.n(v.toFixed(1)).replace('.', ar && s.digits === 'arab' ? '٫' : '.') + '°';
   const ishaMin = p.ishaInterval ? (method === 'UmmAlQura' && hijri.m === 9 ? 120 : p.ishaInterval) : 0;
-  const mAdj = method === 'Egyptian' ? 0 : p.methodAdjustments[k];
+  const mAdj = p.methodAdjustments[k];
 
   const rule: Record<PrayerKey, string> = ar
     ? {

@@ -36,12 +36,19 @@ export default function HijriAdjust() {
         onChange={(v) => setOffset(v === 'auto' ? null : Number(v))}
         options={[
           { v: 'auto', l: t.auto },
-          { v: '-1', l: t.minusDay },
-          { v: '0', l: t.noAdjust },
-          { v: '1', l: t.plusDay },
+          { v: '-2', l: f.n('−2') },
+          { v: '-1', l: f.n('−1') },
+          { v: '0', l: f.n('0') },
+          { v: '1', l: f.n('+1') },
+          { v: '2', l: f.n('+2') },
         ]}
       />
-      {cur !== null && Math.abs(cur) > 1 && <p className="mt-1 text-[11px] text-gold">{f.n(cur > 0 ? `+${cur}` : cur)}</p>}
+      {cur !== null && Math.abs(cur) > 2 && <p className="mt-1 text-[11px] text-gold">{f.n(cur > 0 ? `+${cur}` : cur)}</p>}
+      <p className="mt-1.5 text-[11px] leading-5 text-muted">
+        {s.lang === 'ar'
+          ? 'التصحيح يُطبّق على كل ما يعتمد على التاريخ الهجري: الأحداث، العدّادات، عشاء رمضان في أم القرى. التواريخ المحسوبة قد تختلف عن رؤية الهلال المعلنة محليًا.'
+          : 'Applied everywhere Hijri-dependent: events, countdowns, the Ramadan Isha rule. Calculated dates may differ from locally announced sightings.'}
+      </p>
       <button type="button" onClick={() => setPicking(!picking)} className="mt-2 text-[12.5px] font-bold text-emerald">
         {t.confirmDate}
       </button>

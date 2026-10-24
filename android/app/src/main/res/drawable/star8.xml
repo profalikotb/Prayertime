@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rub el Hizb–style eight-point star (two overlapping squares) — subtle geometric accent for the widgets -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp" android:height="96dp" android:viewportWidth="100" android:viewportHeight="100">
+    <path android:strokeColor="#F2CF7A" android:strokeWidth="2.2" android:fillColor="#00000000"
+        android:pathData="M20,20 L80,20 L80,80 L20,80 Z" />
+    <path android:strokeColor="#F2CF7A" android:strokeWidth="2.2" android:fillColor="#00000000"
+        android:pathData="M50,7.6 L92.4,50 L50,92.4 L7.6,50 Z" />
+    <path android:strokeColor="#F2CF7A" android:strokeWidth="1.4" android:fillColor="#00000000"
+        android:pathData="M50,34 A16,16 0 1,1 49.9,34 Z" />
+</vector>

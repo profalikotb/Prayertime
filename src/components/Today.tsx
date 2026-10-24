@@ -17,6 +17,7 @@ import ShareCard from './ShareCard';
 import AzkarCard from './AzkarCard';
 import PrayerWhy from './PrayerWhy';
 import { CITIES } from '@/data/cities';
+import { precisionLabel } from '@/lib/location';
 
 export default function Today() {
   return (
@@ -107,6 +108,9 @@ function Hero() {
           {place.city[s.lang]}
           {place.country[s.lang] ? ` · ${place.country[s.lang]}` : ''}
         </span>
+        <span className={`shrink-0 rounded-full px-1.5 text-[10px] font-bold ${precisionLabel(place, s.lang).tone === 'ok' ? 'bg-emerald/40' : precisionLabel(place, s.lang).tone === 'warn' ? 'bg-[#e8a33a]/45' : 'bg-white/20'}`}>
+          {precisionLabel(place, s.lang).text}
+        </span>
       </button>
       <div className="relative mt-3 pe-16">
         <div className="flex flex-wrap items-center gap-2">
@@ -114,7 +118,7 @@ function Hero() {
           <StatusChip status={hijri.status} profile={profile} small onDark />
         </div>
         <p className="mt-0.5 text-[13px] text-white/75">
-          {f.weekday(today)} · {f.gDate(today)} · <span className="tnum">{f.gShort(today)}</span>
+          {f.weekday(today)} · {f.gDate(today)} · <span className="tnum">{f.gShort(today)}</span> · <span className="tnum">{f.time(now)}</span>
         </p>
       </div>
 
@@ -159,8 +163,32 @@ function Hero() {
         </div>
       </div>
       <p className="relative mt-1 text-center text-[11px] text-white/55">
-        {t.method}: {methodInfo(method).name[s.lang]}
+        {t.method}: {methodInfo(method).name[s.lang]} · {s.method === 'auto' ? (s.lang === 'ar' ? 'تلقائي حسب الموقع' : 'auto by location') : s.lang === 'ar' ? 'مثبّت يدويًا' : 'locked'}
       </p>
+      <div className="relative mt-3 grid grid-cols-3 gap-2 text-[12px] font-bold">
+        {(
+          [
+            ['qibla', 'compass', s.lang === 'ar' ? 'القبلة' : 'Qibla'],
+            ['islamic', 'book', s.lang === 'ar' ? 'حدث اليوم' : 'Islamic Today'],
+            ['audio', 'bell', s.lang === 'ar' ? 'الأذان' : 'Adhan'],
+          ] as const
+        ).map(([k, i, l]) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => {
+              if (k === 'audio') {
+                go('settings');
+                setTimeout(() => document.getElementById('audio')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
+              } else go(k);
+            }}
+            className="flex items-center justify-center gap-1.5 rounded-xl bg-white/10 px-2 py-2 backdrop-blur"
+          >
+            <Icon name={i} className="h-4 w-4 shrink-0 text-[#e8c77a]" />
+            <span className="truncate">{l}</span>
+          </button>
+        ))}
+      </div>
     </section>
   );
 }
@@ -175,7 +203,7 @@ function LocationNotice() {
         {t.locating}
       </p>
     );
-  if (locStatus !== 'denied' && locStatus !== 'failed' && place.source !== 'default') return null;
+  if (locStatus !== 'denied' && locStatus !== 'failed' && place.source !== 'default' && place.source !== 'approx') return null;
   // a recent GPS fix is still valid — keep using it silently instead of alarming the user
   if (place.source === 'gps' && Date.now() - place.at < 7 * 86400000) return null;
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
@@ -198,7 +226,16 @@ function LocationNotice() {
       <div className="flex items-start gap-2">
         <Icon name="info" className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
         <div className="flex-1 leading-5 text-ink/80">
-          <p className="font-bold">{locStatus === 'denied' ? (ar ? 'تحديد الموقع غير مسموح' : 'Location access is off') : t.locFailed}</p>
+          <p className="font-bold">
+            {locStatus === 'denied' ? (ar ? 'تحديد الموقع غير مسموح' : 'Location access is off') : place.source === 'approx' ? (ar ? 'الموقع تقريبي' : 'Approximate location') : t.locFailed}
+          </p>
+          {place.source === 'approx' && (
+            <p className="mt-0.5 text-muted">
+              {ar
+                ? `استُنتج من المنطقة الزمنية للجهاز (${place.city.ar}) — قد يختلف الوقت بضع دقائق عن مدينتك. اسمح بالموقع أو اختر مدينتك.`
+                : `Inferred from the device timezone (${place.city.en}) — times may differ by a few minutes. Allow location or pick your city.`}
+            </p>
+          )}
           {locStatus === 'denied' && <p className="mt-0.5 text-muted">{fix}</p>}
         </div>
       </div>
@@ -420,42 +457,36 @@ function Significance() {
   );
 }
 
+/** Home: one featured event for today's Hijri date; the full list lives on the Islamic Today page. */
 function History() {
-  const { t, hijri, f } = useApp();
+  const { t, hijri, f, s, go } = useApp();
+  const ar = s.lang === 'ar';
   const day = eventsForDay(hijri.m, hijri.d);
   const month = eventsForMonthOnly(hijri.m);
-  const [open, setOpen] = useState(false);
+  const featured = day[0] ?? null;
+  const more = day.length - (featured ? 1 : 0) + month.length;
   return (
-    <Card title={t.history} icon="book" className="xl:col-span-2">
+    <Card
+      title={t.history}
+      icon="book"
+      className="xl:col-span-2"
+      action={
+        <button type="button" onClick={() => go('islamic')} className="chip bg-emerald/10 text-emerald">
+          {ar ? 'عرض الكل' : 'Open'}
+        </button>
+      }
+    >
       <p className="-mt-1 mb-2 text-[12px] font-semibold text-gold">
         {f.n(hijri.d)} {f.hMonth(hijri.m)}
       </p>
-      {day.length === 0 ? (
-        <p className="rounded-xl bg-ink/[.03] p-3 text-[13px] text-muted">{t.noEvent}</p>
-      ) : (
-        <div className="grid gap-2.5">
-          {day.map((e) => (
-            <EventCard key={e.id} e={e} />
-          ))}
-        </div>
-      )}
-      {month.length > 0 && (
-        <div className="mt-3">
-          <button type="button" onClick={() => setOpen(!open)} className="flex w-full items-center justify-between rounded-lg py-1.5 text-[12.5px] font-bold text-emerald">
-            <span>
-              {t.monthEvents} ({f.n(month.length)})
-            </span>
-            <Icon name={open ? 'x' : 'chevL'} className={`h-4 w-4 ${open ? '' : '-rotate-90'}`} />
-          </button>
-          {open && (
-            <div className="mt-2 grid gap-2.5">
-              {month.map((e) => (
-                <EventCard key={e.id} e={e} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {featured ? <EventCard e={featured} /> : <p className="rounded-xl bg-ink/[.03] p-3 text-[13px] text-muted">{t.noEvent}</p>}
+      <button type="button" onClick={() => go('islamic')} className="mt-3 flex w-full items-center justify-between rounded-lg py-1.5 text-[12.5px] font-bold text-emerald">
+        <span>
+          {ar ? 'حدث في مثل هذا اليوم الهجري' : 'Islamic Today'}
+          {more > 0 && ` (${f.n(more)} ${ar ? 'أخرى' : 'more'})`}
+        </span>
+        <Icon name={ar ? 'chevL' : 'chevR'} className="h-4 w-4" />
+      </button>
     </Card>
   );
 }

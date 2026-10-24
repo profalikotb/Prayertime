@@ -5,13 +5,16 @@ import { Card, Icon, Row, Seg, Toggle } from './ui';
 import HijriAdjust from './HijriAdjust';
 import WidgetCard from './WidgetCard';
 import ClinicSettings from './ClinicSettings';
+import AudioSettings from './AudioSettings';
 import { CITIES } from '@/data/cities';
 import { METHODS, autoMethod, methodInfo } from '@/lib/methods';
 import { PRAYER_NAMES } from '@/lib/i18n';
-import { PRAYER_KEYS, type MethodKey, type Profile } from '@/lib/types';
+import { PRAYER_KEYS, type HighLat, type MethodKey, type Profile } from '@/lib/types';
 import { profileFor } from '@/lib/prayer';
 import { buildIcs, downloadIcs } from '@/lib/ics';
-import { chime, hasAdhanFile, playAdhan, requestNotify, stopAdhan } from '@/lib/notify';
+import { requestNotify } from '@/lib/notify';
+import { precisionLabel } from '@/lib/location';
+import { isHighLatitude } from '@/lib/prayer';
 import { baseCalendar } from '@/lib/hijri';
 import { resetAll } from '@/lib/storage';
 
@@ -71,18 +74,26 @@ export default function SettingsView() {
         {s.locationMode === 'manual' ? (
           <Row label={t.city}>
             <select className={selectCls} value={s.manualCityId ?? 'cairo'} onChange={(e) => set((x) => ({ ...x, manualCityId: e.target.value }))}>
-              {CITIES.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name[s.lang]} — {c.country[s.lang]}
-                </option>
-              ))}
+              {[...new Set(CITIES.map((c) => c.cc))].map((cc) => {
+                const list = CITIES.filter((c) => c.cc === cc);
+                return (
+                  <optgroup key={cc} label={list[0].country[s.lang]}>
+                    {list.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name[s.lang]}
+                      </option>
+                    ))}
+                  </optgroup>
+                );
+              })}
             </select>
           </Row>
         ) : (
           <div className="mt-3 flex items-center gap-2 text-[13px]">
             <Icon name="pin" className="h-4 w-4 text-emerald" />
             <span className="flex-1">
-              <b>{place.city[s.lang]}</b> {place.country[s.lang] && `· ${place.country[s.lang]}`}
+              <b>{place.city[s.lang]}</b> {place.country[s.lang] && `· ${place.country[s.lang]}`}{' '}
+              <span className="chip bg-emerald/10 text-emerald">{precisionLabel(place, s.lang).text}</span>
               <span className="block text-[11px] text-muted" dir="ltr">
                 {place.lat.toFixed(4)}, {place.lng.toFixed(4)} · {place.tz}
               </span>
@@ -116,6 +127,11 @@ export default function SettingsView() {
             <p className="mt-1 text-muted">{s.lang === 'ar' ? 'أو اختر «يدوي» واختر مدينتك.' : 'Or switch to Manual and pick your city.'}</p>
           </div>
         )}
+        <p className="mt-2 text-[11px] leading-5 text-muted">
+          {s.lang === 'ar'
+            ? 'الترتيب: موقع الجهاز (بإذنك) ← آخر موقع محفوظ ← موقع تقريبي من المنطقة الزمنية ← اختيار يدوي ← القاهرة. في الوضع التلقائي يتحدّث الموقع والطريقة عند السفر. الموقع لا يغادر جهازك إلا لاسم المدينة.'
+            : 'Order: device location (with permission) → last saved → timezone-approximate → manual → Cairo. In Auto mode location and method follow you when travelling. Coordinates only leave the device to look up the city name.'}
+        </p>
       </Card>
 
       <Card title={t.method} icon="sun">
@@ -130,8 +146,72 @@ export default function SettingsView() {
           ))}
         </select>
         <p className="mt-1.5 text-[11px] text-muted" dir="auto">
-          AlAdhan #{methodInfo(s.method === 'auto' ? autoM.key : s.method).aladhan} · {methodInfo(s.method === 'auto' ? autoM.key : s.method).detail}
+          {methodInfo(s.method === 'auto' ? autoM.key : s.method).detail} ·{' '}
+          {s.method === 'auto'
+            ? s.lang === 'ar'
+              ? 'تلقائي: يتغيّر مع البلد عند السفر'
+              : 'auto: follows the country when travelling'
+            : s.lang === 'ar'
+              ? '🔒 مثبّت: لا يتغيّر عند السفر'
+              : '🔒 locked: will not change when travelling'}
         </p>
+        {s.method === 'Custom' && (
+          <div className="mt-2 grid grid-cols-3 gap-2 rounded-xl bg-ink/[.04] p-2.5 text-[12px] font-semibold">
+            {(
+              [
+                ['fajr', s.lang === 'ar' ? 'زاوية الفجر °' : 'Fajr °', 10, 20, 0.5],
+                ['isha', s.lang === 'ar' ? 'زاوية العشاء °' : 'Isha °', 10, 20, 0.5],
+                ['ishaInterval', s.lang === 'ar' ? 'أو العشاء بعد المغرب (د)' : 'or Isha after Maghrib (min)', 0, 150, 5],
+              ] as const
+            ).map(([k, l, min, max, step]) => (
+              <label key={k} className="grid gap-1">
+                <span className="leading-4 text-muted">{l}</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min={min}
+                  max={max}
+                  step={step}
+                  value={s.customAngles[k]}
+                  onChange={(e) => {
+                    const v = Math.max(min, Math.min(max, Number(e.target.value) || 0));
+                    set((x) => ({ ...x, customAngles: { ...x.customAngles, [k]: v } }));
+                  }}
+                  className="tnum rounded-lg border border-line/15 bg-surface px-2 py-1.5 text-center text-[14px] font-bold"
+                  dir="ltr"
+                />
+              </label>
+            ))}
+            <p className="col-span-3 text-[11px] font-normal leading-5 text-muted">
+              {s.lang === 'ar'
+                ? 'لمطابقة جدول مسجدك المحلي (مثل بريطانيا): اضبط الزوايا هنا ثم استخدم تعديل الدقائق لكل صلاة أدناه. ٠ دقيقة = استخدام زاوية العشاء.'
+                : 'To match your local mosque (e.g. UK): set the angles, then fine-tune each prayer below. 0 min = use the Isha angle.'}
+            </p>
+          </div>
+        )}
+        <Row
+          label={s.lang === 'ar' ? 'خطوط العرض العليا' : 'High-latitude rule'}
+          hint={
+            isHighLatitude(place.lat)
+              ? s.lang === 'ar'
+                ? `موقعك عند ${Math.abs(place.lat).toFixed(1)}° — القاعدة تؤثر على الفجر والعشاء صيفًا.`
+                : `You are at ${Math.abs(place.lat).toFixed(1)}° — this affects Fajr/Isha in summer.`
+              : s.lang === 'ar'
+                ? 'لا تؤثر في موقعك الحالي (تُستخدم فوق ٤٨° تقريبًا).'
+                : 'No effect at your latitude (matters above ~48°).'
+          }
+        >
+          <Seg<HighLat>
+            value={s.highLat}
+            onChange={(v) => set((x) => ({ ...x, highLat: v }))}
+            options={[
+              { v: 'auto', l: t.auto },
+              { v: 'middle', l: s.lang === 'ar' ? 'منتصف الليل' : 'Middle' },
+              { v: 'seventh', l: s.lang === 'ar' ? 'سُبع الليل' : '1/7 night' },
+              { v: 'twilight', l: s.lang === 'ar' ? 'الزاوية' : 'Angle' },
+            ]}
+          />
+        </Row>
         <Row label={t.asrSchool}>
           <Seg value={s.madhab} onChange={(v) => set((x) => ({ ...x, madhab: v }))} options={[{ v: 'shafi', l: t.shafi }, { v: 'hanafi', l: t.hanafi }]} />
         </Row>
@@ -222,29 +302,14 @@ export default function SettingsView() {
             </div>
           ))}
         </div>
-        <Row label={t.sound}>
-          <Seg
-            value={s.notify.sound}
-            onChange={async (v) => {
-              if (v === 'adhan' && !(await hasAdhanFile())) {
-                setNotifMsg(s.lang === 'ar' ? 'ملف الأذان غير موجود (public/adhan.mp3) — ستُستخدم النغمة.' : 'No Adhan file (public/adhan.mp3) — the chime will be used.');
-              }
-              set((x) => ({ ...x, notify: { ...x.notify, sound: v } }));
-            }}
-            options={[
-              { v: 'chime', l: t.chime },
-              { v: 'adhan', l: t.adhan },
-              { v: 'silent', l: t.silent },
-            ]}
-          />
-        </Row>
-        <button
-          type="button"
-          onClick={() => (s.notify.sound === 'adhan' ? (stopAdhan(), void playAdhan()) : chime())}
-          className="text-[12.5px] font-bold text-emerald"
-        >
-          {t.testSound}
-        </button>
+        <Toggle
+          on={s.notify.sound === 'silent'}
+          label={s.lang === 'ar' ? 'إشعار صامت (بدون أذان أو صوت)' : 'Silent notifications (no Adhan or sound)'}
+          onChange={(v) => set((x) => ({ ...x, notify: { ...x.notify, sound: v ? 'silent' : 'chime' } }))}
+        />
+        <p className="text-[11.5px] text-muted">
+          {s.lang === 'ar' ? 'اختيار الأذان لكل صلاة وتسجيل صوتك في «مكتبة الأذان» و«التنبيه بصوتي» أدناه.' : 'Pick the Adhan per prayer and record your voice in the cards below.'}
+        </p>
         <Toggle on={s.notify.vibrate} label={t.vibrate} onChange={(v) => set((x) => ({ ...x, notify: { ...x.notify, vibrate: v } }))} />
         <Toggle on={s.notify.ramadan} label={t.ramadanReminders} onChange={(v) => set((x) => ({ ...x, notify: { ...x.notify, ramadan: v } }))} />
         <p className="mt-2 rounded-xl bg-gold/10 p-3 text-[12px] leading-5 text-ink/80">{t.notifIosNote}</p>
@@ -257,6 +322,8 @@ export default function SettingsView() {
           {t.exportIcs}
         </button>
       </Card>
+
+      <AudioSettings />
 
       <ClinicSettings />
 

@@ -10,7 +10,8 @@
     "widget": "node scripts/build-widget.mjs",
     "start": "npx serve out",
     "typecheck": "tsc --noEmit",
-    "verify": "tsx scripts/verify.ts"
+    "verify": "tsx scripts/verify.ts",
+    "android-data": "tsx scripts/android-data.ts"
   },
   "engines": {
     "node": ">=18.18"

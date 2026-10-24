@@ -23,7 +23,12 @@ type IconName =
   | 'download'
   | 'wifiOff'
   | 'check'
-  | 'x';
+  | 'x'
+  | 'mic'
+  | 'play'
+  | 'stop'
+  | 'upload'
+  | 'trash';
 
 const PATHS: Record<IconName, ReactNode> = {
   pin: <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Zm0-9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />,
@@ -86,6 +91,11 @@ const PATHS: Record<IconName, ReactNode> = {
   wifiOff: <path d="m3 3 18 18M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 5.2-2.7M19 13a10 10 0 0 0-2.6-1.8M2 9.5a15 15 0 0 1 4.5-2.9M22 9.5A15 15 0 0 0 11 5.1M12 20h.01" />,
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   x: <path d="M6 6l12 12M18 6 6 18" />,
+  mic: <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm-6-3a6 6 0 0 0 12 0M12 18v3m-3 0h6" />,
+  play: <path d="M8 5.5v13l10.5-6.5L8 5.5Z" />,
+  stop: <path d="M7 7h10v10H7z" />,
+  upload: <path d="M12 16V4m0 0-5 5m5-5 5 5M4 20h16" />,
+  trash: <path d="M5 7h14M10 7V4h4v3m-7 0 1 13h8l1-13" />,
 };
 
 export function Icon({ name, className = 'h-5 w-5', fill = false }: { name: IconName; className?: string; fill?: boolean }) {

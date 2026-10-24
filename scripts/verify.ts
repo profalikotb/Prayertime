@@ -12,6 +12,8 @@ import { HISTORY } from '../src/data/history';
 import { qiblaBearing, distanceToKaabaKm } from '../src/lib/qibla';
 import { buildIcs } from '../src/lib/ics';
 import { defaultSettings } from '../src/lib/storage';
+import { sunPosition } from '../src/lib/compass';
+import { reminderText } from '../src/lib/audio';
 import type { MethodKey, Place } from '../src/lib/types';
 
 let pass = 0, fail = 0;
@@ -39,7 +41,7 @@ const mkRn = row('Makkah (Ramadan, off)', 21.4225, 39.8262, 'Asia/Riyadh', '2027
 const mins = (s: string) => +s.slice(0, 2) * 60 + +s.slice(3);
 ok(mins(mkR[5]) - mins(mkR[4]) === 120 && mins(mkRn[5]) - mins(mkRn[4]) === 90, 'Umm al-Qura Isha = Maghrib + 120 min in Ramadan, +90 otherwise');
 ok(mins(mk[5]) - mins(mk[4]) === 90, 'Umm al-Qura Isha = Maghrib + 90 min (Makkah 18/10/2026)');
-ok(autoMethod('EG') === 'Egyptian' && autoMethod('SA') === 'UmmAlQura' && autoMethod('FR') === 'MuslimWorldLeague', 'Auto method: EG→Egyptian(5), SA→Umm al-Qura(4), other→MWL');
+ok(autoMethod('EG') === 'Egyptian' && autoMethod('SA') === 'UmmAlQura' && autoMethod('DE') === 'MuslimWorldLeague', 'Auto method: EG→Egyptian(5), SA→Umm al-Qura(4), other→MWL');
 
 console.log('\n2. Egypt DST (summer time ends last Thursday of October)');
 const before = computeDay(parseKey('2026-10-29'), { lat: 30.0444, lng: 31.2357 }, opt('Egyptian'));
@@ -121,6 +123,40 @@ const ics = buildIcs(today, 30, place, () => opt('Egyptian'), defaultSettings().
 ok((ics.match(/BEGIN:VEVENT/g) ?? []).length === 150, '30 days × 5 prayers = 150 events');
 ok(ics.split('\r\n').every((l) => new TextEncoder().encode(l).length <= 75), 'All lines folded to ≤ 75 octets (RFC 5545)');
 ok(ics.includes('DTSTART:20261018T023200Z'), 'Fajr 18/10/2026 05:32 Cairo written as 02:32Z');
+
+console.log('\n10. International methods (sun altitude at the computed minute must equal the method angle)');
+ok(autoMethod('US') === 'NorthAmerica' && autoMethod('CA') === 'FCNA' && autoMethod('FR') === 'UOIF' && autoMethod('GB') === 'MuslimWorldLeague' && autoMethod('NO') === 'MuslimWorldLeague',
+  'Auto: USA→ISNA, Canada→FCNA (separate), France→UOIF (separate), UK→MWL default, Norway→MWL');
+const ang: [string, number, number, string, MethodKey, number, number][] = [
+  ['Paris', 48.8566, 2.3522, '2026-10-24', 'UOIF', 12, 12],
+  ['Toronto', 43.6532, -79.3832, '2026-10-24', 'FCNA', 13, 13],
+  ['New York', 40.7128, -74.006, '2026-01-15', 'NorthAmerica', 15, 15],
+  ['London', 51.5074, -0.1278, '2026-01-15', 'MuslimWorldLeague', 18, 17],
+  ['Berlin', 52.52, 13.405, '2026-10-24', 'MuslimWorldLeague', 18, 17],
+];
+for (const [n, lat, lng, d, m, fa, ia] of ang) {
+  const t = computeDay(parseKey(d), { lat, lng }, opt(m));
+  const fAlt = sunPosition(t.fajr, lat, lng).alt, iAlt = sunPosition(t.isha, lat, lng).alt;
+  ok(Math.abs(fAlt + fa) < 0.35 && Math.abs(iAlt + ia) < 0.35, `${n} ${m}: Fajr at ${fAlt.toFixed(2)}° (−${fa}°), Isha at ${iAlt.toFixed(2)}° (−${ia}°)`);
+}
+const custom = computeDay(parseKey('2026-10-24'), { lat: 51.5074, lng: -0.1278 }, { ...opt('Custom'), custom: { fajr: 15, isha: 0, ishaInterval: 90 } });
+ok(Math.abs(sunPosition(custom.fajr, 51.5074, -0.1278).alt + 15) < 0.35 && (custom.isha.getTime() - custom.maghrib.getTime()) / 60000 === 90, 'Custom angles: London Fajr 15°, Isha = Maghrib + 90 min');
+const osloRules = (['auto', 'middle', 'seventh', 'twilight'] as const).map((r) => computeDay(parseKey('2026-06-21'), { lat: 59.9139, lng: 10.7522 }, { ...opt('MuslimWorldLeague'), highLat: r }));
+ok(osloRules.every((t) => Object.values(t).every((x) => !isNaN(x.getTime())) && t.fajr < t.sunrise && t.isha > t.maghrib), 'Oslo 21/06 (angles never reached): every high-latitude rule gives valid, ordered times');
+const distinct = new Set(osloRules.map((t) => t.fajr.getTime())).size;
+ok(distinct >= 3, `Oslo summer: rules actually differ (${distinct} distinct Fajr times)`);
+const cairoRules = (['middle', 'seventh', 'twilight'] as const).map((r) => computeDay(parseKey('2026-06-21'), { lat: 30.0444, lng: 31.2357 }, { ...opt('Egyptian'), highLat: r }).fajr.getTime());
+ok(new Set(cairoRules).size === 1, 'Cairo: high-latitude rule never changes times at low latitude');
+const hanafi = computeDay(parseKey('2026-10-24'), { lat: 30.0444, lng: 31.2357 }, { ...opt('Egyptian'), madhab: 'hanafi' });
+const shafi = computeDay(parseKey('2026-10-24'), { lat: 30.0444, lng: 31.2357 }, opt('Egyptian'));
+ok(hanafi.asr > shafi.asr && hanafi.dhuhr.getTime() === shafi.dhuhr.getTime(), `Hanafi Asr later than standard (${hm(hanafi.asr, 'Africa/Cairo')} vs ${hm(shafi.asr, 'Africa/Cairo')}), other times unchanged`);
+
+console.log('\n11. Hijri correction −2…+2 and voice text');
+const base = hijriFor(parseKey('2026-10-24'), { profile: 'EG', manualOffset: 0 });
+const plus2 = hijriFor(parseKey('2026-10-24'), { profile: 'EG', manualOffset: 2 });
+const minus2 = hijriFor(parseKey('2026-10-24'), { profile: 'EG', manualOffset: -2 });
+ok(plus2.d === base.d + 2 && minus2.d === base.d - 2 && plus2.status === 'user', `Offsets ±2 shift the date (${minus2.d} · ${base.d} · ${plus2.d}) and mark it as user-corrected`);
+ok(reminderText('العصر', 'Asr', 5, 'ar') === 'باقي خمس دقائق على أذان صلاة العصر، استعد للصلاة.', 'Voice TTS text: «باقي خمس دقائق على أذان صلاة العصر، استعد للصلاة.»');
 
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail ? 1 : 0);
