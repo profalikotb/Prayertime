@@ -24,6 +24,7 @@ import {
   renameClip,
   saveClip,
   soundLabel,
+  voiceSoundFor,
   startRecording,
   stopAll,
   ttsSupported,
@@ -107,11 +108,12 @@ export default function AudioSettings() {
     if (playing === tag) return stopAll();
     if (which === 'v') {
       const text = reminderText(PRAYER_NAMES.ar[k], PRAYER_NAMES.en[k], a.voice.minutes, s.lang);
-      void playSound(a.voice.perPrayer[k].sound, { volume: a.volume, tts: text, lang: s.lang, tag });
+      void playSound(voiceSoundFor(a.voice.perPrayer[k].sound, a.voice.minutes), { volume: a.volume, tts: text, lang: s.lang, tag });
     } else void playSound(a.adhan[k], { volume: a.volume, tag });
   };
 
   const voiceOptions = [
+    { v: 'builtin', l: soundLabel('builtin', clips, s.lang) },
     ...(ttsSupported() ? [{ v: 'tts', l: soundLabel('tts', clips, s.lang) }] : []),
     { v: 'chime', l: soundLabel('chime', clips, s.lang) },
     ...voices.map((c) => ({ v: `clip:${c.id}`, l: `🎙 ${c.name}` })),
@@ -136,6 +138,11 @@ export default function AudioSettings() {
         {!s.notify.enabled && a.voice.enabled && (
           <p className="mb-1 rounded-lg bg-gold/10 px-2.5 py-1.5 text-[12px] text-gold">
             {ar ? 'فعّل «التنبيهات» في بطاقة التنبيهات حتى يعمل.' : 'Turn on Notifications (card above) for it to run.'}
+          </p>
+        )}
+        {a.voice.minutes !== 5 && (
+          <p className="mb-1 rounded-lg bg-gold/10 px-2.5 py-1.5 text-[11.5px] text-ink/80">
+            {ar ? 'تسجيلك يقول «خمس دقائق»؛ مع وقت آخر يقرأ صوت الجهاز العدد الصحيح.' : 'Your recording says “five minutes”; for other lead times the device voice reads the right number.'}
           </p>
         )}
         <Row label={ar ? 'قبل الأذان بـ' : 'Minutes before'}>

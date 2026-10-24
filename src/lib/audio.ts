@@ -304,6 +304,10 @@ export async function playSound(sound: string, opts: { volume: number; tts?: str
       await speak(opts.tts, opts.lang ?? 'ar', opts.volume);
       return true;
     }
+    if (sound === 'builtin') {
+      await playSrc(BUILTIN_REMINDER, opts.volume, tag);
+      return true;
+    }
     if (sound === 'legacy') {
       await playSrc('/adhan.mp3', opts.volume, tag);
       return true;
@@ -327,9 +331,18 @@ export function soundLabel(sound: string, clips: ClipMeta[], lang: 'ar' | 'en'):
   if (sound === 'chime') return lang === 'ar' ? 'نغمة هادئة' : 'Soft chime';
   if (sound === 'silent') return lang === 'ar' ? 'صامت (إشعار فقط)' : 'Silent (notification only)';
   if (sound === 'tts') return lang === 'ar' ? 'صوت الجهاز (قراءة آلية)' : 'Device voice (TTS)';
+  if (sound === 'builtin') return lang === 'ar' ? 'تسجيلي: «باقي خمس دقائق…»' : 'My recording: “5 minutes left…”';
   if (sound === 'legacy') return lang === 'ar' ? 'ملف الموقع adhan.mp3' : 'Site file adhan.mp3';
   const c = clips.find((x) => `clip:${x.id}` === sound);
   return c ? c.name : lang === 'ar' ? 'تسجيل محذوف' : 'Deleted recording';
+}
+
+/** Prof Ali Kotb's recorded reminder: «باقي خمس دقائق…» (6 s, shipped with the app, cached offline) */
+export const BUILTIN_REMINDER = '/audio/reminder-5min.mp3';
+
+/** The built-in recording says «five minutes» — at any other lead time the device voice reads the correct number. */
+export function voiceSoundFor(sound: string, minutes: number) {
+  return sound === 'builtin' && minutes !== 5 ? 'tts' : sound;
 }
 
 export const FIVE: FivePrayer[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];

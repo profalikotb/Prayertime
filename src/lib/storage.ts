@@ -26,15 +26,16 @@ export function defaultSettings(): Settings {
     clinics: DEFAULT_CLINICS.map((c) => ({ ...c, days: [...c.days] })),
     scheduleClean: true,
     audio: {
+      v: 2,
       voice: {
-        enabled: false,
+        enabled: true,
         minutes: 5,
         perPrayer: {
-          fajr: { on: true, sound: 'tts' },
-          dhuhr: { on: true, sound: 'tts' },
-          asr: { on: true, sound: 'tts' },
-          maghrib: { on: true, sound: 'tts' },
-          isha: { on: true, sound: 'tts' },
+          fajr: { on: true, sound: 'builtin' },
+          dhuhr: { on: true, sound: 'builtin' },
+          asr: { on: true, sound: 'builtin' },
+          maghrib: { on: true, sound: 'builtin' },
+          isha: { on: true, sound: 'builtin' },
         },
       },
       adhan: { fajr: 'chime', dhuhr: 'chime', asr: 'chime', maghrib: 'chime', isha: 'chime' },
@@ -92,6 +93,13 @@ export function loadSettings(): Settings {
     const parsed = JSON.parse(raw);
     if (parsed?.v !== 1) return defaultSettings();
     const st = merge(defaultSettings(), parsed);
+    if ((parsed.audio?.v ?? 0) < 2) {
+      // 2.1: the built-in 5-minute recording becomes the default voice reminder
+      st.audio.voice.enabled = true;
+      for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) if (st.audio.voice.perPrayer[k].sound === 'tts') st.audio.voice.perPrayer[k].sound = 'builtin';
+      st.audio.v = 2;
+      saveSettings(st);
+    }
     if (!parsed.audio && parsed.notify?.sound === 'adhan') {
       // carry the old single "Adhan" choice into the new per-prayer selection
       for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) st.audio.adhan[k] = 'legacy';

@@ -56,3 +56,12 @@ The web app is Next.js 15 static export on Vercel. The Android app is native Jav
 - **Built-in Adhan recordings:** none are bundled because no recording with a verifiable license was available. Add your own licensed files.
 - **Separate settings:** the web app and the Android app keep their settings separately, because browser storage cannot be shared with a native app.
 - **Widget theme:** widgets follow the prayer-time phase (dawn, day, dusk, night) instead of the system light/dark setting.
+
+## 2.1
+
+- **Default 5-minute reminder:** your recording «باقي خمس دقائق…» is bundled with both apps: `public/audio/reminder-5min.mp3` for the web and `res/raw/reminder_5min.mp3` for Android. The web app also caches it for offline use.
+  - It is the default voice reminder for all five prayers, and is switched on automatically, including on existing installs.
+  - At any lead time other than 5 minutes, the device voice reads the correct number instead.
+- **Compass:** iOS only allows motion access from a tap, so the request is now made by the tap that opens the Qibla screen (tab bar or home shortcut). The compass is running when the screen appears.
+  - iPhone asks once.
+  - Android and desktop need no permission.

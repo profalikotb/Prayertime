@@ -100,7 +100,8 @@ export type FivePrayer = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 
 /**
  * Personal audio. Sound ids: 'chime' (built-in synthesized bell) · 'silent' · 'legacy' (/public/adhan.mp3)
- * · 'clip:<id>' (a recording saved on this device, IndexedDB) · 'tts' (system speech, voice reminder only).
+ * · 'clip:<id>' (a recording saved on this device, IndexedDB) · 'tts' (system speech, voice reminder only)
+ * · 'builtin' (/audio/reminder-5min.mp3 — «باقي خمس دقائق…», used when the reminder is 5 min before).
  */
 export interface AudioPrefs {
   voice: {
@@ -112,6 +113,8 @@ export interface AudioPrefs {
   adhan: Record<FivePrayer, string>;
   /** 0–1 (iOS ignores page volume — use the hardware buttons) */
   volume: number;
+  /** settings version (2 = built-in 5-minute reminder recording is the default) */
+  v?: number;
 }
 
 export interface Settings {

@@ -5,11 +5,11 @@ import { Card, Icon } from './ui';
 import { compassPoint, distanceToKaabaKm, qiblaBearing } from '@/lib/qibla';
 import { angleDelta, declination, sunQiblaTimes } from '@/lib/compass';
 import { wallClock } from '@/lib/civil';
+import { compassState, requestCompass } from '@/lib/compassPermission';
 
 type OrientationEvt = DeviceOrientationEvent & { webkitCompassHeading?: number; webkitCompassAccuracy?: number };
 type Mode = 'probing' | 'idle' | 'live' | 'unavailable' | 'denied';
 
-const GRANT_KEY = 'pakpt.compass';
 
 /**
  * Qibla compass.
@@ -25,7 +25,18 @@ export default function QiblaView() {
   const km = distanceToKaabaKm(place.lat, place.lng);
   const decl = useMemo(() => declination(place.lat, place.lng), [place.lat, place.lng]);
 
-  const [mode, setMode] = useState<Mode>('probing');
+  // granted by the tap that opened this screen (or no permission needed) → go live immediately
+  const [mode, setMode] = useState<Mode>(() => (compassState() === 'granted' ? 'live' : 'probing'));
+  useEffect(() => {
+    const on = () => {
+      if (compassState() === 'granted') {
+        lastEvent.current = 0;
+        setMode('live');
+      } else if (compassState() === 'denied') setMode('denied');
+    };
+    window.addEventListener('pakpt-compass', on);
+    return () => window.removeEventListener('pakpt-compass', on);
+  }, []);
   const [heading, setHeading] = useState<number | null>(null); // true heading, filtered
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [tilted, setTilted] = useState(false);
@@ -115,13 +126,8 @@ export default function QiblaView() {
   const enable = async () => {
     try {
       if (needsPermission) {
-        const r = await (DeviceOrientationEvent as unknown as { requestPermission: () => Promise<string> }).requestPermission();
+        const r = await requestCompass();
         if (r !== 'granted') return setMode('denied');
-        try {
-          localStorage.setItem(GRANT_KEY, '1');
-        } catch {
-          /* ignore */
-        }
       }
       lastEvent.current = 0;
       setMode('live');

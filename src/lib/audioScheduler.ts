@@ -14,7 +14,7 @@ import { useEffect, useRef } from 'react';
 import type { HijriResult, Place, PrayerTimesDay, Settings } from './types';
 import { PRAYER_NAMES } from './i18n';
 import { show } from './notify';
-import { FIVE, playSound, reminderText } from './audio';
+import { FIVE, playSound, reminderText, voiceSoundFor } from './audio';
 import { parseKey, weekday } from './civil';
 
 const KEY = 'pakpt.fired.v1';
@@ -69,7 +69,7 @@ export function useAudioScheduler(now: Date, s: Settings | null, times: { today:
       if (voiceOn && due(`${k}-v`, at - a.voice.minutes * 60000)) {
         const text = reminderText(namesAr[k], namesEn[k], a.voice.minutes, s.lang);
         void show(label, text, n.vibrate);
-        void playSound(v.sound, { volume: a.volume, tts: text, lang: s.lang, tag: `${k}-v` });
+        void playSound(voiceSoundFor(v.sound, a.voice.minutes), { volume: a.volume, tts: text, lang: s.lang, tag: `${k}-v` });
       }
       // 2) the generic "before" chime — skipped when the voice reminder already covers this prayer
       if (!voiceOn && n.perPrayer[k].before && n.beforeMin > 0 && due(`${k}-b`, at - n.beforeMin * 60000)) {

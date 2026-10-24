@@ -18,6 +18,7 @@ import SettingsView from './SettingsView';
 import QuranView from './QuranView';
 import IslamicToday from './IslamicToday';
 import { useAudioScheduler } from '@/lib/audioScheduler';
+import { requestCompass } from '@/lib/compassPermission';
 
 const LOCATION_TTL = 30 * 60 * 1000;
 
@@ -122,6 +123,12 @@ export default function App() {
       window.removeEventListener('pageshow', onVis);
     };
   }, [refreshLocation, s?.locationMode]);
+
+  /** tab change; opening Qibla asks iOS for compass access inside the same tap → compass starts by itself */
+  const goTab = useCallback((k: Tab) => {
+    if (k === 'qibla') void requestCompass();
+    setTab(k);
+  }, []);
 
   /* ---------- deep links (#qibla, #islamic, #settings …) — used by the Android widget shortcuts ---------- */
   useEffect(() => {
@@ -231,7 +238,7 @@ export default function App() {
     ps,
     opts,
     online,
-    go: setTab,
+    go: goTab,
   };
 
   const tabs: { k: Tab; l: string; i: Parameters<typeof Icon>[0]['name'] }[] = [
@@ -263,7 +270,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    setTab(x.k);
+                    goTab(x.k);
                     window.scrollTo({ top: 0 });
                   }}
                   aria-current={tab === x.k ? 'page' : undefined}
