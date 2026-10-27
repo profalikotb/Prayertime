@@ -63,15 +63,16 @@ final class Store {
     static void setAlertsOn(Context c, boolean v) { p(c).edit().putBoolean("alerts", v).apply(); }
     static boolean voiceOn(Context c) { return p(c).getBoolean("voice", true); }
     static void setVoiceOn(Context c, boolean v) { p(c).edit().putBoolean("voice", v).apply(); }
-    static int voiceMin(Context c) { return p(c).getInt("voiceMin", 5); }
+    /** fixed: the recorded reminder says «five minutes» */
+    static int voiceMin(Context c) { return 5; }
     static void setVoiceMin(Context c, int v) { p(c).edit().putInt("voiceMin", v).apply(); }
     /** i = PrayerEngine index (0 fajr, 2 dhuhr, 3 asr, 4 maghrib, 5 isha) */
     static boolean voiceFor(Context c, int i) { return p(c).getBoolean("voiceOn" + i, true); }
     static void setVoiceFor(Context c, int i, boolean v) { p(c).edit().putBoolean("voiceOn" + i, v).apply(); }
     static boolean adhanFor(Context c, int i) { return p(c).getBoolean("adhanOn" + i, true); }
     static void setAdhanFor(Context c, int i, boolean v) { p(c).edit().putBoolean("adhanOn" + i, v).apply(); }
-    /** sound id: "builtin" (res/raw/reminder_5min — «باقي خمس دقائق…») | "tts" | "default" | "silent" | "clip:<id>" */
-    static String voiceSound(Context c, int i) { return p(c).getString("voiceSnd" + i, "builtin"); }
+    /** voice: "builtin" (res/raw/reminder_5min — «باقي خمس دقائق…») | "chime" (res/raw/chime). Adhan: "default" | "chime" | "silent" | "clip:<id>" */
+    static String voiceSound(Context c, int i) { return "chime".equals(p(c).getString("voiceSnd" + i, "builtin")) ? "chime" : "builtin"; }
     static void setVoiceSound(Context c, int i, String v) { p(c).edit().putString("voiceSnd" + i, v).apply(); }
     static String adhanSound(Context c, int i) { return p(c).getString("adhanSnd" + i, "default"); }
     static void setAdhanSound(Context c, int i, String v) { p(c).edit().putString("adhanSnd" + i, v).apply(); }
@@ -148,7 +149,7 @@ final class Store {
             }
             SharedPreferences.Editor e = p(c).edit().putString("clips", keep.toString());
             for (int i : Alerts.PRAYERS) {
-                if (("clip:" + id).equals(voiceSound(c, i))) e.putString("voiceSnd" + i, "tts");
+                
                 if (("clip:" + id).equals(adhanSound(c, i))) e.putString("adhanSnd" + i, "default");
             }
             e.apply();

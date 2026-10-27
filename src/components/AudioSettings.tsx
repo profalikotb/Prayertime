@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApp } from './ctx';
-import { Card, Icon, Row, Seg, Toggle } from './ui';
+import { Card, Icon, Row, Toggle } from './ui';
 import { PRAYER_NAMES } from '@/lib/i18n';
 import type { FivePrayer } from '@/lib/types';
 import {
@@ -20,14 +20,12 @@ import {
   persistStorage,
   playSound,
   recordingSupported,
-  reminderText,
   renameClip,
   saveClip,
   soundLabel,
   voiceSoundFor,
   startRecording,
   stopAll,
-  ttsSupported,
   type AddError,
   type AdhanRegion,
   type ClipKind,
@@ -78,12 +76,11 @@ function errText(e: unknown, kind: ClipKind, ar: boolean): string {
 
 /** «التنبيه بصوتي قبل الصلاة» + «مكتبة الأذان» */
 export default function AudioSettings() {
-  const { s, set, f } = useApp();
+  const { s, set } = useApp();
   const ar = s.lang === 'ar';
   const names = PRAYER_NAMES[s.lang];
   const clips = useClips();
   const playing = usePlaying();
-  const voices = clips.filter((c) => c.kind === 'voice');
   const adhans = clips.filter((c) => c.kind === 'adhan');
   const a = s.audio;
 
@@ -97,7 +94,7 @@ export default function AudioSettings() {
       const pp = { ...x.audio.voice.perPrayer };
       const ad = { ...x.audio.adhan };
       for (const k of FIVE) {
-        if (pp[k].sound === sid) pp[k] = { ...pp[k], sound: 'tts' };
+        if (pp[k].sound === sid) pp[k] = { ...pp[k], sound: 'builtin' };
         if (ad[k] === sid) ad[k] = 'chime';
       }
       return { ...x, audio: { ...x.audio, voice: { ...x.audio.voice, perPrayer: pp }, adhan: ad } };
@@ -107,16 +104,14 @@ export default function AudioSettings() {
     const tag = `test-${k}-${which}`;
     if (playing === tag) return stopAll();
     if (which === 'v') {
-      const text = reminderText(PRAYER_NAMES.ar[k], PRAYER_NAMES.en[k], a.voice.minutes, s.lang);
-      void playSound(voiceSoundFor(a.voice.perPrayer[k].sound, a.voice.minutes), { volume: a.volume, tts: text, lang: s.lang, tag });
+      void playSound(voiceSoundFor(a.voice.perPrayer[k].sound), { volume: a.volume, tag });
     } else void playSound(a.adhan[k], { volume: a.volume, tag });
   };
 
+  // only two choices: the recorded reminder, or the soft chime (no device/TTS voices)
   const voiceOptions = [
     { v: 'builtin', l: soundLabel('builtin', clips, s.lang) },
-    ...(ttsSupported() ? [{ v: 'tts', l: soundLabel('tts', clips, s.lang) }] : []),
     { v: 'chime', l: soundLabel('chime', clips, s.lang) },
-    ...voices.map((c) => ({ v: `clip:${c.id}`, l: `🎙 ${c.name}` })),
   ];
   const adhanOptions = [
     { v: 'chime', l: soundLabel('chime', clips, s.lang) },
@@ -131,8 +126,8 @@ export default function AudioSettings() {
       <Card title={ar ? 'التنبيه بصوتي قبل الصلاة' : 'My voice prayer reminder'} icon="mic" className="md:col-span-2">
         <div id="audio" className="-mt-1 mb-2 text-[12px] leading-5 text-muted">
           {ar
-            ? 'سجّل بصوتك: «باقي خمس دقائق على أذان صلاة العصر، استعد للصلاة» — ويُشغَّل قبل كل صلاة. التسجيلات محفوظة على هذا الجهاز فقط ولا تُرفع لأي خادم.'
-            : 'Record your own reminder; it plays before each prayer. Recordings stay on this device only — never uploaded.'}
+            ? 'قبل كل صلاة بخمس دقائق يُشغَّل تسجيلك «باقي خمس دقائق على أذان الصلاة…» أو نغمة هادئة — اختر لكل صلاة.'
+            : 'Five minutes before each prayer: your recorded reminder or a soft chime — choose per prayer.'}
         </div>
         <Toggle on={a.voice.enabled} label={ar ? 'تفعيل التنبيه الصوتي' : 'Enable voice reminder'} onChange={(v) => setVoice((x) => ({ ...x, enabled: v }))} />
         {!s.notify.enabled && a.voice.enabled && (
@@ -140,15 +135,7 @@ export default function AudioSettings() {
             {ar ? 'فعّل «التنبيهات» في بطاقة التنبيهات حتى يعمل.' : 'Turn on Notifications (card above) for it to run.'}
           </p>
         )}
-        {a.voice.minutes !== 5 && (
-          <p className="mb-1 rounded-lg bg-gold/10 px-2.5 py-1.5 text-[11.5px] text-ink/80">
-            {ar ? 'تسجيلك يقول «خمس دقائق»؛ مع وقت آخر يقرأ صوت الجهاز العدد الصحيح.' : 'Your recording says “five minutes”; for other lead times the device voice reads the right number.'}
-          </p>
-        )}
-        <Row label={ar ? 'قبل الأذان بـ' : 'Minutes before'}>
-          <Seg value={a.voice.minutes} onChange={(v) => setVoice((x) => ({ ...x, minutes: v }))} options={[3, 5, 10, 15, 20].map((m) => ({ v: m, l: f.n(m) }))} />
-        </Row>
-
+        <p className="mb-1 text-[12px] text-muted">{ar ? 'قبل الأذان بـ ٥ دقائق.' : '5 minutes before the Adhan.'}</p>
         <div className="mt-2 grid gap-1.5">
           {FIVE.map((k) => {
             const p = a.voice.perPrayer[k];
@@ -181,20 +168,6 @@ export default function AudioSettings() {
             );
           })}
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            const v = voices[0] ? `clip:${voices[0].id}` : null;
-            if (!v) return;
-            setVoice((x) => ({ ...x, perPrayer: Object.fromEntries(FIVE.map((k) => [k, { ...x.perPrayer[k], sound: v }])) as typeof x.perPrayer }));
-          }}
-          disabled={!voices.length}
-          className="mt-2 text-[12.5px] font-bold text-emerald disabled:opacity-40"
-        >
-          {ar ? 'استخدم أحدث تسجيل لكل الصلوات' : 'Use my latest recording for all prayers'}
-        </button>
-
-        <ClipManager kind="voice" clips={voices} onDeleted={onDeleted} playing={playing} />
       </Card>
 
       {/* ───────────── Adhan library ───────────── */}

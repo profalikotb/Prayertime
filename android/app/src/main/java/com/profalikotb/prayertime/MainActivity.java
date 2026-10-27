@@ -349,20 +349,7 @@ public class MainActivity extends Activity {
             Store.setVoiceOn(this, on);
             changed();
         });
-        int[] mins = {3, 5, 10, 15, 20};
-        button("⏳  قبل الأذان بـ " + Day.arabic(String.valueOf(Store.voiceMin(this))) + " دقائق", v -> {
-            String[] n = new String[mins.length];
-            int sel = 1;
-            for (int i = 0; i < mins.length; i++) {
-                n[i] = Day.arabic(String.valueOf(mins[i])) + " دقائق";
-                if (mins[i] == Store.voiceMin(this)) sel = i;
-            }
-            new AlertDialog.Builder(this).setTitle("وقت التنبيه الصوتي").setSingleChoiceItems(n, sel, (dlg, w) -> {
-                Store.setVoiceMin(this, mins[w]);
-                dlg.dismiss();
-                changed();
-            }).show();
-        }, GLASS);
+        text("قبل الأذان بـ ٥ دقائق: تسجيلك «باقي خمس دقائق…» أو نغمة هادئة.", 13, DIM, false);
 
         for (int i : Alerts.PRAYERS) {
             final int k = i;
@@ -371,11 +358,6 @@ public class MainActivity extends Activity {
             button(Day.AR[i] + "   🎙 " + vs + "   🕌 " + as, v -> prayerDialog(k), 0x22FFFFFF);
         }
 
-        button(recorder == null ? "🎙  تسجيل تنبيه بصوتي (حتى ٦٠ ثانية)" : "⏹  إيقاف التسجيل وحفظه", v -> {
-            if (recorder == null) startRecording();
-            else stopRecording(false);
-        }, recorder == null ? GREEN : 0xFFC0392B);
-        button("📁  إضافة ملف تنبيه صوتي (MP3 · M4A · WAV)", v -> pick(PICK_VOICE), GLASS);
         button("📁  إضافة ملف أذان (مصري، مكي، مدني، تركي، مغربي…)", v -> pick(PICK_ADHAN), GLASS);
         button("🗂  إدارة التسجيلات (تشغيل، تسمية، حذف)", v -> manageDialog(), GLASS);
 
@@ -401,12 +383,12 @@ public class MainActivity extends Activity {
     }
 
     private String soundName(String id, boolean voice) {
-        if ("builtin".equals(id)) return Store.voiceMin(this) == 5 ? "تسجيلي" : "صوت الجهاز";
-        if ("tts".equals(id)) return "صوت الجهاز";
+        if ("builtin".equals(id)) return "تسجيلي";
+        if ("chime".equals(id)) return "نغمة هادئة";
         if ("default".equals(id)) return "صوت النظام";
         if ("silent".equals(id)) return "صامت";
         Store.Clip c = Store.clip(this, id);
-        return c != null ? c.name : (voice ? "صوت الجهاز" : "صوت النظام");
+        return c != null ? c.name : (voice ? "تسجيلي" : "صوت النظام");
     }
 
     /** One prayer: choose (or switch off) its voice reminder and its Adhan. */
@@ -424,12 +406,16 @@ public class MainActivity extends Activity {
         List<String> ids = new ArrayList<>(), names = new ArrayList<>();
         ids.add("off");
         names.add("إيقاف لهذه الصلاة");
-        if (voice) { ids.add("builtin"); names.add("تسجيلي: «باقي خمس دقائق على أذان الصلاة…»" + (Store.voiceMin(this) == 5 ? "" : " (عند ٥ دقائق فقط)")); }
-        if (voice) { ids.add("tts"); names.add("صوت الجهاز يقرأ: «" + Alerts.reminderText(i, Store.voiceMin(this)) + "»"); }
-        ids.add("default");
-        names.add("صوت النظام");
-        if (!voice) { ids.add("silent"); names.add("صامت (إشعار فقط)"); }
-        for (Store.Clip c : clips) { ids.add("clip:" + c.id); names.add((voice ? "🎙 " : "🕌 ") + c.name); }
+        if (voice) {
+            // voice reminder: only the recorded file or the soft chime
+            ids.add("builtin"); names.add("التنبيه بصوتي: «باقي خمس دقائق على أذان الصلاة…»");
+            ids.add("chime"); names.add("نغمة هادئة");
+        } else {
+            ids.add("default"); names.add("صوت النظام");
+            ids.add("chime"); names.add("نغمة هادئة");
+            ids.add("silent"); names.add("صامت (إشعار فقط)");
+            for (Store.Clip c : clips) { ids.add("clip:" + c.id); names.add("🕌 " + c.name); }
+        }
         boolean on = voice ? Store.voiceFor(this, i) : Store.adhanFor(this, i);
         String cur = on ? (voice ? Store.voiceSound(this, i) : Store.adhanSound(this, i)) : "off";
         int sel = Math.max(0, ids.indexOf(cur));

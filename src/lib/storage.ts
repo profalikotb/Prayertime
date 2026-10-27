@@ -26,7 +26,7 @@ export function defaultSettings(): Settings {
     clinics: DEFAULT_CLINICS.map((c) => ({ ...c, days: [...c.days] })),
     scheduleClean: true,
     audio: {
-      v: 2,
+      v: 3,
       voice: {
         enabled: true,
         minutes: 5,
@@ -98,6 +98,16 @@ export function loadSettings(): Settings {
       st.audio.voice.enabled = true;
       for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) if (st.audio.voice.perPrayer[k].sound === 'tts') st.audio.voice.perPrayer[k].sound = 'builtin';
       st.audio.v = 2;
+      saveSettings(st);
+    }
+    if ((st.audio.v ?? 0) < 3) {
+      // 2.2: voice reminder = the recorded file or the soft chime only, always 5 min before (no TTS / other voices)
+      for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) {
+        const v = st.audio.voice.perPrayer[k];
+        v.sound = v.sound === 'chime' ? 'chime' : 'builtin';
+      }
+      st.audio.voice.minutes = 5;
+      st.audio.v = 3;
       saveSettings(st);
     }
     if (!parsed.audio && parsed.notify?.sound === 'adhan') {

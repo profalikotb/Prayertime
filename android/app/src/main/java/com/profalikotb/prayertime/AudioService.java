@@ -15,9 +15,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.speech.tts.TextToSpeech;
 import java.io.File;
-import java.util.Locale;
 
 /**
  * Plays ONE alert sound at a time (voice recording, Arabic TTS, Adhan file or the system sound) as a
@@ -31,7 +29,6 @@ public class AudioService extends Service {
     private static final long MAX_MS = 10 * 60_000L;
 
     private MediaPlayer player;
-    private TextToSpeech tts;
     private AudioManager am;
     private AudioFocusRequest focus;
     private final Handler h = new Handler(Looper.getMainLooper());
@@ -56,16 +53,18 @@ public class AudioService extends Service {
         else startForeground(NOTIF, n);
         release(); // never overlap with a previous alert
         String sound = in.getStringExtra(X_SOUND);
-        String text = in.getStringExtra(X_TTS);
         am = getSystemService(AudioManager.class);
         requestFocus();
         h.postDelayed(this::finish, MAX_MS);
-        if ("builtin".equals(sound) && Store.voiceMin(this) != 5) sound = "tts"; // the recording says «five minutes»
+        if (voice) {
+            // voice reminder: ONLY the recorded file or the soft chime — never a device / TTS voice
+            playUri(raw("chime".equals(sound) ? R.raw.chime : R.raw.reminder_5min));
+            return START_NOT_STICKY;
+        }
         Store.Clip clip = Store.clip(this, sound);
-        if ("builtin".equals(sound)) playUri(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.reminder_5min));
+        if ("chime".equals(sound)) playUri(raw(R.raw.chime));
         else if (clip != null && new File(clip.file).exists()) playUri(Uri.fromFile(new File(clip.file)));
-        else if ("tts".equals(sound) && text != null) speak(text);
-        else playUri(RingtoneManager.getDefaultUri(voice ? RingtoneManager.TYPE_NOTIFICATION : RingtoneManager.TYPE_ALARM));
+        else playUri(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
         return START_NOT_STICKY;
     }
 
@@ -103,30 +102,7 @@ public class AudioService extends Service {
         }
     }
 
-    private void speak(String text) {
-        tts = new TextToSpeech(this, status -> {
-            if (status != TextToSpeech.SUCCESS) {
-                playUri(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
-                return;
-            }
-            int r = tts.setLanguage(new Locale("ar", "EG"));
-            if (r < 0) r = tts.setLanguage(new Locale("ar"));
-            if (r < 0) { // no Arabic voice installed → system sound (the notification still shows the text)
-                playUri(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
-                return;
-            }
-            tts.setAudioAttributes(attrs());
-            tts.setSpeechRate(0.92f);
-            tts.setOnUtteranceProgressListener(new android.speech.tts.UtteranceProgressListener() {
-                @Override public void onStart(String id) {}
-                @Override public void onDone(String id) { h.post(AudioService.this::finish); }
-                @Override public void onError(String id) { h.post(AudioService.this::finish); }
-            });
-            android.os.Bundle p = new android.os.Bundle();
-            p.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, Store.volume(this) / 100f);
-            tts.speak(text, TextToSpeech.QUEUE_FLUSH, p, "reminder");
-        });
-    }
+    private Uri raw(int id) { return Uri.parse("android.resource://" + getPackageName() + "/" + id); }
 
     private void release() {
         h.removeCallbacksAndMessages(null);
@@ -137,11 +113,6 @@ public class AudioService extends Service {
             }
             player.release();
             player = null;
-        }
-        if (tts != null) {
-            tts.stop();
-            tts.shutdown();
-            tts = null;
         }
         if (am != null && focus != null) am.abandonAudioFocusRequest(focus);
     }
