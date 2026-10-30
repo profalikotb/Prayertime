@@ -17,6 +17,7 @@ import QiblaView from './QiblaView';
 import SettingsView from './SettingsView';
 import QuranView from './QuranView';
 import IslamicToday from './IslamicToday';
+import { MiniBody } from './MiniWidget';
 import { useAudioScheduler } from '@/lib/audioScheduler';
 import { requestCompass } from '@/lib/compassPermission';
 
@@ -30,6 +31,7 @@ export default function App() {
   const [now, setNow] = useState(() => new Date());
   const [tab, setTab] = useState<Tab>('today');
   const [online, setOnline] = useState(true);
+  const [mini, setMini] = useState(false); // #mini = compact desktop widget window
   const locBusy = useRef(false);
 
   /* ---------- boot: settings + last known place (synchronous, never blocks) ---------- */
@@ -133,6 +135,7 @@ export default function App() {
   /* ---------- deep links (#qibla, #islamic, #settings …) — used by the Android widget shortcuts ---------- */
   useEffect(() => {
     const read = () => {
+      if (location.hash === '#mini') return setMini(true);
       const h = location.hash.replace('#', '') as Tab;
       if (['today', 'calendar', 'quran', 'qibla', 'settings', 'islamic'].includes(h)) setTab(h);
     };
@@ -248,6 +251,13 @@ export default function App() {
     { k: 'qibla', l: t.tabQibla, i: 'compass' },
     { k: 'settings', l: t.tabSettings, i: 'gear' },
   ];
+
+  if (mini)
+    return (
+      <Ctx.Provider value={value}>
+        <MiniBody />
+      </Ctx.Provider>
+    );
 
   return (
     <Ctx.Provider value={value}>

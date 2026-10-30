@@ -14,6 +14,7 @@ import { eventsForDay, eventsForMonthOnly } from '@/data/history';
 import EventCard from './EventCard';
 import { ClinicCard, LogCard, LogCheck } from './DailyCards';
 import ShareCard from './ShareCard';
+import { DesktopWidgetButton } from './MiniWidget';
 import AzkarCard from './AzkarCard';
 import PrayerWhy from './PrayerWhy';
 import { CITIES } from '@/data/cities';
@@ -53,6 +54,7 @@ function TopBar() {
         <h1 className="font-display text-[22px] font-bold text-emerald">{t.appName}</h1>
         <p className="text-[12px] font-semibold text-gold">{t.appBy}</p>
       </div>
+      <DesktopWidgetButton />
       {!online && (
         <span className="chip bg-ink/5 text-muted" title={t.offline}>
           <Icon name="wifiOff" className="h-3.5 w-3.5" />
