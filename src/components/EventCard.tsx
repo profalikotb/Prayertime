@@ -10,6 +10,10 @@ export default function EventCard({ e }: { e: HistEvent }) {
   const year = e.yLabel ? e.yLabel[L] : e.y < 0 ? f.n(L === 'ar' ? `${-e.y} ق.هـ` : `${-e.y} BH`) : f.n(L === 'ar' ? `${e.y} هـ` : `${e.y} AH`);
   const hijri = e.d ? `${f.n(e.d)} ${f.hMonth(e.m)} ${year}` : `${f.hMonth(e.m)} ${year}`;
   const wiki = `https://${L}.wikipedia.org/w/index.php?search=${encodeURIComponent(e.title[L].replace(/\(.*?\)/g, ''))}`;
+  const titleAr = e.title.ar.replace(/\(.*?\)|[«»]/g, '').trim();
+  // Dorar's dated Islamic-history encyclopedia, and the cited classical works, via a site-restricted search
+  const dorar = `https://www.google.com/search?q=${encodeURIComponent(`site:dorar.net/history ${titleAr}`)}`;
+  const books = `https://www.google.com/search?q=${encodeURIComponent(`${titleAr} ${e.sources[0]?.split('،')[0] ?? ''} site:shamela.ws OR site:ar.wikisource.org`)}`;
   return (
     <article className="rounded-xl border border-line/10 p-3">
       <div className="flex flex-wrap items-center gap-1.5">
@@ -35,9 +39,17 @@ export default function EventCard({ e }: { e: HistEvent }) {
             <b>{t.source}: </b>
             {e.sources.join(' · ')}
           </p>
-          <a href={wiki} target="_blank" rel="noopener noreferrer" className="text-[12px] font-bold text-emerald underline underline-offset-4">
-            Wikipedia ↗
-          </a>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <a href={wiki} target="_blank" rel="noopener noreferrer" className="text-[12px] font-bold text-emerald underline underline-offset-4">
+              {L === 'ar' ? 'ويكيبيديا' : 'Wikipedia'} ↗
+            </a>
+            <a href={dorar} target="_blank" rel="noopener noreferrer" className="text-[12px] font-bold text-emerald underline underline-offset-4">
+              {L === 'ar' ? 'الموسوعة التاريخية (الدرر السنية)' : 'Dorar historical encyclopedia'} ↗
+            </a>
+            <a href={books} target="_blank" rel="noopener noreferrer" className="text-[12px] font-bold text-emerald underline underline-offset-4">
+              {L === 'ar' ? 'في كتب التاريخ' : 'In the history books'} ↗
+            </a>
+          </div>
         </div>
       )}
       <button type="button" onClick={() => setOpen(!open)} className="mt-1.5 text-[12px] font-bold text-gold">

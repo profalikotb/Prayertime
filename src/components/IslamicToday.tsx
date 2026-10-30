@@ -4,10 +4,10 @@ import { useApp } from './ctx';
 import { Card, Icon, StatusChip, refEn } from './ui';
 import EventCard from './EventCard';
 import { addDays, diffDays, weekday } from '@/lib/civil';
-import { hijriFor } from '@/lib/hijri';
+import { gregorianFor, hijriFor } from '@/lib/hijri';
 import { upcomingOccasions } from '@/lib/occasions';
 import { significanceFor } from '@/data/significance';
-import { eventsForDay, eventsForMonthOnly } from '@/data/history';
+import { HISTORY, eventsForDay, eventsForMonthOnly } from '@/data/history';
 
 /**
  * «حدث في مثل هذا اليوم الهجري» — Islamic Today.
@@ -19,6 +19,19 @@ export default function IslamicToday() {
   const { s, f, t, today, hctx, profile, go } = useApp();
   const ar = s.lang === 'ar';
   const [off, setOff] = useState(0);
+  const [idxMonth, setIdxMonth] = useState<number | null>(null);
+  /** jump to the next occurrence of a Hijri day (this year, else next year) */
+  const jump = (m: number, d: number) => {
+    const th = hijriFor(today, hctx);
+    for (const y of [th.y, th.y + 1]) {
+      const g = gregorianFor({ y, m, d }, hctx, today);
+      if (g && diffDays(g.date, today) >= 0) {
+        setOff(diffDays(g.date, today));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    }
+  };
   const date = useMemo(() => addDays(today, off), [today, off]);
   const h = useMemo(() => hijriFor(date, hctx), [date, hctx]);
   const next = useMemo(() => hijriFor(addDays(date, 1), hctx), [date, hctx]);
@@ -133,6 +146,46 @@ export default function IslamicToday() {
               ))}
             </div>
           </>
+        )}
+      </Card>
+
+      {/* index: every event by Hijri month — tap one to open its day */}
+      <Card title={ar ? `فهرس الأحداث (${f.n(HISTORY.length)})` : `Event index (${HISTORY.length})`} icon="calendar">
+        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
+          {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
+            const n = HISTORY.filter((e) => e.m === m).length;
+            return (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setIdxMonth(idxMonth === m ? null : m)}
+                className={`rounded-lg px-1 py-1.5 text-[12px] font-bold ${idxMonth === m ? 'bg-emerald text-white' : 'bg-emerald/5 text-ink/80'}`}
+              >
+                {f.hMonth(m)}
+                <span className="block text-[10.5px] font-semibold opacity-70">{f.n(n)}</span>
+              </button>
+            );
+          })}
+        </div>
+        {idxMonth && (
+          <ul className="mt-3 divide-y divide-line/5">
+            {HISTORY.filter((e) => e.m === idxMonth)
+              .sort((a, b) => (a.d ?? 99) - (b.d ?? 99) || a.y - b.y)
+              .map((e) => (
+                <li key={e.id}>
+                  <button type="button" onClick={() => jump(e.m, e.d ?? 1)} className="flex w-full items-center gap-3 py-2 text-start">
+                    <span className="w-16 shrink-0 text-center text-[12px] font-bold text-emerald">
+                      {e.d ? `${f.n(e.d)} ${f.hMonth(e.m)}` : ar ? 'الشهر' : 'month'}
+                    </span>
+                    <span className="min-w-0 flex-1 text-[13px] font-semibold leading-5">
+                      {e.title[s.lang]}
+                      <span className="ms-1 text-[11px] font-normal text-muted">({f.n(e.y < 0 ? (ar ? `${-e.y} ق.هـ` : `${-e.y} BH`) : ar ? `${e.y} هـ` : `${e.y} AH`)})</span>
+                    </span>
+                    <Icon name={ar ? 'chevL' : 'chevR'} className="h-4 w-4 shrink-0 text-muted" />
+                  </button>
+                </li>
+              ))}
+          </ul>
         )}
       </Card>
 
