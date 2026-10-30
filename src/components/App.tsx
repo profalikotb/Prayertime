@@ -147,7 +147,32 @@ export default function App() {
   /* ---------- service worker ---------- */
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;
-    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => undefined);
+    // auto-update: check for a new deploy on start, on focus and hourly; when the new version
+    // takes control, reload once so the installed app always shows the latest version
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    const onChange = () => {
+      if (!hadController || reloaded) return;
+      reloaded = true;
+      location.reload();
+    };
+    navigator.serviceWorker.addEventListener('controllerchange', onChange);
+    let reg: ServiceWorkerRegistration | undefined;
+    navigator.serviceWorker
+      .register('/sw.js', { scope: '/', updateViaCache: 'none' })
+      .then((r) => {
+        reg = r;
+        void r.update();
+      })
+      .catch(() => undefined);
+    const check = () => document.visibilityState === 'visible' && void reg?.update().catch(() => undefined);
+    document.addEventListener('visibilitychange', check);
+    const iv = setInterval(check, 3600_000);
+    return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onChange);
+      document.removeEventListener('visibilitychange', check);
+      clearInterval(iv);
+    };
   }, []);
 
   /* ---------- unlock audio on first interaction (iOS) ---------- */
