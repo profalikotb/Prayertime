@@ -20,6 +20,7 @@ export default function EventCard({ e }: { e: HistEvent }) {
         <span className="chip bg-emerald/10 text-emerald">{hijri}</span>
         {e.gregorian && <span className="chip bg-ink/5 text-muted">{e.gregorian[L]}</span>}
         {e.disputed && <span className="chip bg-gold/15 text-gold">{t.disputed}</span>}
+        {e.modern && <span className="chip bg-ink/5 text-muted">{L === 'ar' ? 'الهجري محسوب من الميلادي' : 'Hijri date computed'}</span>}
       </div>
       <h3 className="mt-2 text-[14.5px] font-bold leading-6">{e.title[L]}</h3>
       <p className="mt-1 text-[13px] leading-6 text-ink/80">{e.summary[L]}</p>

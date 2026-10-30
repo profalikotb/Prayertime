@@ -150,7 +150,7 @@ export default function IslamicToday() {
       </Card>
 
       {/* index: every event by Hijri month — tap one to open its day */}
-      <Card title={ar ? `فهرس الأحداث (${f.n(HISTORY.length)})` : `Event index (${HISTORY.length})`} icon="calendar">
+      <Card title={ar ? `فهرس الأحداث — ${f.n(HISTORY.length)} حدثًا` : `Event index — ${HISTORY.length} events`} icon="calendar">
         <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
           {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
             const n = HISTORY.filter((e) => e.m === m).length;
