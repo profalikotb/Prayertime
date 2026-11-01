@@ -21,6 +21,63 @@ import { resetAll } from '@/lib/storage';
 const selectCls =
   'w-full rounded-xl border border-line/15 bg-surface px-3 py-2.5 text-[14px] font-semibold text-ink outline-none focus:border-emerald bg-[length:14px] bg-no-repeat';
 
+/** Alarms that work with the app CLOSED: a live calendar subscription (iPhone, Mac, Windows/Outlook) + the Android app. */
+function CalendarFeed() {
+  const { s, place, method } = useApp();
+  const ar = s.lang === 'ar';
+  const [copied, setCopied] = useState(false);
+  const q = new URLSearchParams({
+    lat: place.lat.toFixed(4),
+    lng: place.lng.toFixed(4),
+    cc: place.cc || 'EG',
+    tz: place.tz,
+    city: place.city[s.lang],
+    lang: s.lang,
+    m: method,
+    asr: s.madhab,
+    before: '5',
+  }).toString();
+  const host = typeof location !== 'undefined' ? location.host : 'prayertimealikotb.vercel.app';
+  const https = `https://${host}/api/ics?${q}`;
+  const webcal = `webcal://${host}/api/ics?${q}`;
+  return (
+    <div className="mt-3 rounded-xl border border-emerald/25 bg-emerald/5 p-3 text-[12.5px] leading-6">
+      <p className="font-extrabold text-emerald">{ar ? 'تنبيه يعمل والتطبيق مغلق' : 'Alerts with the app closed'}</p>
+      <p className="text-ink/80">
+        {ar
+          ? 'اشترك مرة واحدة في «تقويم المواقيت»: يرن الهاتف أو الكمبيوتر قبل كل صلاة بـ ٥ دقائق وعند الأذان حتى والتطبيق مغلق، ويتحدّث تلقائيًا كل يوم.'
+          : 'Subscribe once: your phone or computer alerts 5 min before each prayer and at the Adhan even when the app is closed, refreshed automatically.'}
+      </p>
+      <a href={webcal} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald py-2.5 text-[14px] font-bold text-white">
+        <Icon name="calendar" className="h-4 w-4" />
+        {ar ? 'اشتراك في تقويم المواقيت (iPhone / Mac / Outlook)' : 'Subscribe (iPhone / Mac / Outlook)'}
+      </a>
+      <button
+        type="button"
+        onClick={() => {
+          void navigator.clipboard?.writeText(https).then(() => setCopied(true));
+          setTimeout(() => setCopied(false), 2500);
+        }}
+        className="mt-1.5 w-full rounded-xl border border-emerald/30 py-2 text-[13px] font-bold text-emerald"
+      >
+        {copied ? (ar ? '✓ نُسخ الرابط' : '✓ Link copied') : ar ? 'نسخ رابط الاشتراك (لـ Outlook على ويندوز)' : 'Copy subscription link (Outlook)'}
+      </button>
+      <p className="mt-1.5 text-[11.5px] text-muted">
+        {ar
+          ? 'على iPhone: عند الاشتراك أوقف خيار «إزالة التنبيهات» (Remove Alerts) حتى تبقى التنبيهات. الصوت هنا نغمة التقويم؛ صوتك والأذان يعملان في تطبيق أندرويد أو والتطبيق مفتوح.'
+          : 'On iPhone, turn OFF “Remove Alerts” when subscribing. Calendar alerts use the calendar tone; your voice and the Adhan play in the Android app or while the app is open.'}
+      </p>
+      <a
+        href="https://github.com/profalikotb/Prayertime/releases/download/android-latest/PrayerTime.apk"
+        className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#3ddc84]/15 py-2.5 text-[13.5px] font-bold text-[#1b8a4c]"
+      >
+        <Icon name="download" className="h-4 w-4" />
+        {ar ? 'تطبيق أندرويد: الودجت + صوتك والأذان والهاتف مقفول' : 'Android app: widgets + voice & Adhan when locked'}
+      </a>
+    </div>
+  );
+}
+
 export default function SettingsView() {
   const { t, s, set, place, refreshLocation, locStatus, today, opts, f } = useApp();
   const [notifMsg, setNotifMsg] = useState<string | null>(null);
@@ -321,6 +378,7 @@ export default function SettingsView() {
           <Icon name="download" className="h-4 w-4" />
           {t.exportIcs}
         </button>
+        <CalendarFeed />
       </Card>
 
       <AudioSettings />

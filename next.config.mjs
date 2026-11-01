@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  // server build (not static export) so /api/ics can serve a live calendar subscription
   images: { unoptimized: true },
   reactStrictMode: true,
   poweredByHeader: false,

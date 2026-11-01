@@ -28,7 +28,7 @@ function fold(line: string): string {
  * The iOS/Android calendar then delivers alerts reliably even when the web app is closed.
  * Times are written in UTC (…Z), so the calendar shows them correctly in any timezone.
  */
-export function buildIcs(start: CivilDate, days: number, place: Place, opts: (d: CivilDate) => PrayerOptions, notify: NotifyPrefs, lang: Lang): string {
+export function buildIcs(start: CivilDate, days: number, place: Place, opts: (d: CivilDate) => PrayerOptions, notify: NotifyPrefs, lang: Lang, feed = false): string {
   const names = PRAYER_NAMES[lang];
   const city = place.city[lang];
   const now = stamp(new Date());
@@ -40,6 +40,8 @@ export function buildIcs(start: CivilDate, days: number, place: Place, opts: (d:
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${esc(lang === 'ar' ? `مواقيت الصلاة – ${city}` : `Prayer Times – ${city}`)}`,
   ];
+  // subscription feed: ask calendar apps to refresh twice a day
+  if (feed) lines.push('REFRESH-INTERVAL;VALUE=DURATION:PT12H', 'X-PUBLISHED-TTL:PT12H');
   for (let i = 0; i < days; i++) {
     const d = addDays(start, i);
     const t = computeDay(d, place, opts(d));
@@ -57,10 +59,11 @@ export function buildIcs(start: CivilDate, days: number, place: Place, opts: (d:
         'TRANSP:TRANSPARENT',
       );
       if (pref.before && notify.beforeMin > 0) {
-        lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(names[k])}`, `TRIGGER:-PT${notify.beforeMin}M`, 'END:VALARM');
+        const txt = lang === 'ar' ? `باقي ${notify.beforeMin} دقائق على أذان ${names[k]}، استعد للصلاة` : `${notify.beforeMin} min to ${names[k]}`;
+        lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(txt)}`, `TRIGGER:-PT${notify.beforeMin}M`, 'END:VALARM');
       }
       if (pref.at) {
-        lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(names[k])}`, 'TRIGGER:PT0M', 'END:VALARM');
+        lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(lang === 'ar' ? `حان الآن وقت صلاة ${names[k]}` : `Time for ${names[k]}`)}`, 'TRIGGER:PT0M', 'END:VALARM');
       }
       lines.push('END:VEVENT');
     }
