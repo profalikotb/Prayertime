@@ -12,6 +12,7 @@ import { daysPhrase } from '@/lib/format';
 import { significanceFor } from '@/data/significance';
 import { eventsForDay, eventsForMonthOnly } from '@/data/history';
 import EventCard from './EventCard';
+import WikiDayList from './WikiDayList';
 import { ClinicCard, LogCard, LogCheck } from './DailyCards';
 import ShareCard from './ShareCard';
 import { DesktopWidgetButton } from './MiniWidget';
@@ -481,7 +482,12 @@ function History() {
       <p className="-mt-1 mb-2 text-[12px] font-semibold text-gold">
         {f.n(hijri.d)} {f.hMonth(hijri.m)}
       </p>
-      {featured ? <EventCard e={featured} /> : <p className="rounded-xl bg-ink/[.03] p-3 text-[13px] text-muted">{t.noEvent}</p>}
+      {featured ? (
+        <EventCard e={featured} />
+      ) : (
+        <p className="rounded-xl bg-ink/[.03] p-3 text-[13px] text-muted">{ar ? 'لا توجد واقعة في القائمة المحققة لهذا اليوم — انظر ما سجّلته ويكيبيديا أدناه.' : 'Nothing in the verified list for today — see Wikipedia below.'}</p>
+      )}
+      <WikiDayList m={hijri.m} d={hijri.d} compact />
       <button type="button" onClick={() => go('islamic')} className="mt-3 flex w-full items-center justify-between rounded-lg py-1.5 text-[12.5px] font-bold text-emerald">
         <span>
           {ar ? 'حدث في مثل هذا اليوم الهجري' : 'Islamic Today'}

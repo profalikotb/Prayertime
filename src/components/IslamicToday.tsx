@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useApp } from './ctx';
 import { Card, Icon, StatusChip, refEn } from './ui';
 import EventCard from './EventCard';
+import WikiDayList from './WikiDayList';
 import { addDays, diffDays, weekday } from '@/lib/civil';
 import { gregorianFor, hijriFor } from '@/lib/hijri';
 import { upcomingOccasions } from '@/lib/occasions';
@@ -127,7 +128,7 @@ export default function IslamicToday() {
       {/* historical events */}
       <Card title={ar ? `وقائع تاريخية في ${f.n(h.d)} ${f.hMonth(h.m)}` : `Historical events on ${h.d} ${f.hMonth(h.m)}`} icon="book">
         {day.length === 0 ? (
-          <p className="rounded-xl bg-ink/[.03] p-3 text-[13px] text-muted">{t.noEvent}</p>
+          <p className="rounded-xl bg-ink/[.03] p-3 text-[13px] text-muted">{ar ? 'لا توجد واقعة في القائمة المحققة لهذا اليوم.' : 'Nothing in the verified list for this day.'}</p>
         ) : (
           <div className="grid gap-2.5">
             {day.map((e) => (
@@ -135,6 +136,7 @@ export default function IslamicToday() {
             ))}
           </div>
         )}
+        <WikiDayList m={h.m} d={h.d} />
         {month.length > 0 && (
           <>
             <p className="mb-2 mt-4 text-[12.5px] font-bold text-emerald">
