@@ -310,6 +310,12 @@ export async function playSound(sound: string, opts: { volume: number; tts?: str
       await playSrc(VOICE_FILES[m] ?? BUILTIN_REMINDER, opts.volume, tag);
       return true;
     }
+    if (sound.startsWith('adhan:')) {
+      const a = BUILTIN_ADHANS.find((x) => x.id === sound);
+      if (!a) throw new Error('missing');
+      await playSrc(a.src, opts.volume, tag);
+      return true;
+    }
     if (sound === 'legacy') {
       await playSrc('/adhan.mp3', opts.volume, tag);
       return true;
@@ -335,6 +341,8 @@ export function soundLabel(sound: string, clips: ClipMeta[], lang: 'ar' | 'en'):
   if (sound === 'tts') return lang === 'ar' ? 'صوت الجهاز (قراءة آلية)' : 'Device voice (TTS)';
   if (sound === 'builtin') return lang === 'ar' ? 'التنبيه بصوتي (صوت مصري)' : 'Voice reminder (Egyptian)';
   if (sound === 'legacy') return lang === 'ar' ? 'ملف الموقع adhan.mp3' : 'Site file adhan.mp3';
+  const b = BUILTIN_ADHANS.find((x) => x.id === sound);
+  if (b) return lang === 'ar' ? b.ar : b.en;
   const c = clips.find((x) => `clip:${x.id}` === sound);
   return c ? c.name : lang === 'ar' ? 'تسجيل محذوف' : 'Deleted recording';
 }
@@ -349,6 +357,13 @@ export const VOICE_FILES: Record<number, string> = {
   25: '/audio/reminder-25min.mp3',
 };
 export const hasVoiceFor = (m: number) => m in VOICE_FILES;
+
+/** Adhans shipped with the app (Egyptian radio-era recordings; full + short ≈ 1 min ending after the first Shahada pair). */
+export const BUILTIN_ADHANS: { id: string; src: string; ar: string; en: string }[] = [
+  { id: 'adhan:refaat-short', src: '/audio/adhan/refaat-short.mp3', ar: '🕌 الشيخ محمد رفعت – مختصر', en: '🕌 Sheikh Mohamed Refaat – short' },
+  { id: 'adhan:refaat', src: '/audio/adhan/refaat.mp3', ar: '🕌 الشيخ محمد رفعت – كامل', en: '🕌 Sheikh Mohamed Refaat – full' },
+];
+export const DEFAULT_ADHAN = 'adhan:refaat-short';
 
 /** Lead times offered for the reminder (minutes before the Adhan). */
 export const REMINDER_MINUTES = [5, 10, 15, 20, 25];

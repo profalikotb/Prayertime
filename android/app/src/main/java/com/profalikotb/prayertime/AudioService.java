@@ -66,6 +66,8 @@ public class AudioService extends Service {
         }
         Store.Clip clip = Store.clip(this, sound);
         if ("chime".equals(sound)) playUri(raw(R.raw.chime));
+        else if ("refaat_short".equals(sound)) playUri(raw(R.raw.adhan_refaat_short));
+        else if ("refaat".equals(sound)) playUri(raw(R.raw.adhan_refaat));
         else if (clip != null && new File(clip.file).exists()) playUri(Uri.fromFile(new File(clip.file)));
         else playUri(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
         return START_NOT_STICKY;

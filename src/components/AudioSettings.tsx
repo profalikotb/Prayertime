@@ -24,6 +24,7 @@ import {
   saveClip,
   soundLabel,
   voiceSoundFor,
+  BUILTIN_ADHANS,
   hasVoiceFor,
   REMINDER_MINUTES,
   startRecording,
@@ -116,6 +117,7 @@ export default function AudioSettings() {
     { v: 'chime', l: soundLabel('chime', clips, s.lang) },
   ];
   const adhanOptions = [
+    ...BUILTIN_ADHANS.map((b) => ({ v: b.id, l: s.lang === 'ar' ? b.ar : b.en })),
     { v: 'chime', l: soundLabel('chime', clips, s.lang) },
     { v: 'silent', l: soundLabel('silent', clips, s.lang) },
     { v: 'legacy', l: soundLabel('legacy', clips, s.lang) },

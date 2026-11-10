@@ -77,7 +77,7 @@ final class Store {
     /** voice: "builtin" (res/raw/reminder_5min — «باقي خمس دقائق…») | "chime" (res/raw/chime). Adhan: "default" | "chime" | "silent" | "clip:<id>" */
     static String voiceSound(Context c, int i) { return "chime".equals(p(c).getString("voiceSnd" + i, "builtin")) ? "chime" : "builtin"; }
     static void setVoiceSound(Context c, int i, String v) { p(c).edit().putString("voiceSnd" + i, v).apply(); }
-    static String adhanSound(Context c, int i) { return p(c).getString("adhanSnd" + i, "default"); }
+    static String adhanSound(Context c, int i) { return p(c).getString("adhanSnd" + i, "refaat_short"); }
     static void setAdhanSound(Context c, int i, String v) { p(c).edit().putString("adhanSnd" + i, v).apply(); }
     static int volume(Context c) { return p(c).getInt("volume", 100); }
     static void setVolume(Context c, int v) { p(c).edit().putInt("volume", Math.max(5, Math.min(100, v))).apply(); }
@@ -153,7 +153,7 @@ final class Store {
             SharedPreferences.Editor e = p(c).edit().putString("clips", keep.toString());
             for (int i : Alerts.PRAYERS) {
                 
-                if (("clip:" + id).equals(adhanSound(c, i))) e.putString("adhanSnd" + i, "default");
+                if (("clip:" + id).equals(adhanSound(c, i))) e.putString("adhanSnd" + i, "refaat_short");
             }
             e.apply();
         } catch (Exception ignored) {

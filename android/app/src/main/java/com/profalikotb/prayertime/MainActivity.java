@@ -400,9 +400,11 @@ public class MainActivity extends Activity {
         if ("builtin".equals(id)) return "تسجيلي";
         if ("chime".equals(id)) return "نغمة هادئة";
         if ("default".equals(id)) return "صوت النظام";
+        if ("refaat_short".equals(id)) return "الشيخ محمد رفعت – مختصر";
+        if ("refaat".equals(id)) return "الشيخ محمد رفعت – كامل";
         if ("silent".equals(id)) return "صامت";
         Store.Clip c = Store.clip(this, id);
-        return c != null ? c.name : (voice ? "تسجيلي" : "صوت النظام");
+        return c != null ? c.name : (voice ? "تسجيلي" : "الشيخ محمد رفعت – مختصر");
     }
 
     /** One prayer: choose (or switch off) its voice reminder and its Adhan. */
@@ -425,6 +427,8 @@ public class MainActivity extends Activity {
             ids.add("builtin"); names.add("التنبيه بصوتي: «باقي خمس دقائق على أذان الصلاة…»");
             ids.add("chime"); names.add("نغمة هادئة");
         } else {
+            ids.add("refaat_short"); names.add("🕌 الشيخ محمد رفعت – مختصر (دقيقة)");
+            ids.add("refaat"); names.add("🕌 الشيخ محمد رفعت – كامل");
             ids.add("default"); names.add("صوت النظام");
             ids.add("chime"); names.add("نغمة هادئة");
             ids.add("silent"); names.add("صامت (إشعار فقط)");

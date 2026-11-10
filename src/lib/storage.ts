@@ -1,6 +1,7 @@
 import type { Adjustments, Place, Settings } from './types';
 import { DEFAULT_CLINICS, LEGACY_SAMPLE_IDS } from './clinics';
 import { DEFAULT_HOMES, DEFAULT_TRAVEL_KM } from './modes';
+import { DEFAULT_ADHAN } from './audio';
 
 const KEY = 'pakpt.settings.v1';
 const PLACE_KEY = 'pakpt.place.v1';
@@ -29,7 +30,7 @@ export function defaultSettings(): Settings {
     surgery: null,
     travel: { enabled: true, km: DEFAULT_TRAVEL_KM, homes: DEFAULT_HOMES.map((h) => ({ ...h })) },
     audio: {
-      v: 3,
+      v: 4,
       voice: {
         enabled: true,
         minutes: 5,
@@ -41,7 +42,7 @@ export function defaultSettings(): Settings {
           isha: { on: true, sound: 'builtin' },
         },
       },
-      adhan: { fajr: 'chime', dhuhr: 'chime', asr: 'chime', maghrib: 'chime', isha: 'chime' },
+      adhan: { fajr: DEFAULT_ADHAN, dhuhr: DEFAULT_ADHAN, asr: DEFAULT_ADHAN, maghrib: DEFAULT_ADHAN, isha: DEFAULT_ADHAN },
       volume: 1,
     },
     shareFooter: 'أ.د. على قطب على · أستاذ جراحة المخ والأعصاب – جامعة عين شمس',
@@ -110,6 +111,12 @@ export function loadSettings(): Settings {
         v.sound = v.sound === 'chime' ? 'chime' : 'builtin';
       }
       st.audio.v = 3;
+      saveSettings(st);
+    }
+    if ((st.audio.v ?? 0) < 4) {
+      // 2.5: Sheikh Mohamed Refaat's Adhan (short) replaces the plain chime as the default Adhan
+      for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) if (st.audio.adhan[k] === 'chime') st.audio.adhan[k] = DEFAULT_ADHAN;
+      st.audio.v = 4;
       saveSettings(st);
     }
     if (!parsed.audio && parsed.notify?.sound === 'adhan') {

@@ -10,8 +10,8 @@ android {
         applicationId 'com.profalikotb.prayertime'
         minSdk 26
         targetSdk 34
-        versionCode 8
-        versionName '2.5'
+        versionCode 9
+        versionName '2.6'
     }
 
     // Fixed signing key committed with the project so every CI build can update the installed app.
