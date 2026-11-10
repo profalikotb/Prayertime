@@ -59,7 +59,7 @@ export function buildIcs(start: CivilDate, days: number, place: Place, opts: (d:
         'TRANSP:TRANSPARENT',
       );
       if (pref.before && notify.beforeMin > 0) {
-        const txt = lang === 'ar' ? `باقي ${notify.beforeMin} دقائق على أذان ${names[k]}، استعد للصلاة` : `${notify.beforeMin} min to ${names[k]}`;
+        const txt = lang === 'ar' ? `باقي ${notify.beforeMin} ${notify.beforeMin <= 10 ? 'دقائق' : 'دقيقة'} على أذان ${names[k]}، استعد للصلاة` : `${notify.beforeMin} min to ${names[k]}`;
         lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(txt)}`, `TRIGGER:-PT${notify.beforeMin}M`, 'END:VALARM');
       }
       if (pref.at) {

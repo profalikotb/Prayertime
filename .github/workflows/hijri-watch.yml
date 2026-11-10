@@ -1,0 +1,49 @@
+# Watches Dar al-Ifta for crescent-sighting statements and records the official first day of
+# each Hijri month in src/data/officialHijri.json. A commit to main redeploys the site on Vercel.
+# Statements that fail validation open an Issue instead of being committed.
+name: Hijri watch (Dar al-Ifta)
+
+on:
+  schedule:
+    - cron: '15 */3 * * *'   # every 3 hours (UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: hijri-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Parser self-test
+        run: node scripts/hijri-watch.mjs --test
+
+      - name: Check Dar al-Ifta
+        run: node scripts/hijri-watch.mjs
+
+      - name: Commit new official dates
+        run: |
+          if ! git diff --quiet -- src/data/officialHijri.json; then
+            git config user.name "hijri-watch[bot]"
+            git config user.email "hijri-watch@users.noreply.github.com"
+            git add src/data/officialHijri.json
+            git commit -m "Official Hijri date from Dar al-Ifta statement"
+            git push
+          fi
+
+      - name: Open issue for statements needing review
+        if: hashFiles('hijri-watch-report.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue create --title "مراجعة بيان دار الإفتاء (رؤية الهلال)" --body-file hijri-watch-report.md

@@ -63,8 +63,11 @@ final class Store {
     static void setAlertsOn(Context c, boolean v) { p(c).edit().putBoolean("alerts", v).apply(); }
     static boolean voiceOn(Context c) { return p(c).getBoolean("voice", true); }
     static void setVoiceOn(Context c, boolean v) { p(c).edit().putBoolean("voice", v).apply(); }
-    /** fixed: the recorded reminder says «five minutes» */
-    static int voiceMin(Context c) { return 5; }
+    /** reminder lead time: 5 / 10 / 15 / 20 / 25 min (the recording says «five minutes»; other leads use the chime) */
+    static int voiceMin(Context c) {
+        int v = p(c).getInt("voiceMin", 5);
+        return v == 5 || v == 10 || v == 15 || v == 20 || v == 25 ? v : 5;
+    }
     static void setVoiceMin(Context c, int v) { p(c).edit().putInt("voiceMin", v).apply(); }
     /** i = PrayerEngine index (0 fajr, 2 dhuhr, 3 asr, 4 maghrib, 5 isha) */
     static boolean voiceFor(Context c, int i) { return p(c).getBoolean("voiceOn" + i, true); }

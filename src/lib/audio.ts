@@ -253,7 +253,7 @@ async function playSrc(src: string, volume: number, tag: string) {
   await el.play();
 }
 
-const MIN_AR: Record<number, string> = { 1: 'دقيقة واحدة', 2: 'دقيقتان', 3: 'ثلاث دقائق', 5: 'خمس دقائق', 10: 'عشر دقائق', 15: 'خمس عشرة دقيقة', 20: 'عشرون دقيقة' };
+const MIN_AR: Record<number, string> = { 1: 'دقيقة واحدة', 2: 'دقيقتان', 3: 'ثلاث دقائق', 5: 'خمس دقائق', 10: 'عشر دقائق', 15: 'خمس عشرة دقيقة', 20: 'عشرون دقيقة', 25: 'خمس وعشرون دقيقة' };
 
 export function reminderText(prayerAr: string, prayerEn: string, minutes: number, lang: 'ar' | 'en') {
   return lang === 'ar'
@@ -340,9 +340,15 @@ export function soundLabel(sound: string, clips: ClipMeta[], lang: 'ar' | 'en'):
 /** Prof Ali Kotb's recorded reminder: «باقي خمس دقائق…» (6 s, shipped with the app, cached offline) */
 export const BUILTIN_REMINDER = '/audio/reminder-5min.mp3';
 
-/** Voice reminder plays only the recorded file or the soft chime — never a device/TTS voice. */
-export function voiceSoundFor(sound: string) {
-  return sound === 'chime' ? 'chime' : 'builtin';
+/** Lead times offered for the reminder (minutes before the Adhan). */
+export const REMINDER_MINUTES = [5, 10, 15, 20, 25];
+
+/**
+ * Voice reminder plays only the recorded file or the soft chime — never a device/TTS voice.
+ * The recording says «خمس دقائق», so at any other lead time the chime plays (the notification shows the right minutes).
+ */
+export function voiceSoundFor(sound: string, minutes = 5) {
+  return sound === 'chime' || minutes !== 5 ? 'chime' : 'builtin';
 }
 
 export const FIVE: FivePrayer[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];

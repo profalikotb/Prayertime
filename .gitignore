@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+.DS_Store
+.env*.local
+public/data/official-hijri.json

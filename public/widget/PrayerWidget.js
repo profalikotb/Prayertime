@@ -129,29 +129,44 @@ if (config.runsInApp && !MODE) {
   MODE = pick === 1 ? 'wallpaper' : pick === 2 ? 'wallpaper-save' : pick === 0 ? '' : 'cancel';
 }
 if (MODE === 'wallpaper' || MODE === 'wallpaper-save') {
+  // DYNAMIC wallpaper: colour theme + hero follow the coming prayer; regenerate it often (see Shortcuts automations)
   const res = Device.screenResolution(); // pixels
   const W = res.width, H = res.height, u = W / 100; // u = 1% of width
+  const THEME = {
+    fajr: ['#1b2a6b', '#4b6cb7', '#9fc2ff'],
+    sunrise: ['#5a2d1a', '#c27c4a', '#ffd29a'],
+    dhuhr: ['#063d33', '#0e8a6a', '#8ff0c8'],
+    asr: ['#4a2e05', '#c08a1e', '#ffe08a'],
+    maghrib: ['#4a1414', '#c2523b', '#ffb199'],
+    isha: ['#070b24', '#24357a', '#a9b8ff'],
+  };
+  const th = THEME[nextKey];
+  const hex = (h) => h.match(/\w\w/g).map((x) => parseInt(x, 16));
+  const mix = (a, b, f) => '#' + hex(a).map((v, i) => Math.round(v + (hex(b)[i] - v) * f).toString(16).padStart(2, '0')).join('');
   const dc = new DrawContext();
   dc.size = new Size(W, H);
   dc.respectScreenScale = false;
-  // background: vertical gradient emerald → midnight, drawn as bands
-  const top = [11, 59, 51], bot = [6, 18, 24];
-  for (let i = 0; i < 64; i++) {
-    const f = i / 63;
-    const c = top.map((v, j) => Math.round(v + (bot[j] - v) * f));
-    dc.setFillColor(new Color('#' + c.map((x) => x.toString(16).padStart(2, '0')).join('')));
-    dc.fillRect(new Rect(0, (H * i) / 64, W, H / 64 + 2));
+  // background: theme colour at top → near-black at bottom
+  for (let i = 0; i < 80; i++) {
+    const f = i / 79;
+    dc.setFillColor(new Color(f < 0.45 ? mix(th[1], th[0], f / 0.45) : mix(th[0], '#05080c', (f - 0.45) / 0.55)));
+    dc.fillRect(new Rect(0, (H * i) / 80, W, H / 80 + 2));
   }
-  // subtle 8-point stars
-  dc.setStrokeColor(new Color('#e8c77a', 0.07));
-  dc.setLineWidth(u * 0.25);
-  for (let y = 0; y < H; y += u * 14) for (let x = (y / (u * 14)) % 2 ? u * 7 : 0; x < W; x += u * 14) {
-    const r = u * 3;
+  // glowing halo behind the hero
+  for (let r = 0; r < 12; r++) {
+    dc.setFillColor(new Color(th[2], 0.025));
+    const R = u * (70 - r * 4.5);
+    dc.fillEllipse(new Rect(W / 2 - R, H * 0.52 - R, R * 2, R * 2));
+  }
+  // 8-point star lattice
+  dc.setStrokeColor(new Color('#ffffff', 0.06));
+  dc.setLineWidth(u * 0.22);
+  for (let yi = 0, y = 0; y < H; yi++, y += u * 14) for (let x = yi % 2 ? u * 7 : 0; x < W; x += u * 14) {
     for (const a0 of [0, Math.PI / 4]) {
       const p = new Path();
       for (let k = 0; k < 4; k++) {
         const a = a0 + Math.PI / 4 + (k * Math.PI) / 2;
-        const pt = new Point(x + r * Math.cos(a), y + r * Math.sin(a));
+        const pt = new Point(x + u * 3 * Math.cos(a), y + u * 3 * Math.sin(a));
         k ? p.addLine(pt) : p.move(pt);
       }
       p.closeSubpath();
@@ -160,37 +175,51 @@ if (MODE === 'wallpaper' || MODE === 'wallpaper-save') {
     }
   }
   const text = (s, y, size, color, opts = {}) => {
-    dc.setFont(opts.light ? Font.mediumSystemFont(size) : opts.rounded ? Font.boldRoundedSystemFont(size) : Font.boldSystemFont(size));
+    dc.setFont(opts.light ? Font.mediumSystemFont(size) : opts.rounded ? Font.heavyRoundedSystemFont ? Font.heavyRoundedSystemFont(size) : Font.boldRoundedSystemFont(size) : Font.heavySystemFont(size));
     dc.setTextColor(color);
     if (opts.align === 'left') dc.setTextAlignedLeft();
     else if (opts.align === 'center') dc.setTextAlignedCenter();
     else dc.setTextAlignedRight();
-    dc.drawTextInRect(s, new Rect(opts.x || u * 8, y, opts.w || W - u * 16, size * 1.45));
+    dc.drawTextInRect(s, new Rect(opts.x === undefined ? u * 8 : opts.x, y, opts.w || W - u * 16, size * 1.5));
   };
-  // header (below the clock/widget area, which iOS keeps in the top ~38%)
-  let y = H * 0.40;
-  const city = loc.name || '';
-  const hij = (() => { try { return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day: 'numeric', month: 'long', year: 'numeric' }).format(now); } catch (e) { return ''; } })();
-  text(`${hij}${city ? '  ·  ' + city : ''}`, y, u * 4.6, new Color('#f2cf7a'), { align: 'center' });
-  y += u * 8.5;
-  // rows
-  const rowH = u * 15;
-  for (const k of ORDER) {
-    const sun = k === 'sunrise';
-    const size = sun ? u * 7 : u * 9.6;
-    const col = sun ? new Color('#fbf5e6', 0.55) : new Color('#fbf5e6');
-    // card
-    const card = new Path();
-    card.addRoundedRect(new Rect(u * 6, y, W - u * 12, rowH - u * 2), u * 3, u * 3);
-    dc.addPath(card);
-    dc.setFillColor(new Color('#ffffff', sun ? 0.04 : 0.08));
+  const card = (x, y, w, h, fill, r = u * 4) => {
+    const p = new Path();
+    p.addRoundedRect(new Rect(x, y, w, h), r, r);
+    dc.addPath(p);
+    dc.setFillColor(fill);
     dc.fillPath();
-    const ty = y + (rowH - u * 2 - size * 1.3) / 2;
-    text(label(k), ty, size, col, { x: u * 10, w: W - u * 20 });
-    text(`${hm(today[k])} ${ap(today[k])}`, ty, size, sun ? col : new Color('#f2cf7a'), { align: 'left', rounded: true, x: u * 10, w: W - u * 20 });
-    y += rowH;
-  }
-  text('مواقيت الصلاة – أ.د. على قطب', H - u * 15, u * 3.4, new Color('#fbf5e6', 0.35), { align: 'center', light: true });
+  };
+  const ACC = new Color(th[2]);
+  const WHITE = new Color('#ffffff');
+  const SOFT = new Color('#ffffff', 0.62);
+
+  // date line (just below the iOS clock + widgets area)
+  let y = H * 0.355;
+  const hij = (() => { try { return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { weekday: 'long', day: 'numeric', month: 'long' }).format(now); } catch (e) { return ''; } })();
+  text(`${hij}${loc.name ? '  ·  ' + loc.name : ''}`, y, u * 4.4, SOFT, { align: 'center', light: true });
+  y += u * 8;
+
+  // HERO: next prayer, huge
+  card(u * 6, y, W - u * 12, u * 44, new Color('#ffffff', 0.10), u * 7);
+  text((soon ? '⏰  ' : '') + 'الصلاة القادمة', y + u * 3.5, u * 5, SOFT, { align: 'center', light: true });
+  text(label(nextKey), y + u * 8.5, u * 17, ACC, { align: 'center' });
+  text(`${hm(nextAt)} ${ap(nextAt)}`, y + u * 28.5, u * 10, WHITE, { align: 'center', rounded: true });
+  y += u * 48;
+
+  // the other prayers: 2 columns × 3 rows of tiles, past ones dimmed, upcoming bright
+  const others = ORDER.filter((k) => k !== nextKey);
+  const tileW = (W - u * 12 - u * 3) / 2, tileH = u * 15;
+  others.forEach((k, i) => {
+    const col = i % 2, row = Math.floor(i / 2);
+    const last = i === others.length - 1 && others.length % 2 === 1;
+    const x = last ? (W - tileW) / 2 : W - u * 6 - tileW - col * (tileW + u * 3); // right-to-left order
+    const ty = y + row * (tileH + u * 2.5);
+    const done = today[k] <= now;
+    card(x, ty, tileW, tileH, new Color('#ffffff', done ? 0.04 : 0.13), u * 4.5);
+    const tc = done ? new Color('#ffffff', 0.33) : WHITE;
+    text(label(k), ty + u * 1.2, u * 5, done ? new Color('#ffffff', 0.33) : SOFT, { align: 'center', x, w: tileW, light: true });
+    text(`${hm(today[k])} ${ap(today[k])}`, ty + u * 6.6, u * 6.8, tc, { align: 'center', x, w: tileW, rounded: true });
+  });
   const img = dc.getImage();
   if (MODE === 'wallpaper-save') {
     await Photos.save(img);

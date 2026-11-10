@@ -106,7 +106,6 @@ export function loadSettings(): Settings {
         const v = st.audio.voice.perPrayer[k];
         v.sound = v.sound === 'chime' ? 'chime' : 'builtin';
       }
-      st.audio.voice.minutes = 5;
       st.audio.v = 3;
       saveSettings(st);
     }

@@ -35,7 +35,7 @@ function CalendarFeed() {
     lang: s.lang,
     m: method,
     asr: s.madhab,
-    before: '5',
+    before: String(s.audio.voice.minutes || 5),
   }).toString();
   const host = typeof location !== 'undefined' ? location.host : 'prayertimealikotb.vercel.app';
   const https = `https://${host}/api/ics?${q}`;

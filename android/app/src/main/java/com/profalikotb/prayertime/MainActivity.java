@@ -349,7 +349,21 @@ public class MainActivity extends Activity {
             Store.setVoiceOn(this, on);
             changed();
         });
-        text("قبل الأذان بـ ٥ دقائق: تسجيلك «باقي خمس دقائق…» أو نغمة هادئة.", 13, DIM, false);
+        int[] mins = {5, 10, 15, 20, 25};
+        button("⏳  التنبيه قبل الأذان بـ " + Day.arabic(String.valueOf(Store.voiceMin(this))) + " دقيقة", v -> {
+            String[] n = new String[mins.length];
+            int sel = 0;
+            for (int i = 0; i < mins.length; i++) {
+                n[i] = Day.arabic(String.valueOf(mins[i])) + (mins[i] == 5 ? " دقائق — تسجيلك" : " دقيقة — نغمة هادئة");
+                if (mins[i] == Store.voiceMin(this)) sel = i;
+            }
+            new AlertDialog.Builder(this).setTitle("وقت التنبيه قبل الأذان").setSingleChoiceItems(n, sel, (dlg, w) -> {
+                Store.setVoiceMin(this, mins[w]);
+                dlg.dismiss();
+                changed();
+            }).show();
+        }, GLASS);
+        text(Store.voiceMin(this) == 5 ? "يُشغَّل تسجيلك «باقي خمس دقائق…» أو نغمة هادئة." : "تسجيلك يقول «خمس دقائق»، لذا تُشغَّل النغمة الهادئة ويظهر الإشعار بالوقت الصحيح.", 12, DIM, false);
 
         for (int i : Alerts.PRAYERS) {
             final int k = i;

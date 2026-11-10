@@ -84,6 +84,7 @@ final class Alerts {
             case 10: m = "عشر دقائق"; break;
             case 15: m = "خمس عشرة دقيقة"; break;
             case 20: m = "عشرون دقيقة"; break;
+            case 25: m = "خمس وعشرون دقيقة"; break;
             default: m = minutes + " دقيقة";
         }
         return "باقي " + m + " على أذان صلاة " + ("الجمعة".equals(n) ? n : "ال" + n) + "، استعد للصلاة.";

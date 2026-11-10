@@ -41,7 +41,7 @@ public class AlertReceiver extends BroadcastReceiver {
         Day d = new Day(c);
         String name = d.label(i);
         boolean voice = kind == Alerts.KIND_VOICE;
-        String title = voice ? "⏳ " + name + " بعد " + Day.arabic(String.valueOf(Store.voiceMin(c))) + " دقائق" : "🕌 حان الآن وقت صلاة " + name;
+        String title = voice ? "⏳ " + name + " بعد " + Day.arabic(String.valueOf(Store.voiceMin(c))) + (Store.voiceMin(c) <= 10 ? " دقائق" : " دقيقة") : "🕌 حان الآن وقت صلاة " + name;
         String body = voice ? Alerts.reminderText(i, Store.voiceMin(c)) : d.city + " · " + Day.time(prayerAt);
         String sound = voice ? Store.voiceSound(c, i) : Store.adhanSound(c, i);
 

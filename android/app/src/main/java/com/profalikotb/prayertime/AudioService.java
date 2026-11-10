@@ -58,7 +58,8 @@ public class AudioService extends Service {
         h.postDelayed(this::finish, MAX_MS);
         if (voice) {
             // voice reminder: ONLY the recorded file or the soft chime — never a device / TTS voice
-            playUri(raw("chime".equals(sound) ? R.raw.chime : R.raw.reminder_5min));
+            boolean chime = "chime".equals(sound) || Store.voiceMin(this) != 5; // recording says «خمس دقائق»
+            playUri(raw(chime ? R.raw.chime : R.raw.reminder_5min));
             return START_NOT_STICKY;
         }
         Store.Clip clip = Store.clip(this, sound);

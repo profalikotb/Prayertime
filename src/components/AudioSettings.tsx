@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApp } from './ctx';
-import { Card, Icon, Row, Toggle } from './ui';
+import { Card, Icon, Row, Seg, Toggle } from './ui';
 import { PRAYER_NAMES } from '@/lib/i18n';
 import type { FivePrayer } from '@/lib/types';
 import {
@@ -24,6 +24,7 @@ import {
   saveClip,
   soundLabel,
   voiceSoundFor,
+  REMINDER_MINUTES,
   startRecording,
   stopAll,
   type AddError,
@@ -76,7 +77,7 @@ function errText(e: unknown, kind: ClipKind, ar: boolean): string {
 
 /** «التنبيه بصوتي قبل الصلاة» + «مكتبة الأذان» */
 export default function AudioSettings() {
-  const { s, set } = useApp();
+  const { s, set, f } = useApp();
   const ar = s.lang === 'ar';
   const names = PRAYER_NAMES[s.lang];
   const clips = useClips();
@@ -104,7 +105,7 @@ export default function AudioSettings() {
     const tag = `test-${k}-${which}`;
     if (playing === tag) return stopAll();
     if (which === 'v') {
-      void playSound(voiceSoundFor(a.voice.perPrayer[k].sound), { volume: a.volume, tag });
+      void playSound(voiceSoundFor(a.voice.perPrayer[k].sound, a.voice.minutes || 5), { volume: a.volume, tag });
     } else void playSound(a.adhan[k], { volume: a.volume, tag });
   };
 
@@ -126,8 +127,8 @@ export default function AudioSettings() {
       <Card title={ar ? 'التنبيه بصوتي قبل الصلاة' : 'My voice prayer reminder'} icon="mic" className="md:col-span-2">
         <div id="audio" className="-mt-1 mb-2 text-[12px] leading-5 text-muted">
           {ar
-            ? 'قبل كل صلاة بخمس دقائق يُشغَّل تسجيلك «باقي خمس دقائق على أذان الصلاة…» أو نغمة هادئة — اختر لكل صلاة.'
-            : 'Five minutes before each prayer: your recorded reminder or a soft chime — choose per prayer.'}
+            ? 'قبل كل صلاة (٥ أو ١٠ أو ١٥ أو ٢٠ أو ٢٥ دقيقة) يُشغَّل تسجيلك «باقي خمس دقائق…» أو نغمة هادئة — اختر لكل صلاة.'
+            : 'Before each prayer (5–25 min): your recorded reminder or a soft chime — choose per prayer.'}
         </div>
         <Toggle on={a.voice.enabled} label={ar ? 'تفعيل التنبيه الصوتي' : 'Enable voice reminder'} onChange={(v) => setVoice((x) => ({ ...x, enabled: v }))} />
         {!s.notify.enabled && a.voice.enabled && (
@@ -135,7 +136,16 @@ export default function AudioSettings() {
             {ar ? 'فعّل «التنبيهات» في بطاقة التنبيهات حتى يعمل.' : 'Turn on Notifications (card above) for it to run.'}
           </p>
         )}
-        <p className="mb-1 text-[12px] text-muted">{ar ? 'قبل الأذان بـ ٥ دقائق.' : '5 minutes before the Adhan.'}</p>
+        <Row label={ar ? 'قبل الأذان بـ (دقائق)' : 'Minutes before the Adhan'}>
+          <Seg value={a.voice.minutes || 5} onChange={(v) => setVoice((x) => ({ ...x, minutes: v }))} options={REMINDER_MINUTES.map((m) => ({ v: m, l: f.n(m) }))} />
+        </Row>
+        {(a.voice.minutes || 5) !== 5 && (
+          <p className="mb-1 rounded-lg bg-gold/10 px-2.5 py-1.5 text-[11.5px] text-ink/80">
+            {ar
+              ? `تسجيلك يقول «خمس دقائق»؛ مع ${f.n(a.voice.minutes)} دقيقة تُشغَّل النغمة الهادئة ويظهر الإشعار بالوقت الصحيح. أرسل تسجيلًا لكل مدة إن أردت صوتك فيها.`
+              : `Your recording says “five minutes”; at ${a.voice.minutes} min the soft chime plays with the correct time in the notification.`}
+          </p>
+        )}
         <div className="mt-2 grid gap-1.5">
           {FIVE.map((k) => {
             const p = a.voice.perPrayer[k];
