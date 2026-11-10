@@ -58,9 +58,9 @@ public class AudioService extends Service {
         h.postDelayed(this::finish, MAX_MS);
         if (voice) {
             // voice reminder: ONLY the recorded file or the soft chime — never a device / TTS voice
-            // one recording per lead time; 25 min has none yet → soft chime
+            // one recording per lead time (Egyptian male voice)
             int m = Store.voiceMin(this);
-            int file = m == 5 ? R.raw.reminder_5min : m == 10 ? R.raw.reminder_10min : m == 15 ? R.raw.reminder_15min : m == 20 ? R.raw.reminder_20min : 0;
+            int file = m == 10 ? R.raw.reminder_10min : m == 15 ? R.raw.reminder_15min : m == 20 ? R.raw.reminder_20min : m == 25 ? R.raw.reminder_25min : R.raw.reminder_5min;
             playUri(raw("chime".equals(sound) || file == 0 ? R.raw.chime : file));
             return START_NOT_STICKY;
         }

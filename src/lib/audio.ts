@@ -333,19 +333,20 @@ export function soundLabel(sound: string, clips: ClipMeta[], lang: 'ar' | 'en'):
   if (sound === 'chime') return lang === 'ar' ? 'نغمة هادئة' : 'Soft chime';
   if (sound === 'silent') return lang === 'ar' ? 'صامت (إشعار فقط)' : 'Silent (notification only)';
   if (sound === 'tts') return lang === 'ar' ? 'صوت الجهاز (قراءة آلية)' : 'Device voice (TTS)';
-  if (sound === 'builtin') return lang === 'ar' ? 'التنبيه بصوتي' : 'My voice reminder';
+  if (sound === 'builtin') return lang === 'ar' ? 'التنبيه بصوتي (صوت مصري)' : 'Voice reminder (Egyptian)';
   if (sound === 'legacy') return lang === 'ar' ? 'ملف الموقع adhan.mp3' : 'Site file adhan.mp3';
   const c = clips.find((x) => `clip:${x.id}` === sound);
   return c ? c.name : lang === 'ar' ? 'تسجيل محذوف' : 'Deleted recording';
 }
 
-/** Recorded reminders shipped with the app (cached offline): «باقي خمس / عشر دقائق / ربع ساعة / عشرون دقيقة…» */
+/** Recorded reminders shipped with the app (Egyptian male voice, cached offline): one per lead time 5–25 min */
 export const BUILTIN_REMINDER = '/audio/reminder-5min.mp3';
 export const VOICE_FILES: Record<number, string> = {
   5: '/audio/reminder-5min.mp3',
   10: '/audio/reminder-10min.mp3',
   15: '/audio/reminder-15min.mp3',
   20: '/audio/reminder-20min.mp3',
+  25: '/audio/reminder-25min.mp3',
 };
 export const hasVoiceFor = (m: number) => m in VOICE_FILES;
 

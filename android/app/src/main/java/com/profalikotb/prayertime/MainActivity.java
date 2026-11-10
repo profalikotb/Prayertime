@@ -354,7 +354,7 @@ public class MainActivity extends Activity {
             String[] n = new String[mins.length];
             int sel = 0;
             for (int i = 0; i < mins.length; i++) {
-                n[i] = Day.arabic(String.valueOf(mins[i])) + (mins[i] <= 10 ? " دقائق" : " دقيقة") + (mins[i] <= 20 ? " — تنبيه صوتي" : " — نغمة هادئة");
+                n[i] = Day.arabic(String.valueOf(mins[i])) + (mins[i] <= 10 ? " دقائق" : " دقيقة") + " — تنبيه صوتي";
                 if (mins[i] == Store.voiceMin(this)) sel = i;
             }
             new AlertDialog.Builder(this).setTitle("وقت التنبيه قبل الأذان").setSingleChoiceItems(n, sel, (dlg, w) -> {
@@ -363,7 +363,7 @@ public class MainActivity extends Activity {
                 changed();
             }).show();
         }, GLASS);
-        text(Store.voiceMin(this) <= 20 ? "يُشغَّل التنبيه الصوتي المناسب للمدة أو نغمة هادئة." : "لا يوجد تسجيل لـ ٢٥ دقيقة بعد؛ تُشغَّل النغمة الهادئة ويظهر الإشعار بالوقت الصحيح.", 12, DIM, false);
+        text("يُشغَّل التنبيه الصوتي المناسب للمدة (صوت مصري) أو نغمة هادئة.", 12, DIM, false);
 
         for (int i : Alerts.PRAYERS) {
             final int k = i;
