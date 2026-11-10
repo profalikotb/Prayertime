@@ -304,8 +304,10 @@ export async function playSound(sound: string, opts: { volume: number; tts?: str
       await speak(opts.tts, opts.lang ?? 'ar', opts.volume);
       return true;
     }
-    if (sound === 'builtin') {
-      await playSrc(BUILTIN_REMINDER, opts.volume, tag);
+    if (sound === 'builtin' || sound.startsWith('builtin:')) {
+      // 'builtin:<minutes>' → the voice file for that lead time
+      const m = Number(sound.split(':')[1] ?? 5);
+      await playSrc(VOICE_FILES[m] ?? BUILTIN_REMINDER, opts.volume, tag);
       return true;
     }
     if (sound === 'legacy') {
@@ -337,18 +339,26 @@ export function soundLabel(sound: string, clips: ClipMeta[], lang: 'ar' | 'en'):
   return c ? c.name : lang === 'ar' ? 'تسجيل محذوف' : 'Deleted recording';
 }
 
-/** Prof Ali Kotb's recorded reminder: «باقي خمس دقائق…» (6 s, shipped with the app, cached offline) */
+/** Recorded reminders shipped with the app (cached offline): «باقي خمس / عشر دقائق / ربع ساعة / عشرون دقيقة…» */
 export const BUILTIN_REMINDER = '/audio/reminder-5min.mp3';
+export const VOICE_FILES: Record<number, string> = {
+  5: '/audio/reminder-5min.mp3',
+  10: '/audio/reminder-10min.mp3',
+  15: '/audio/reminder-15min.mp3',
+  20: '/audio/reminder-20min.mp3',
+};
+export const hasVoiceFor = (m: number) => m in VOICE_FILES;
 
 /** Lead times offered for the reminder (minutes before the Adhan). */
 export const REMINDER_MINUTES = [5, 10, 15, 20, 25];
 
 /**
- * Voice reminder plays only the recorded file or the soft chime — never a device/TTS voice.
- * The recording says «خمس دقائق», so at any other lead time the chime plays (the notification shows the right minutes).
+ * Voice reminder plays only a recorded file or the soft chime — never a device/TTS voice.
+ * Each lead time has its own recording; a lead time without one falls back to the chime
+ * (the notification still shows the right minutes).
  */
 export function voiceSoundFor(sound: string, minutes = 5) {
-  return sound === 'chime' || minutes !== 5 ? 'chime' : 'builtin';
+  return sound === 'chime' || !hasVoiceFor(minutes) ? 'chime' : `builtin:${minutes}`;
 }
 
 export const FIVE: FivePrayer[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];

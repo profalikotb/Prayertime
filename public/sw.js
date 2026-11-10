@@ -4,9 +4,9 @@
  * Fonts/icons/other same-origin GETs: stale-while-revalidate.
  * Prayer times are computed on-device, so the app is fully functional offline once cached.
  */
-const VERSION = 'v3.0.0';
+const VERSION = 'v3.1.0';
 const CACHE = `pakpt-${VERSION}`;
-const SHELL = ['/', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png', '/audio/reminder-5min.mp3'];
+const SHELL = ['/', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png', '/audio/reminder-5min.mp3', '/audio/reminder-10min.mp3', '/audio/reminder-15min.mp3', '/audio/reminder-20min.mp3'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

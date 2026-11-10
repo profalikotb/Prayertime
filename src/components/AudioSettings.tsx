@@ -24,6 +24,7 @@ import {
   saveClip,
   soundLabel,
   voiceSoundFor,
+  hasVoiceFor,
   REMINDER_MINUTES,
   startRecording,
   stopAll,
@@ -127,7 +128,7 @@ export default function AudioSettings() {
       <Card title={ar ? 'التنبيه بصوتي قبل الصلاة' : 'My voice prayer reminder'} icon="mic" className="md:col-span-2">
         <div id="audio" className="-mt-1 mb-2 text-[12px] leading-5 text-muted">
           {ar
-            ? 'قبل كل صلاة (٥ أو ١٠ أو ١٥ أو ٢٠ أو ٢٥ دقيقة) يُشغَّل تسجيلك «باقي خمس دقائق…» أو نغمة هادئة — اختر لكل صلاة.'
+            ? 'قبل كل صلاة (٥ أو ١٠ أو ١٥ أو ٢٠ أو ٢٥ دقيقة) يُشغَّل التنبيه الصوتي المناسب للمدة («باقي عشر دقائق…»، «باقي ربع ساعة…») أو نغمة هادئة — اختر لكل صلاة.'
             : 'Before each prayer (5–25 min): your recorded reminder or a soft chime — choose per prayer.'}
         </div>
         <Toggle on={a.voice.enabled} label={ar ? 'تفعيل التنبيه الصوتي' : 'Enable voice reminder'} onChange={(v) => setVoice((x) => ({ ...x, enabled: v }))} />
@@ -139,11 +140,11 @@ export default function AudioSettings() {
         <Row label={ar ? 'قبل الأذان بـ (دقائق)' : 'Minutes before the Adhan'}>
           <Seg value={a.voice.minutes || 5} onChange={(v) => setVoice((x) => ({ ...x, minutes: v }))} options={REMINDER_MINUTES.map((m) => ({ v: m, l: f.n(m) }))} />
         </Row>
-        {(a.voice.minutes || 5) !== 5 && (
+        {!hasVoiceFor(a.voice.minutes || 5) && (
           <p className="mb-1 rounded-lg bg-gold/10 px-2.5 py-1.5 text-[11.5px] text-ink/80">
             {ar
-              ? `تسجيلك يقول «خمس دقائق»؛ مع ${f.n(a.voice.minutes)} دقيقة تُشغَّل النغمة الهادئة ويظهر الإشعار بالوقت الصحيح. أرسل تسجيلًا لكل مدة إن أردت صوتك فيها.`
-              : `Your recording says “five minutes”; at ${a.voice.minutes} min the soft chime plays with the correct time in the notification.`}
+              ? `لا يوجد تسجيل بعد لـ ${f.n(a.voice.minutes)} دقيقة؛ تُشغَّل النغمة الهادئة ويظهر الإشعار بالوقت الصحيح.`
+              : `No recording yet for ${a.voice.minutes} min; the soft chime plays with the correct time in the notification.`}
           </p>
         )}
         <div className="mt-2 grid gap-1.5">
