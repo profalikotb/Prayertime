@@ -188,7 +188,7 @@ export function TransferSettings() {
   const [link, setLink] = useState('');
   useEffect(() => {
     // exclude per-device state (manual surgery switch)
-    const { surgery: _surgery, ...rest } = s; // eslint-disable-line @typescript-eslint/no-unused-vars
+    const { surgery: _surgery, push: _push, ...rest } = s; // eslint-disable-line @typescript-eslint/no-unused-vars
     setLink(`${location.origin}/#import=${b64(JSON.stringify(rest))}`);
   }, [s]);
   return (
@@ -232,6 +232,57 @@ export function TransferSettings() {
         </button>
       </div>
       {msg && <p className="mt-1.5 text-[12px] text-emerald">{msg}</p>}
+    </Card>
+  );
+}
+
+/* ───────────────────────── Closed-app notifications (Web Push via n8n) ───────────────────────── */
+export function PushCard() {
+  const { s, set, place, method } = useApp();
+  const ar = s.lang === 'ar';
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ t: string; bad?: boolean } | null>(null);
+  const [mod, setMod] = useState<typeof import('@/lib/push') | null>(null);
+  useEffect(() => {
+    void import('@/lib/push').then(setMod);
+  }, []);
+  const ERR: Record<string, [string, string]> = {
+    unsupported: ['هذا المتصفح لا يدعم الإشعارات الخلفية.', 'This browser does not support background notifications.'],
+    homescreen: ['على iPhone: أضف التطبيق إلى الشاشة الرئيسية أولًا (مشاركة ← إضافة إلى الشاشة الرئيسية)، ثم افتحه من أيقونته وفعّل من هنا.', 'On iPhone, add the app to the Home Screen first, open it from the icon, then enable here.'],
+    denied: ['لم يُسمح بالإشعارات. اسمح بها من إعدادات الجهاز ثم أعد المحاولة.', 'Notifications were not allowed.'],
+    notconfigured: ['الخادم غير مُعدّ بعد (مفاتيح Vercel).', 'Server not configured yet (Vercel keys).'],
+    network: ['تعذّر الاتصال بخادم التنبيهات (n8n).', 'Could not reach the alert server (n8n).'],
+  };
+  const toggle = async (on: boolean) => {
+    if (!mod) return;
+    setBusy(true);
+    setMsg(null);
+    try {
+      if (on) {
+        await mod.enablePush(s, place, method);
+        set((x) => ({ ...x, push: true }));
+        setMsg({ t: ar ? '✓ مفعّل — ستصلك التنبيهات والتطبيق مغلق.' : '✓ Enabled — alerts arrive with the app closed.' });
+      } else {
+        await mod.disablePush();
+        set((x) => ({ ...x, push: false }));
+        setMsg({ t: ar ? 'أُوقفت التنبيهات الخلفية على هذا الجهاز.' : 'Background alerts turned off on this device.' });
+      }
+    } catch (e) {
+      const k = typeof e === 'string' && ERR[e] ? e : 'network';
+      setMsg({ t: ERR[k][ar ? 0 : 1], bad: true });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Card title={ar ? 'تنبيهات والتطبيق مغلق (iPhone · أندرويد · الكمبيوتر)' : 'Alerts with the app closed'} icon="bell">
+      <p className="-mt-1 mb-2 text-[12.5px] leading-6 text-muted">
+        {ar
+          ? `إشعار قبل كل صلاة بـ ${s.audio.voice.minutes || 5} دقائق وعند الأذان حتى والتطبيق مغلق والهاتف مقفول. على iPhone يلزم فتح التطبيق من أيقونة الشاشة الرئيسية (iOS 16.4 أو أحدث). الصوت نغمة إشعار النظام.`
+          : `A notification ${s.audio.voice.minutes || 5} min before each prayer and at the Adhan, even with the app closed. On iPhone open the app from its Home Screen icon (iOS 16.4+). Uses the system notification sound.`}
+      </p>
+      <Toggle on={!!s.push} label={busy ? (ar ? 'جارٍ…' : 'Working…') : ar ? 'تفعيل التنبيهات الخلفية على هذا الجهاز' : 'Enable background alerts on this device'} onChange={(v) => void toggle(v)} />
+      {msg && <p className={`mt-1 text-[12px] leading-5 ${msg.bad ? 'text-[#c0392b]' : 'text-emerald'}`}>{msg.t}</p>}
     </Card>
   );
 }

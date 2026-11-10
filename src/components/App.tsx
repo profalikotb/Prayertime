@@ -19,6 +19,7 @@ import QuranView from './QuranView';
 import IslamicToday from './IslamicToday';
 import { MiniBody } from './MiniWidget';
 import { unb64 } from './ModeCards';
+import { autoMethod } from '@/lib/methods';
 import { useAudioScheduler } from '@/lib/audioScheduler';
 import { requestCompass } from '@/lib/compassPermission';
 
@@ -133,6 +134,18 @@ export default function App() {
     setTab(k);
   }, []);
 
+  /* ---------- keep the closed-app push subscription in sync (location, method, lead time, surgery) ---------- */
+  const methodNow = place && s ? (s.method === 'auto' ? autoMethod(place.cc) : s.method) : null;
+  const pushSig = s?.push && place && methodNow
+    ? JSON.stringify([place.lat.toFixed(3), place.lng.toFixed(3), place.tz, methodNow, s.madhab, s.audio.voice.minutes, s.audio.voice.enabled, s.lang, s.surgery?.until ?? 0, s.notify.perPrayer])
+    : '';
+  useEffect(() => {
+    if (!pushSig || !s || !place || !methodNow) return;
+    const id = setTimeout(() => void import('@/lib/push').then((m) => m.syncPush(s, place, methodNow)).catch(() => undefined), 3000);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pushSig]);
+
   /* ---------- deep links (#qibla, #islamic, #settings …) — used by the Android widget shortcuts ---------- */
   useEffect(() => {
     const read = () => {
@@ -142,7 +155,7 @@ export default function App() {
         try {
           const incoming = JSON.parse(unb64(location.hash.slice(8)));
           if (incoming?.v === 1 && confirm(incoming.lang === 'en' ? 'Copy the settings from your other device to this one?' : 'نسخ الإعدادات من جهازك الآخر إلى هذا الجهاز؟')) {
-            saveSettings({ ...loadSettings(), ...incoming, surgery: null });
+            saveSettings({ ...loadSettings(), ...incoming, surgery: null, push: loadSettings().push });
             history.replaceState(null, '', '/');
             location.reload();
             return;

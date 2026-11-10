@@ -144,6 +144,8 @@ export interface Settings {
   shareFooter: string;
   /** manual "in theatre" switch: silent alerts until `until` (epoch ms) */
   surgery: { from: number; until: number } | null;
+  /** this device is subscribed to closed-app push alerts (n8n) */
+  push?: boolean;
   /** travel mode: homes + qasr distance (km) */
   travel: { enabled: boolean; km: number; homes: import('./modes').Home[] };
 }

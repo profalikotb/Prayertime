@@ -4,7 +4,7 @@
  * Fonts/icons/other same-origin GETs: stale-while-revalidate.
  * Prayer times are computed on-device, so the app is fully functional offline once cached.
  */
-const VERSION = 'v2.9.0';
+const VERSION = 'v3.0.0';
 const CACHE = `pakpt-${VERSION}`;
 const SHELL = ['/', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png', '/audio/reminder-5min.mp3'];
 
@@ -75,6 +75,28 @@ self.addEventListener('fetch', (e) => {
         })
         .catch(() => hit);
       return hit || net;
+    }),
+  );
+});
+
+// closed-app alerts sent by /api/push/tick (n8n every minute)
+self.addEventListener('push', (e) => {
+  let d = {};
+  try {
+    d = e.data ? e.data.json() : {};
+  } catch {
+    d = { title: e.data ? e.data.text() : '' };
+  }
+  e.waitUntil(
+    self.registration.showNotification(d.title || 'مواقيت الصلاة', {
+      body: d.body || '',
+      tag: d.tag || 'prayer',
+      renotify: true,
+      silent: !!d.silent,
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      lang: 'ar',
+      dir: 'rtl',
     }),
   );
 });
