@@ -5,7 +5,9 @@
  * (home-screen app, iOS 16.4+). Returns the endpoints that no longer exist so n8n can drop them.
  */
 import { NextResponse, type NextRequest } from 'next/server';
+import { createECDH } from 'node:crypto';
 import webpush from 'web-push';
+import { VAPID_PUBLIC } from '@/lib/pushKey';
 import { civilToday, isValidTz, weekday } from '@/lib/civil';
 import { hijriFor } from '@/lib/hijri';
 import { autoMethod } from '@/lib/methods';
@@ -41,12 +43,14 @@ interface Sub {
 }
 
 export async function POST(req: NextRequest) {
-  if (!process.env.PUSH_SECRET || req.headers.get('x-push-secret') !== process.env.PUSH_SECRET) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-  }
-  const pub = process.env.VAPID_PUBLIC_KEY;
-  const priv = process.env.VAPID_PRIVATE_KEY;
-  if (!pub || !priv) return NextResponse.json({ error: 'VAPID keys missing' }, { status: 500 });
+  // Two ways to authorise (no Vercel setup needed for the second):
+  //  1) env PUSH_SECRET + VAPID_PRIVATE_KEY on Vercel, n8n sends x-push-secret
+  //  2) n8n sends the VAPID private key itself (x-vapid-private); accepted only if it derives the public key
+  const pub = process.env.VAPID_PUBLIC_KEY || VAPID_PUBLIC;
+  const envOk = !!process.env.PUSH_SECRET && req.headers.get('x-push-secret') === process.env.PUSH_SECRET && !!process.env.VAPID_PRIVATE_KEY;
+  const hdr = req.headers.get('x-vapid-private') ?? '';
+  const priv = envOk ? process.env.VAPID_PRIVATE_KEY! : matches(hdr, pub) ? hdr : '';
+  if (!priv) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   webpush.setVapidDetails('mailto:prayer-times@prayertimealikotb.vercel.app', pub, priv);
 
   const body = await req.json().catch(() => ({}));
@@ -108,4 +112,16 @@ export async function POST(req: NextRequest) {
     }),
   );
   return NextResponse.json({ ok: true, checked: subs.length, sent, expired: [...new Set(expired)] });
+}
+
+/** true if the base64url P-256 private key belongs to the base64url public key */
+function matches(priv: string, pub: string): boolean {
+  try {
+    if (!/^[A-Za-z0-9_-]{40,50}$/.test(priv)) return false;
+    const e = createECDH('prime256v1');
+    e.setPrivateKey(Buffer.from(priv, 'base64url'));
+    return e.getPublicKey().toString('base64url') === pub;
+  } catch {
+    return false;
+  }
 }

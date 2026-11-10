@@ -250,7 +250,7 @@ export function PushCard() {
     unsupported: ['هذا المتصفح لا يدعم الإشعارات الخلفية.', 'This browser does not support background notifications.'],
     homescreen: ['على iPhone: أضف التطبيق إلى الشاشة الرئيسية أولًا (مشاركة ← إضافة إلى الشاشة الرئيسية)، ثم افتحه من أيقونته وفعّل من هنا.', 'On iPhone, add the app to the Home Screen first, open it from the icon, then enable here.'],
     denied: ['لم يُسمح بالإشعارات. اسمح بها من إعدادات الجهاز ثم أعد المحاولة.', 'Notifications were not allowed.'],
-    notconfigured: ['الخادم غير مُعدّ بعد (مفاتيح Vercel).', 'Server not configured yet (Vercel keys).'],
+    notconfigured: ['خادم التنبيهات (n8n) غير مفعّل: استورد ملف Prayer-Push-n8n.json في n8n واضغط Active، ثم أعد المحاولة.', 'The n8n alert workflow is not active: import Prayer-Push-n8n.json into n8n and switch it Active, then retry.'],
     network: ['تعذّر الاتصال بخادم التنبيهات (n8n).', 'Could not reach the alert server (n8n).'],
   };
   const toggle = async (on: boolean) => {
@@ -278,7 +278,7 @@ export function PushCard() {
     <Card title={ar ? 'تنبيهات والتطبيق مغلق (iPhone · أندرويد · الكمبيوتر)' : 'Alerts with the app closed'} icon="bell">
       <p className="-mt-1 mb-2 text-[12.5px] leading-6 text-muted">
         {ar
-          ? `إشعار قبل كل صلاة بـ ${s.audio.voice.minutes || 5} دقائق وعند الأذان حتى والتطبيق مغلق والهاتف مقفول. على iPhone يلزم فتح التطبيق من أيقونة الشاشة الرئيسية (iOS 16.4 أو أحدث). الصوت نغمة إشعار النظام.`
+          ? `إشعار قبل كل صلاة بـ ${s.audio.voice.minutes || 5} ${(s.audio.voice.minutes || 5) <= 10 ? 'دقائق' : 'دقيقة'} وعند الأذان حتى والتطبيق مغلق والهاتف مقفول. على iPhone يلزم فتح التطبيق من أيقونة الشاشة الرئيسية (iOS 16.4 أو أحدث). الصوت نغمة إشعار النظام.`
           : `A notification ${s.audio.voice.minutes || 5} min before each prayer and at the Adhan, even with the app closed. On iPhone open the app from its Home Screen icon (iOS 16.4+). Uses the system notification sound.`}
       </p>
       <Toggle on={!!s.push} label={busy ? (ar ? 'جارٍ…' : 'Working…') : ar ? 'تفعيل التنبيهات الخلفية على هذا الجهاز' : 'Enable background alerts on this device'} onChange={(v) => void toggle(v)} />

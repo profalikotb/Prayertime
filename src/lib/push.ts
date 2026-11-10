@@ -5,6 +5,7 @@
  * n8n calls /api/push/tick every minute, which sends the notifications.
  */
 import type { MethodKey, Place, Settings } from './types';
+import { VAPID_PUBLIC } from './pushKey';
 
 export const DEFAULT_WEBHOOK = 'https://n8n.srv1044029.hstgr.cloud/webhook/prayer-push';
 
@@ -58,8 +59,9 @@ export async function enablePush(s: Settings, place: Place, method: MethodKey): 
   if (needsHomeScreen()) throw 'homescreen' as PushError;
   const perm = await Notification.requestPermission();
   if (perm !== 'granted') throw 'denied' as PushError;
-  const { key, webhook } = await config().catch(() => ({ key: '', webhook: DEFAULT_WEBHOOK }));
-  if (!key) throw 'notconfigured' as PushError;
+  const cfg = await config().catch(() => ({ key: '', webhook: DEFAULT_WEBHOOK }));
+  const key = cfg.key || VAPID_PUBLIC;
+  const webhook = cfg.webhook;
   const reg = await navigator.serviceWorker.ready;
   const sub =
     (await reg.pushManager.getSubscription()) ??
@@ -88,6 +90,7 @@ export async function disablePush(): Promise<void> {
 }
 
 async function send(url: string, body: unknown) {
-  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) });
-  if (!r.ok) throw 'network' as PushError;
+  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) }).catch(() => null);
+  if (!r) throw 'network' as PushError;
+  if (!r.ok) throw (r.status === 404 ? 'notconfigured' : 'network') as PushError;
 }
