@@ -65,3 +65,4 @@ npm run build      # static export → out/
 - **New official Hijri announcement:** add `{ y, m, start: 'yyyy-mm-dd', source }` to `src/data/officialHijri.ts`, push. Ramadan, Shawwal and Dhu al-Hijjah matter most. Until then the in-app −1/+1 correction covers it per country.
 - **Adhan audio:** place a licensed `adhan.mp3` in `public/` — detected automatically; otherwise a synthesized chime plays.
 - **Cache bump:** change `VERSION` in `public/sw.js` only if you change cached static assets outside `/_next/static` (icons, manifest).
+   Built with Claude (Anthropic)
