@@ -15,7 +15,8 @@ import type { HijriResult, Place, PrayerTimesDay, Settings } from './types';
 import { PRAYER_NAMES } from './i18n';
 import { show } from './notify';
 import { FIVE, playSound, reminderText, voiceSoundFor } from './audio';
-import { parseKey, weekday } from './civil';
+import { parseKey, wallClock, weekday } from './civil';
+import { activeSurgery, surgeryWindows } from './modes';
 
 const KEY = 'pakpt.fired.v1';
 const WINDOW = 90_000; // an alert fires if the app is open within 90 s after its moment
@@ -51,6 +52,11 @@ export function useAudioScheduler(now: Date, s: Settings | null, times: { today:
     const tNow = now.getTime();
     const city = place.city[s.lang];
     const friday = weekday(parseKey(dayKey)) === 5;
+    // surgery mode: notifications + vibration only, no sound; one summary when the list ends
+    const dw = wallClock(times.today.dhuhr, place.tz);
+    const windows = surgeryWindows(s, parseKey(dayKey), times.today, dw.h * 60 + dw.min);
+    const inSurgery = !!activeSurgery(windows, tNow);
+    const play: typeof playSound = (snd, o) => (inSurgery ? Promise.resolve(true) : playSound(snd, o));
 
     const due = (id: string, at: number) => {
       if (ids.has(id) || tNow < at || tNow - at >= WINDOW) return false;
@@ -70,23 +76,39 @@ export function useAudioScheduler(now: Date, s: Settings | null, times: { today:
       if (voiceOn && due(`${k}-v`, at - lead * 60000)) {
         const text = reminderText(namesAr[k], namesEn[k], lead, s.lang);
         void show(label, text, n.vibrate);
-        void playSound(voiceSoundFor(v.sound, lead), { volume: a.volume, tag: `${k}-v` });
+        void play(voiceSoundFor(v.sound, lead), { volume: a.volume, tag: `${k}-v` });
       }
       // 2) the generic "before" chime — skipped when the voice reminder already covers this prayer
       if (!voiceOn && n.perPrayer[k].before && n.beforeMin > 0 && due(`${k}-b`, at - n.beforeMin * 60000)) {
         void show(label, s.lang === 'ar' ? `بعد ${n.beforeMin} دقيقة` : `In ${n.beforeMin} minutes`, n.vibrate);
-        if (n.sound !== 'silent') void playSound('chime', { volume: a.volume });
+        if (n.sound !== 'silent') void play('chime', { volume: a.volume });
       }
       // 3) the Adhan at the exact time
       if (n.perPrayer[k].at && due(`${k}-a`, at)) {
         const body = s.lang === 'ar' ? `حان الآن وقت صلاة ${label} · ${city} · ${fmtTime(times.today[k])}` : `Time for ${label} · ${city} · ${fmtTime(times.today[k])}`;
         void show(label, body, n.vibrate);
-        void playSound(n.sound === 'silent' ? 'silent' : a.adhan[k], { volume: a.volume, tag: `${k}-a` });
+        void play(n.sound === 'silent' ? 'silent' : a.adhan[k], { volume: a.volume, tag: `${k}-a` });
       }
     }
     if (n.ramadan && hijri.m === 9 && due('suhoor', times.today.fajr.getTime() - 30 * 60000)) {
       void show(s.lang === 'ar' ? 'السحور' : 'Suhoor', s.lang === 'ar' ? 'بقي ٣٠ دقيقة على الفجر' : '30 minutes until Fajr', n.vibrate);
-      if (n.sound !== 'silent') void playSound('chime', { volume: a.volume });
+      if (n.sound !== 'silent') void play('chime', { volume: a.volume });
+    }
+    // end of a surgery window: list the prayers whose time fell inside it
+    for (const w of windows) {
+      if (!due(`surg-${w.end}`, w.end)) continue;
+      const missed = FIVE.filter((k) => {
+        const t = times.today[k].getTime();
+        return t >= w.start && t < w.end;
+      });
+      if (!missed.length) continue;
+      const list = missed.map((k) => names[k]).join(s.lang === 'ar' ? ' و' : ' & ');
+      void show(
+        s.lang === 'ar' ? 'انتهت العمليات' : 'Surgery finished',
+        s.lang === 'ar' ? `صلاة ${list} — حان وقت أدائها` : `Prayers due: ${list}`,
+        n.vibrate,
+      );
+      void playSound('chime', { volume: a.volume });
     }
   }, [now, s, times, dayKey, hijri.m, place, fmtTime]);
 }

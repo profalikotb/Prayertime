@@ -142,4 +142,8 @@ export interface Settings {
   scheduleClean?: boolean;
   /** footer line printed on shared prayer-time cards */
   shareFooter: string;
+  /** manual "in theatre" switch: silent alerts until `until` (epoch ms) */
+  surgery: { from: number; until: number } | null;
+  /** travel mode: homes + qasr distance (km) */
+  travel: { enabled: boolean; km: number; homes: import('./modes').Home[] };
 }

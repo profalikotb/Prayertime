@@ -28,6 +28,7 @@ type IconName =
   | 'play'
   | 'stop'
   | 'upload'
+  | 'share'
   | 'trash';
 
 const PATHS: Record<IconName, ReactNode> = {
@@ -95,6 +96,7 @@ const PATHS: Record<IconName, ReactNode> = {
   play: <path d="M8 5.5v13l10.5-6.5L8 5.5Z" />,
   stop: <path d="M7 7h10v10H7z" />,
   upload: <path d="M12 16V4m0 0-5 5m5-5 5 5M4 20h16" />,
+  share: <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm12 7a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />,
   trash: <path d="M5 7h14M10 7V4h4v3m-7 0 1 13h8l1-13" />,
 };
 

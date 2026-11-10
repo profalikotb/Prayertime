@@ -13,6 +13,9 @@ import { significanceFor } from '@/data/significance';
 import { eventsForDay, eventsForMonthOnly } from '@/data/history';
 import EventCard from './EventCard';
 import WikiDayList from './WikiDayList';
+import { SurgeryCard, TravelCard } from './ModeCards';
+import { useFastLog } from '@/lib/fastLog';
+import { key as dayKeyOf } from '@/lib/civil';
 import { ClinicCard, LogCard, LogCheck } from './DailyCards';
 import ShareCard from './ShareCard';
 import { DesktopWidgetButton } from './MiniWidget';
@@ -28,6 +31,8 @@ export default function Today() {
       <div className="grid gap-3 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start">
         <div className="grid gap-3 lg:sticky lg:top-4">
           <Hero />
+          <SurgeryCard />
+          <TravelCard />
           <LocationNotice />
           <PrayerList />
           <LogCard />
@@ -360,6 +365,7 @@ function RamadanCard() {
             </div>
           ))}
         </dl>
+        <FastRow />
         {hijri.d >= 20 && (
           <div className="mt-3 rounded-xl border border-gold/30 bg-gold/5 p-3">
             <p className="flex items-center gap-1.5 text-[13px] font-bold text-gold">
@@ -391,7 +397,64 @@ function RamadanCard() {
           {r.h.status !== 'official' && <p className="text-[11px] text-muted">{t.provisionalNote}</p>}
         </div>
       </div>
+      <QadaFasts />
     </Card>
+  );
+}
+
+/** Ramadan: «صمت اليوم» + days fasted this Ramadan + make-up counter */
+function FastRow() {
+  const { s, f, today, hijri, hctx } = useApp();
+  const ar = s.lang === 'ar';
+  const [log, update] = useFastLog();
+  const k = dayKeyOf(today);
+  const on = log.days[k] === 1;
+  const start = gregorianFor({ y: hijri.y, m: 9, d: 1 }, hctx, today);
+  const fasted = start ? Object.entries(log.days).filter(([d, v]) => v === 1 && d >= dayKeyOf(start.date) && d <= k).length : 0;
+  return (
+    <div className="mt-3 flex items-center gap-3 rounded-xl bg-emerald/5 p-2.5">
+      <button
+        type="button"
+        aria-pressed={on}
+        onClick={() => update((l) => ({ ...l, days: { ...l.days, [k]: on ? 0 : 1 } }))}
+        className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-bold ${on ? 'bg-emerald text-white' : 'bg-surface text-emerald'}`}
+      >
+        <Icon name="check" className="h-4 w-4" />
+        {ar ? 'صمتُ اليوم' : 'Fasted today'}
+      </button>
+      <p className="flex-1 text-[12.5px]">
+        {ar ? 'أيام صُمتها هذا الشهر: ' : 'Days fasted: '}
+        <b className="tnum text-emerald">
+          {f.n(fasted)}/{f.n(hijri.d)}
+        </b>
+      </p>
+      <QadaFasts inline />
+    </div>
+  );
+}
+
+function QadaFasts({ inline = false }: { inline?: boolean }) {
+  const { s, f } = useApp();
+  const ar = s.lang === 'ar';
+  const [log, update] = useFastLog();
+  if (!inline && log.qada === 0) {
+    return (
+      <button type="button" onClick={() => update((l) => ({ ...l, qada: 1 }))} className="mt-2 text-[12px] font-bold text-emerald">
+        {ar ? '＋ أيام قضاء صيام عليّ' : '＋ Make-up fasts owed'}
+      </button>
+    );
+  }
+  return (
+    <div className={`flex items-center gap-1.5 ${inline ? '' : 'mt-2'}`}>
+      <span className="text-[11.5px] text-muted">{ar ? 'قضاء:' : 'Qada:'}</span>
+      <button type="button" className="h-7 w-7 rounded-lg bg-surface text-[15px] font-bold shadow-sm" onClick={() => update((l) => ({ ...l, qada: Math.max(0, l.qada - 1) }))}>
+        −
+      </button>
+      <span className="tnum min-w-[2ch] text-center text-[15px] font-extrabold">{f.n(log.qada)}</span>
+      <button type="button" className="h-7 w-7 rounded-lg bg-surface text-[15px] font-bold shadow-sm" onClick={() => update((l) => ({ ...l, qada: l.qada + 1 }))}>
+        +
+      </button>
+    </div>
   );
 }
 

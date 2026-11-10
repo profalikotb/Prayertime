@@ -1,5 +1,6 @@
 import type { Adjustments, Place, Settings } from './types';
 import { DEFAULT_CLINICS, LEGACY_SAMPLE_IDS } from './clinics';
+import { DEFAULT_HOMES, DEFAULT_TRAVEL_KM } from './modes';
 
 const KEY = 'pakpt.settings.v1';
 const PLACE_KEY = 'pakpt.place.v1';
@@ -25,6 +26,8 @@ export function defaultSettings(): Settings {
     hijriConfirmedAt: { EG: null, SA: null, OTHER: null },
     clinics: DEFAULT_CLINICS.map((c) => ({ ...c, days: [...c.days] })),
     scheduleClean: true,
+    surgery: null,
+    travel: { enabled: true, km: DEFAULT_TRAVEL_KM, homes: DEFAULT_HOMES.map((h) => ({ ...h })) },
     audio: {
       v: 3,
       voice: {

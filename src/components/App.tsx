@@ -18,6 +18,7 @@ import SettingsView from './SettingsView';
 import QuranView from './QuranView';
 import IslamicToday from './IslamicToday';
 import { MiniBody } from './MiniWidget';
+import { unb64 } from './ModeCards';
 import { useAudioScheduler } from '@/lib/audioScheduler';
 import { requestCompass } from '@/lib/compassPermission';
 
@@ -136,6 +137,22 @@ export default function App() {
   useEffect(() => {
     const read = () => {
       if (location.hash === '#mini') return setMini(true);
+      if (location.hash.startsWith('#import=')) {
+        // settings link from another device
+        try {
+          const incoming = JSON.parse(unb64(location.hash.slice(8)));
+          if (incoming?.v === 1 && confirm(incoming.lang === 'en' ? 'Copy the settings from your other device to this one?' : 'نسخ الإعدادات من جهازك الآخر إلى هذا الجهاز؟')) {
+            saveSettings({ ...loadSettings(), ...incoming, surgery: null });
+            history.replaceState(null, '', '/');
+            location.reload();
+            return;
+          }
+        } catch {
+          /* bad link */
+        }
+        history.replaceState(null, '', '/');
+        return;
+      }
       const h = location.hash.replace('#', '') as Tab;
       if (['today', 'calendar', 'quran', 'qibla', 'settings', 'islamic'].includes(h)) setTab(h);
     };

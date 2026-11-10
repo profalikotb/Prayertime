@@ -6,6 +6,7 @@ import HijriAdjust from './HijriAdjust';
 import WidgetCard from './WidgetCard';
 import ClinicSettings from './ClinicSettings';
 import AudioSettings from './AudioSettings';
+import { TransferSettings, TravelSettings } from './ModeCards';
 import { CITIES } from '@/data/cities';
 import { METHODS, autoMethod, methodInfo } from '@/lib/methods';
 import { PRAYER_NAMES } from '@/lib/i18n';
@@ -384,6 +385,10 @@ export default function SettingsView() {
       <AudioSettings />
 
       <ClinicSettings />
+
+      <TravelSettings />
+
+      <TransferSettings />
 
       <WidgetCard />
 
