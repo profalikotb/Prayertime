@@ -361,7 +361,6 @@ export const hasVoiceFor = (m: number) => m in VOICE_FILES;
 /** Adhans shipped with the app (Egyptian radio-era recordings; full + short ≈ 1 min ending after the first Shahada pair). */
 export const BUILTIN_ADHANS: { id: string; src: string; ar: string; en: string }[] = [
   { id: 'adhan:refaat-short', src: '/audio/adhan/refaat-short.mp3', ar: '🕌 الشيخ محمد رفعت – مختصر', en: '🕌 Sheikh Mohamed Refaat – short' },
-  { id: 'adhan:refaat', src: '/audio/adhan/refaat.mp3', ar: '🕌 الشيخ محمد رفعت – كامل', en: '🕌 Sheikh Mohamed Refaat – full' },
 ];
 export const DEFAULT_ADHAN = 'adhan:refaat-short';
 

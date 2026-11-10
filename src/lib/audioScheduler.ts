@@ -14,7 +14,7 @@ import { useEffect, useRef } from 'react';
 import type { HijriResult, Place, PrayerTimesDay, Settings } from './types';
 import { PRAYER_NAMES } from './i18n';
 import { show } from './notify';
-import { FIVE, playSound, reminderText, voiceSoundFor } from './audio';
+import { DEFAULT_ADHAN, FIVE, playSound, reminderText, voiceSoundFor } from './audio';
 import { parseKey, wallClock, weekday } from './civil';
 import { activeSurgery, surgeryWindows } from './modes';
 
@@ -89,7 +89,7 @@ export function useAudioScheduler(now: Date, s: Settings | null, times: { today:
       if (n.perPrayer[k].at && due(`${k}-a`, at)) {
         const body = s.lang === 'ar' ? `حان الآن وقت صلاة ${label} · ${city} · ${fmtTime(times.today[k])}` : `Time for ${label} · ${city} · ${fmtTime(times.today[k])}`;
         void showLocal(label, body, n.vibrate);
-        void play(n.sound === 'silent' ? 'silent' : a.adhan[k], { volume: a.volume, tag: `${k}-a` });
+        void play(n.sound === 'silent' ? 'silent' : DEFAULT_ADHAN, { volume: a.volume, tag: `${k}-a` });
       }
     }
     if (n.ramadan && hijri.m === 9 && due('suhoor', times.today.fajr.getTime() - 30 * 60000)) {

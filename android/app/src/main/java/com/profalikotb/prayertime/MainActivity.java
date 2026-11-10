@@ -372,7 +372,6 @@ public class MainActivity extends Activity {
             button(Day.AR[i] + "   🎙 " + vs + "   🕌 " + as, v -> prayerDialog(k), 0x22FFFFFF);
         }
 
-        button("📁  إضافة ملف أذان (مصري، مكي، مدني، تركي، مغربي…)", v -> pick(PICK_ADHAN), GLASS);
         button("🗂  إدارة التسجيلات (تشغيل، تسمية، حذف)", v -> manageDialog(), GLASS);
 
         TextView vl = text("مستوى الصوت: " + Day.arabic(String.valueOf(Store.volume(this))) + "٪", 14, 0xFFFBF5E6, false);
@@ -401,7 +400,6 @@ public class MainActivity extends Activity {
         if ("chime".equals(id)) return "نغمة هادئة";
         if ("default".equals(id)) return "صوت النظام";
         if ("refaat_short".equals(id)) return "الشيخ محمد رفعت – مختصر";
-        if ("refaat".equals(id)) return "الشيخ محمد رفعت – كامل";
         if ("silent".equals(id)) return "صامت";
         Store.Clip c = Store.clip(this, id);
         return c != null ? c.name : (voice ? "تسجيلي" : "الشيخ محمد رفعت – مختصر");
@@ -427,12 +425,7 @@ public class MainActivity extends Activity {
             ids.add("builtin"); names.add("التنبيه بصوتي: «باقي خمس دقائق على أذان الصلاة…»");
             ids.add("chime"); names.add("نغمة هادئة");
         } else {
-            ids.add("refaat_short"); names.add("🕌 الشيخ محمد رفعت – مختصر (دقيقة)");
-            ids.add("refaat"); names.add("🕌 الشيخ محمد رفعت – كامل");
-            ids.add("default"); names.add("صوت النظام");
-            ids.add("chime"); names.add("نغمة هادئة");
-            ids.add("silent"); names.add("صامت (إشعار فقط)");
-            for (Store.Clip c : clips) { ids.add("clip:" + c.id); names.add("🕌 " + c.name); }
+            ids.add("refaat_short"); names.add("🕌 الشيخ محمد رفعت – مختصر");
         }
         boolean on = voice ? Store.voiceFor(this, i) : Store.adhanFor(this, i);
         String cur = on ? (voice ? Store.voiceSound(this, i) : Store.adhanSound(this, i)) : "off";

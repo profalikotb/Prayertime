@@ -30,7 +30,7 @@ export function defaultSettings(): Settings {
     surgery: null,
     travel: { enabled: true, km: DEFAULT_TRAVEL_KM, homes: DEFAULT_HOMES.map((h) => ({ ...h })) },
     audio: {
-      v: 4,
+      v: 5,
       voice: {
         enabled: true,
         minutes: 5,
@@ -113,10 +113,10 @@ export function loadSettings(): Settings {
       st.audio.v = 3;
       saveSettings(st);
     }
-    if ((st.audio.v ?? 0) < 4) {
-      // 2.5: Sheikh Mohamed Refaat's Adhan (short) replaces the plain chime as the default Adhan
-      for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) if (st.audio.adhan[k] === 'chime') st.audio.adhan[k] = DEFAULT_ADHAN;
-      st.audio.v = 4;
+    if ((st.audio.v ?? 0) < 5) {
+      // 2.6: the only Adhan is Sheikh Mohamed Refaat (short)
+      for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) st.audio.adhan[k] = DEFAULT_ADHAN;
+      st.audio.v = 5;
       saveSettings(st);
     }
     if (!parsed.audio && parsed.notify?.sound === 'adhan') {
