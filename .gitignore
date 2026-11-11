@@ -9,3 +9,4 @@ next-env.d.ts
 public/data/official-hijri.json
 ios/build/
 ios/PrayerTime.xcodeproj/
+ios/PrayerTime/Info.plist

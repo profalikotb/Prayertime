@@ -36,6 +36,7 @@ jobs:
           mkdir -p Payload && cp -R "$APP" Payload/
           zip -qry PrayerTime.ipa Payload
           ls -la PrayerTime.ipa
+          /usr/libexec/PlistBuddy -c "Print :NSAlarmKitUsageDescription" Payload/*.app/Info.plist
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ios-latest
