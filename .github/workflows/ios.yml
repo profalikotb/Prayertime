@@ -1,0 +1,47 @@
+name: iOS IPA
+
+on:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          brew install xcodegen
+      - name: Generate project
+        working-directory: ios
+        run: xcodegen generate
+      - name: Build (unsigned — AltStore / Sideloadly sign it with your Apple ID)
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild -project PrayerTime.xcodeproj -scheme PrayerTime -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build | tail -n 80
+      - name: Package IPA
+        run: |
+          APP=$(find ios/build/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' | head -1)
+          mkdir -p Payload && cp -R "$APP" Payload/
+          zip -qry PrayerTime.ipa Payload
+          ls -la PrayerTime.ipa
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ios-latest
+          name: مواقيت الصلاة – تطبيق iPhone (أحدث إصدار)
+          body: |
+            ملف IPA غير موقَّع: ثبّته بـ AltStore أو Sideloadly باستخدام Apple ID المجاني (يُجدَّد كل 7 أيام).
+            يتطلب iOS 26. Build ${{ github.run_number }}
+          files: PrayerTime.ipa
+          make_latest: false

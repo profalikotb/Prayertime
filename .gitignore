@@ -7,3 +7,5 @@ next-env.d.ts
 .DS_Store
 .env*.local
 public/data/official-hijri.json
+ios/build/
+ios/PrayerTime.xcodeproj/
