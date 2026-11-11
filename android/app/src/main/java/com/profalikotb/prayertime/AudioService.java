@@ -54,12 +54,17 @@ public class AudioService extends Service {
         release(); // never overlap with a previous alert
         String sound = in.getStringExtra(X_SOUND);
         am = getSystemService(AudioManager.class);
+        forceMax();
         requestFocus();
         h.postDelayed(this::finish, MAX_MS);
         if (voice) {
             // voice reminder: ONLY the recorded file or the soft chime — never a device / TTS voice
             // one recording per lead time (Egyptian male voice)
             int m = Store.voiceMin(this);
+            if ("own".equals(sound)) {
+                playUri(raw(R.raw.reminder_own)); // his own voice
+                return START_NOT_STICKY;
+            }
             int file = m == 10 ? R.raw.reminder_10min : m == 15 ? R.raw.reminder_15min : m == 20 ? R.raw.reminder_20min : m == 25 ? R.raw.reminder_25min : R.raw.reminder_5min;
             playUri(raw("chime".equals(sound) || file == 0 ? R.raw.chime : file));
             return START_NOT_STICKY;
@@ -67,6 +72,25 @@ public class AudioService extends Service {
         // the only Adhan: Sheikh Mohamed Refaat (short)
         playUri(raw(R.raw.adhan_refaat_short));
         return START_NOT_STICKY;
+    }
+
+    /** Mandatory alert: alarm stream to maximum for the playback, restored afterwards. */
+    private int savedVol = -1;
+    private void forceMax() {
+        if (am == null) return;
+        try {
+            if (savedVol < 0) savedVol = am.getStreamVolume(AudioManager.STREAM_ALARM);
+            am.setStreamVolume(AudioManager.STREAM_ALARM, am.getStreamMaxVolume(AudioManager.STREAM_ALARM), 0);
+        } catch (Exception ignored) {
+        }
+    }
+    private void restoreVol() {
+        if (am == null || savedVol < 0) return;
+        try {
+            am.setStreamVolume(AudioManager.STREAM_ALARM, savedVol, 0);
+        } catch (Exception ignored) {
+        }
+        savedVol = -1;
     }
 
     private AudioAttributes attrs() {
@@ -89,8 +113,7 @@ public class AudioService extends Service {
             player = new MediaPlayer();
             player.setAudioAttributes(attrs());
             player.setDataSource(this, u);
-            float v = Store.volume(this) / 100f;
-            player.setVolume(v, v);
+            player.setVolume(1f, 1f); // always full
             player.setOnCompletionListener(m -> finish());
             player.setOnErrorListener((m, w, e) -> {
                 finish();
@@ -120,6 +143,7 @@ public class AudioService extends Service {
 
     private void finish() {
         release();
+        restoreVol();
         stopForeground(STOP_FOREGROUND_DETACH); // keep the notification text visible
         stopSelf();
     }
@@ -127,6 +151,7 @@ public class AudioService extends Service {
     @Override
     public void onDestroy() {
         release();
+        restoreVol();
         super.onDestroy();
     }
 }

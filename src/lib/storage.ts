@@ -30,16 +30,16 @@ export function defaultSettings(): Settings {
     surgery: null,
     travel: { enabled: true, km: DEFAULT_TRAVEL_KM, homes: DEFAULT_HOMES.map((h) => ({ ...h })) },
     audio: {
-      v: 5,
+      v: 6,
       voice: {
         enabled: true,
-        minutes: 5,
+        minutes: 15,
         perPrayer: {
-          fajr: { on: true, sound: 'builtin' },
-          dhuhr: { on: true, sound: 'builtin' },
-          asr: { on: true, sound: 'builtin' },
-          maghrib: { on: true, sound: 'builtin' },
-          isha: { on: true, sound: 'builtin' },
+          fajr: { on: true, sound: 'own' },
+          dhuhr: { on: true, sound: 'own' },
+          asr: { on: true, sound: 'own' },
+          maghrib: { on: true, sound: 'own' },
+          isha: { on: true, sound: 'own' },
         },
       },
       adhan: { fajr: DEFAULT_ADHAN, dhuhr: DEFAULT_ADHAN, asr: DEFAULT_ADHAN, maghrib: DEFAULT_ADHAN, isha: DEFAULT_ADHAN },
@@ -117,6 +117,15 @@ export function loadSettings(): Settings {
       // 2.6: the only Adhan is Sheikh Mohamed Refaat (short)
       for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) st.audio.adhan[k] = DEFAULT_ADHAN;
       st.audio.v = 5;
+      saveSettings(st);
+    }
+    if ((st.audio.v ?? 0) < 6) {
+      // 2.8: his own recorded voice, 15 min before every prayer, full volume
+      st.audio.voice.enabled = true;
+      st.audio.voice.minutes = 15;
+      for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) st.audio.voice.perPrayer[k] = { on: true, sound: 'own' };
+      st.audio.volume = 1;
+      st.audio.v = 6;
       saveSettings(st);
     }
     if (!parsed.audio && parsed.notify?.sound === 'adhan') {

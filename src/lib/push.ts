@@ -43,7 +43,7 @@ function prefs(s: Settings, place: Place, method: MethodKey) {
     city: place.city[s.lang],
     method,
     asr: s.madhab,
-    lead: s.audio.voice.minutes || 5,
+    lead: s.audio.voice.minutes || 15,
     voice: s.audio.voice.enabled,
     adhan: true,
     prayers: five.filter((k) => s.notify.perPrayer[k].at),

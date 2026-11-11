@@ -240,7 +240,7 @@ export const PLAYING_EVT = PEVT;
 async function playSrc(src: string, volume: number, tag: string) {
   el ??= new Audio();
   el.src = src;
-  el.volume = Math.max(0, Math.min(1, volume));
+  el.volume = Math.max(0, Math.min(1, volume)); // alerts always pass 1 (browsers cannot raise the system volume)
   el.currentTime = 0;
   playing = tag;
   window.dispatchEvent(new Event(PEVT));
@@ -304,6 +304,10 @@ export async function playSound(sound: string, opts: { volume: number; tts?: str
       await speak(opts.tts, opts.lang ?? 'ar', opts.volume);
       return true;
     }
+    if (sound === 'own') {
+      await playSrc(OWN_REMINDER, 1, tag);
+      return true;
+    }
     if (sound === 'builtin' || sound.startsWith('builtin:')) {
       // 'builtin:<minutes>' → the voice file for that lead time
       const m = Number(sound.split(':')[1] ?? 5);
@@ -339,7 +343,8 @@ export function soundLabel(sound: string, clips: ClipMeta[], lang: 'ar' | 'en'):
   if (sound === 'chime') return lang === 'ar' ? 'نغمة هادئة' : 'Soft chime';
   if (sound === 'silent') return lang === 'ar' ? 'صامت (إشعار فقط)' : 'Silent (notification only)';
   if (sound === 'tts') return lang === 'ar' ? 'صوت الجهاز (قراءة آلية)' : 'Device voice (TTS)';
-  if (sound === 'builtin') return lang === 'ar' ? 'التنبيه بصوتي (صوت مصري)' : 'Voice reminder (Egyptian)';
+  if (sound === 'own') return lang === 'ar' ? '🎙 صوتي (تسجيل أ.د. على قطب)' : '🎙 My own voice';
+  if (sound === 'builtin') return lang === 'ar' ? 'صوت مصري حسب المدة' : 'Egyptian voice (per lead time)';
   if (sound === 'legacy') return lang === 'ar' ? 'ملف الموقع adhan.mp3' : 'Site file adhan.mp3';
   const b = BUILTIN_ADHANS.find((x) => x.id === sound);
   if (b) return lang === 'ar' ? b.ar : b.en;
@@ -349,6 +354,9 @@ export function soundLabel(sound: string, clips: ClipMeta[], lang: 'ar' | 'en'):
 
 /** Recorded reminders shipped with the app (Egyptian male voice, cached offline): one per lead time 5–25 min */
 export const BUILTIN_REMINDER = '/audio/reminder-5min.mp3';
+/** Prof Ali Kotb's own recorded reminder (loudness-boosted) — the default */
+export const OWN_REMINDER = '/audio/reminder-own.mp3';
+export const DEFAULT_VOICE_MIN = 15;
 export const VOICE_FILES: Record<number, string> = {
   5: '/audio/reminder-5min.mp3',
   10: '/audio/reminder-10min.mp3',
@@ -373,6 +381,7 @@ export const REMINDER_MINUTES = [5, 10, 15, 20, 25];
  * (the notification still shows the right minutes).
  */
 export function voiceSoundFor(sound: string, minutes = 5) {
+  if (sound === 'own') return 'own';
   return sound === 'chime' || !hasVoiceFor(minutes) ? 'chime' : `builtin:${minutes}`;
 }
 

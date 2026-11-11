@@ -19,7 +19,7 @@ import android.os.Vibrator;
 /**
  * Fires at T − N (voice) or T (Adhan). Order of decisions:
  *  1. de-duplicate (Store.claim) and drop stale alarms (> 10 min late, e.g. delivered after a long power-off),
- *  2. silent / vibrate ringer or Do Not Disturb → notification only (vibration only if the phone is in vibrate mode),
+ *  2. MANDATORY: always audible — silent / vibrate mode does not mute it; AudioService raises the alarm volume to max,
  *  3. otherwise start AudioService (foreground, media playback — allowed from an exact alarm),
  *     and if Android refuses, fall back to a notification that carries the system sound.
  */
@@ -47,11 +47,9 @@ public class AlertReceiver extends BroadcastReceiver {
 
         AudioManager am = c.getSystemService(AudioManager.class);
         NotificationManager nm = c.getSystemService(NotificationManager.class);
-        int ringer = am == null ? AudioManager.RINGER_MODE_NORMAL : am.getRingerMode();
-        boolean dnd = nm != null && nm.getCurrentInterruptionFilter() > NotificationManager.INTERRUPTION_FILTER_ALL;
-        boolean audible = ringer == AudioManager.RINGER_MODE_NORMAL && !dnd && !"silent".equals(sound);
+        boolean audible = true; // mandatory alert (user's choice): plays in silent / vibrate mode too
 
-        if (Store.vibrate(c) && ringer != AudioManager.RINGER_MODE_SILENT && !dnd) vibrate(c);
+        if (Store.vibrate(c)) vibrate(c);
 
         if (audible) {
             Intent s = new Intent(c, AudioService.class)

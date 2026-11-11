@@ -278,8 +278,8 @@ export function PushCard() {
     <Card title={ar ? 'تنبيهات والتطبيق مغلق (iPhone · أندرويد · الكمبيوتر)' : 'Alerts with the app closed'} icon="bell">
       <p className="-mt-1 mb-2 text-[12.5px] leading-6 text-muted">
         {ar
-          ? `إشعار قبل كل صلاة بـ ${s.audio.voice.minutes || 5} ${(s.audio.voice.minutes || 5) <= 10 ? 'دقائق' : 'دقيقة'} وعند الأذان حتى والتطبيق مغلق والهاتف مقفول. على iPhone يلزم فتح التطبيق من أيقونة الشاشة الرئيسية (iOS 16.4 أو أحدث). الصوت نغمة إشعار النظام.`
-          : `A notification ${s.audio.voice.minutes || 5} min before each prayer and at the Adhan, even with the app closed. On iPhone open the app from its Home Screen icon (iOS 16.4+). Uses the system notification sound.`}
+          ? `إشعار قبل كل صلاة بـ ${s.audio.voice.minutes || 15} ${(s.audio.voice.minutes || 15) <= 10 ? 'دقائق' : 'دقيقة'} وعند الأذان حتى والتطبيق مغلق والهاتف مقفول. على iPhone يلزم فتح التطبيق من أيقونة الشاشة الرئيسية (iOS 16.4 أو أحدث). الصوت نغمة إشعار النظام.`
+          : `A notification ${s.audio.voice.minutes || 15} min before each prayer and at the Adhan, even with the app closed. On iPhone open the app from its Home Screen icon (iOS 16.4+). Uses the system notification sound.`}
       </p>
       <Toggle on={!!s.push} label={busy ? (ar ? 'جارٍ…' : 'Working…') : ar ? 'تفعيل التنبيهات الخلفية على هذا الجهاز' : 'Enable background alerts on this device'} onChange={(v) => void toggle(v)} />
       {msg && <p className={`mt-1 text-[12px] leading-5 ${msg.bad ? 'text-[#c0392b]' : 'text-emerald'}`}>{msg.t}</p>}

@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
         adjustments: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
         ramadan: hijriFor(day, hctx).m === 9,
       });
-      const lead = [5, 10, 15, 20, 25].includes(s.lead ?? 5) ? (s.lead ?? 5) : 5;
+      const lead = [5, 10, 15, 20, 25].includes(s.lead ?? 15) ? (s.lead ?? 15) : 15;
       const ar = s.lang !== 'en';
       const fri = weekday(day) === 5;
       const silent = (s.silentUntil ?? 0) > now;

@@ -65,8 +65,9 @@ final class Store {
     static void setVoiceOn(Context c, boolean v) { p(c).edit().putBoolean("voice", v).apply(); }
     /** reminder lead time: 5 / 10 / 15 / 20 / 25 min (the recording says «five minutes»; other leads use the chime) */
     static int voiceMin(Context c) {
-        int v = p(c).getInt("voiceMin", 5);
-        return v == 5 || v == 10 || v == 15 || v == 20 || v == 25 ? v : 5;
+        migrate(c);
+        int v = p(c).getInt("voiceMin", 15);
+        return v == 5 || v == 10 || v == 15 || v == 20 || v == 25 ? v : 15;
     }
     static void setVoiceMin(Context c, int v) { p(c).edit().putInt("voiceMin", v).apply(); }
     /** i = PrayerEngine index (0 fajr, 2 dhuhr, 3 asr, 4 maghrib, 5 isha) */
@@ -75,7 +76,19 @@ final class Store {
     static boolean adhanFor(Context c, int i) { return p(c).getBoolean("adhanOn" + i, true); }
     static void setAdhanFor(Context c, int i, boolean v) { p(c).edit().putBoolean("adhanOn" + i, v).apply(); }
     /** voice: "builtin" (res/raw/reminder_5min — «باقي خمس دقائق…») | "chime" (res/raw/chime). Adhan: "default" | "chime" | "silent" | "clip:<id>" */
-    static String voiceSound(Context c, int i) { return "chime".equals(p(c).getString("voiceSnd" + i, "builtin")) ? "chime" : "builtin"; }
+    /** voice: "own" (his recording, default) | "builtin" (Egyptian voice per lead time) | "chime" */
+    static String voiceSound(Context c, int i) {
+        migrate(c);
+        String v = p(c).getString("voiceSnd" + i, "own");
+        return "chime".equals(v) || "builtin".equals(v) ? v : "own";
+    }
+    /** 2.8: his own voice, 15 min before every prayer, full volume — applied once to existing installs */
+    static void migrate(Context c) {
+        if (p(c).getInt("cfgV", 0) >= 8) return;
+        android.content.SharedPreferences.Editor e = p(c).edit().putInt("cfgV", 8).putInt("voiceMin", 15).putBoolean("voice", true).putInt("volume", 100);
+        for (int i : Alerts.PRAYERS) e.putString("voiceSnd" + i, "own").putBoolean("voiceOn" + i, true);
+        e.apply();
+    }
     static void setVoiceSound(Context c, int i, String v) { p(c).edit().putString("voiceSnd" + i, v).apply(); }
     static String adhanSound(Context c, int i) { return "refaat_short"; }
     static void setAdhanSound(Context c, int i, String v) { p(c).edit().putString("adhanSnd" + i, v).apply(); }

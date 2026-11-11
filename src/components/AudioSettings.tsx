@@ -60,12 +60,13 @@ export default function AudioSettings() {
     const tag = `test-${k}-${which}`;
     if (playing === tag) return stopAll();
     if (which === 'v') {
-      void playSound(voiceSoundFor(a.voice.perPrayer[k].sound, a.voice.minutes || 5), { volume: a.volume, tag });
-    } else void playSound(DEFAULT_ADHAN, { volume: a.volume, tag });
+      void playSound(voiceSoundFor(a.voice.perPrayer[k].sound, a.voice.minutes || 15), { volume: 1, tag });
+    } else void playSound(DEFAULT_ADHAN, { volume: 1, tag });
   };
 
   // only two choices: the recorded reminder, or the soft chime (no device/TTS voices)
   const voiceOptions = [
+    { v: 'own', l: soundLabel('own', clips, s.lang) },
     { v: 'builtin', l: soundLabel('builtin', clips, s.lang) },
     { v: 'chime', l: soundLabel('chime', clips, s.lang) },
   ];
@@ -76,7 +77,7 @@ export default function AudioSettings() {
       <Card title={ar ? 'التنبيه بصوتي قبل الصلاة' : 'My voice prayer reminder'} icon="mic" className="md:col-span-2">
         <div id="audio" className="-mt-1 mb-2 text-[12px] leading-5 text-muted">
           {ar
-            ? 'قبل كل صلاة (٥ أو ١٠ أو ١٥ أو ٢٠ أو ٢٥ دقيقة) يُشغَّل التنبيه الصوتي المناسب للمدة («باقي عشر دقائق…»، «باقي ربع ساعة…») أو نغمة هادئة — اختر لكل صلاة.'
+            ? 'الافتراضي: صوتي (تسجيلي) قبل كل صلاة بـ ١٥ دقيقة بأعلى مستوى صوت. يمكن اختيار صوت مصري حسب المدة أو نغمة هادئة لكل صلاة.'
             : 'Before each prayer (5–25 min): your recorded reminder or a soft chime — choose per prayer.'}
         </div>
         <Toggle on={a.voice.enabled} label={ar ? 'تفعيل التنبيه الصوتي' : 'Enable voice reminder'} onChange={(v) => setVoice((x) => ({ ...x, enabled: v }))} />
@@ -86,9 +87,9 @@ export default function AudioSettings() {
           </p>
         )}
         <Row label={ar ? 'قبل الأذان بـ (دقائق)' : 'Minutes before the Adhan'}>
-          <Seg value={a.voice.minutes || 5} onChange={(v) => setVoice((x) => ({ ...x, minutes: v }))} options={REMINDER_MINUTES.map((m) => ({ v: m, l: f.n(m) }))} />
+          <Seg value={a.voice.minutes || 15} onChange={(v) => setVoice((x) => ({ ...x, minutes: v }))} options={REMINDER_MINUTES.map((m) => ({ v: m, l: f.n(m) }))} />
         </Row>
-        {!hasVoiceFor(a.voice.minutes || 5) && (
+        {!hasVoiceFor(a.voice.minutes || 15) && (
           <p className="mb-1 rounded-lg bg-gold/10 px-2.5 py-1.5 text-[11.5px] text-ink/80">
             {ar
               ? `لا يوجد تسجيل بعد لـ ${f.n(a.voice.minutes)} دقيقة؛ تُشغَّل النغمة الهادئة ويظهر الإشعار بالوقت الصحيح.`
@@ -156,18 +157,9 @@ export default function AudioSettings() {
             );
           })}
         </div>
-        <Row label={ar ? 'مستوى الصوت' : 'Volume'} hint={ar ? 'على iPhone يتحكم زر الصوت الجانبي فقط.' : 'On iPhone only the hardware buttons apply.'}>
-          <input
-            type="range"
-            min={0.1}
-            max={1}
-            step={0.05}
-            value={a.volume}
-            onChange={(e) => set((x) => ({ ...x, audio: { ...x.audio, volume: Number(e.target.value) } }))}
-            className="w-full accent-[rgb(var(--emerald))]"
-            aria-label={ar ? 'مستوى الصوت' : 'Volume'}
-          />
-        </Row>
+        <p className="mt-2 rounded-lg bg-emerald/10 px-2.5 py-1.5 text-[12px] font-bold text-emerald">
+          {ar ? '🔊 التنبيه والأذان يعملان دائمًا بأعلى مستوى صوت (إجباري).' : '🔊 Reminder and Adhan always play at maximum volume (mandatory).'}
+        </p>
         <AudioLimits />
       </Card>
     </>
@@ -187,7 +179,7 @@ function AudioLimits() {
           <li>
             <b>أندرويد:</b> تطبيق «مواقيت الصلاة» الأصلي (APK) يشغّل تسجيلك والأذان في الخلفية والهاتف مقفول وبعد إعادة التشغيل. إذا ثبّتّه فأوقف تنبيهات المتصفح هنا لتجنّب التكرار.
           </li>
-          <li>في التطبيق الأصلي يُحترم الوضع الصامت وعدم الإزعاج تلقائيًا؛ في المتصفح يتبع الصوت مستوى صوت الوسائط.</li>
+          <li>في تطبيق أندرويد: التنبيه إجباري — يرفع صوت المنبّه لأعلى مستوى ويعمل حتى في الوضع الصامت، ثم يعيد مستوى الصوت كما كان. في المتصفح يتبع الصوت مستوى صوت الوسائط في الجهاز.</li>
         </ul>
       ) : (
         <ul className="list-disc space-y-0.5 ps-4">
@@ -197,7 +189,7 @@ function AudioLimits() {
           <li>
             <b>Android:</b> the native APK plays your voice and the Adhan in the background, locked and after reboot. If installed, turn browser notifications off here to avoid duplicates.
           </li>
-          <li>The native app respects silent mode and Do Not Disturb; in the browser, media volume applies.</li>
+          <li>Android app: mandatory — raises the alarm volume to maximum, plays even in silent mode, then restores it. In the browser, the device media volume applies.</li>
         </ul>
       )}
     </div>

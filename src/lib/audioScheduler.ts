@@ -74,11 +74,11 @@ export function useAudioScheduler(now: Date, s: Settings | null, times: { today:
       const voiceOn = a.voice.enabled && v.on;
 
       // 1) personal voice reminder N minutes before
-      const lead = a.voice.minutes || 5;
+      const lead = a.voice.minutes || 15;
       if (voiceOn && due(`${k}-v`, at - lead * 60000)) {
         const text = reminderText(namesAr[k], namesEn[k], lead, s.lang);
         void showLocal(label, text, n.vibrate);
-        void play(voiceSoundFor(v.sound, lead), { volume: a.volume, tag: `${k}-v` });
+        void play(voiceSoundFor(v.sound, lead), { volume: 1, tag: `${k}-v` }); // always full volume
       }
       // 2) the generic "before" chime — skipped when the voice reminder already covers this prayer
       if (!voiceOn && n.perPrayer[k].before && n.beforeMin > 0 && due(`${k}-b`, at - n.beforeMin * 60000)) {
@@ -89,7 +89,7 @@ export function useAudioScheduler(now: Date, s: Settings | null, times: { today:
       if (n.perPrayer[k].at && due(`${k}-a`, at)) {
         const body = s.lang === 'ar' ? `حان الآن وقت صلاة ${label} · ${city} · ${fmtTime(times.today[k])}` : `Time for ${label} · ${city} · ${fmtTime(times.today[k])}`;
         void showLocal(label, body, n.vibrate);
-        void play(n.sound === 'silent' ? 'silent' : DEFAULT_ADHAN, { volume: a.volume, tag: `${k}-a` });
+        void play(DEFAULT_ADHAN, { volume: 1, tag: `${k}-a` }); // mandatory, full volume
       }
     }
     if (n.ramadan && hijri.m === 9 && due('suhoor', times.today.fajr.getTime() - 30 * 60000)) {

@@ -363,7 +363,7 @@ public class MainActivity extends Activity {
                 changed();
             }).show();
         }, GLASS);
-        text("يُشغَّل التنبيه الصوتي المناسب للمدة (صوت مصري) أو نغمة هادئة.", 12, DIM, false);
+        text("الافتراضي: صوتي قبل كل صلاة بـ ١٥ دقيقة، بأعلى مستوى صوت وإجباريًا حتى في الوضع الصامت.", 12, DIM, false);
 
         for (int i : Alerts.PRAYERS) {
             final int k = i;
@@ -374,17 +374,7 @@ public class MainActivity extends Activity {
 
         button("🗂  إدارة التسجيلات (تشغيل، تسمية، حذف)", v -> manageDialog(), GLASS);
 
-        TextView vl = text("مستوى الصوت: " + Day.arabic(String.valueOf(Store.volume(this))) + "٪", 14, 0xFFFBF5E6, false);
-        vl.setPadding(0, dp(12), 0, 0);
-        SeekBar sb = new SeekBar(this);
-        sb.setMax(100);
-        sb.setProgress(Store.volume(this));
-        sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar s, int p, boolean u) { vl.setText("مستوى الصوت: " + Day.arabic(String.valueOf(Math.max(5, p))) + "٪"); }
-            @Override public void onStartTrackingTouch(SeekBar s) {}
-            @Override public void onStopTrackingTouch(SeekBar s) { Store.setVolume(MainActivity.this, s.getProgress()); }
-        });
-        box.addView(sb);
+        text("🔊 مستوى الصوت: الأعلى دائمًا (إجباري)", 14, 0xFFFBF5E6, false).setPadding(0, dp(12), 0, 0);
         toggle("اهتزاز مع التنبيه", Store.vibrate(this), (x, on) -> Store.setVibrate(this, on));
 
         button("▶  تجربة كاملة: صوتك بعد ٣٠ ث ثم الأذان بعد ٦٠ ث", v -> {
@@ -392,11 +382,12 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "اقفل الشاشة الآن للتأكد من عمل التنبيه في الخلفية", Toast.LENGTH_LONG).show();
         }, GREEN);
         button("⏹  إيقاف أي صوت يعمل الآن", v -> AudioService.stop(this), GLASS);
-        text("يُحترم الوضع الصامت والاهتزاز وعدم الإزعاج: يظهر الإشعار دون صوت. الصوت يُشغَّل على مستوى صوت المنبّه.", 12, DIM, false).setPadding(0, dp(8), 0, 0);
+        text("التنبيه إجباري: يرفع صوت المنبّه لأعلى مستوى ويعمل حتى في الوضع الصامت والاهتزاز، ثم يعيد الصوت كما كان. زر «إيقاف الصوت» في الإشعار يوقفه.", 12, DIM, false).setPadding(0, dp(8), 0, 0);
     }
 
     private String soundName(String id, boolean voice) {
-        if ("builtin".equals(id)) return "تسجيلي";
+        if ("own".equals(id)) return "صوتي";
+        if ("builtin".equals(id)) return "صوت مصري";
         if ("chime".equals(id)) return "نغمة هادئة";
         if ("default".equals(id)) return "صوت النظام";
         if ("refaat_short".equals(id)) return "الشيخ محمد رفعت – مختصر";
@@ -422,7 +413,8 @@ public class MainActivity extends Activity {
         names.add("إيقاف لهذه الصلاة");
         if (voice) {
             // voice reminder: only the recorded file or the soft chime
-            ids.add("builtin"); names.add("التنبيه بصوتي: «باقي خمس دقائق على أذان الصلاة…»");
+            ids.add("own"); names.add("🎙 صوتي (تسجيلي) — الافتراضي");
+            ids.add("builtin"); names.add("صوت مصري حسب المدة");
             ids.add("chime"); names.add("نغمة هادئة");
         } else {
             ids.add("refaat_short"); names.add("🕌 الشيخ محمد رفعت – مختصر");
