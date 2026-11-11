@@ -59,14 +59,7 @@ public class AudioService extends Service {
         h.postDelayed(this::finish, MAX_MS);
         if (voice) {
             // voice reminder: ONLY the recorded file or the soft chime — never a device / TTS voice
-            // one recording per lead time (Egyptian male voice)
-            int m = Store.voiceMin(this);
-            if ("own".equals(sound)) {
-                playUri(raw(R.raw.reminder_own)); // his own voice
-                return START_NOT_STICKY;
-            }
-            int file = m == 10 ? R.raw.reminder_10min : m == 15 ? R.raw.reminder_15min : m == 20 ? R.raw.reminder_20min : m == 25 ? R.raw.reminder_25min : R.raw.reminder_5min;
-            playUri(raw("chime".equals(sound) || file == 0 ? R.raw.chime : file));
+            playUri(raw("chime".equals(sound) ? R.raw.chime : R.raw.reminder_own)); // his own voice, every lead time
             return START_NOT_STICKY;
         }
         // the only Adhan: Sheikh Mohamed Refaat (short)

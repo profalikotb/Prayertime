@@ -30,7 +30,7 @@ export function defaultSettings(): Settings {
     surgery: null,
     travel: { enabled: true, km: DEFAULT_TRAVEL_KM, homes: DEFAULT_HOMES.map((h) => ({ ...h })) },
     audio: {
-      v: 6,
+      v: 7,
       voice: {
         enabled: true,
         minutes: 15,
@@ -126,6 +126,15 @@ export function loadSettings(): Settings {
       for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) st.audio.voice.perPrayer[k] = { on: true, sound: 'own' };
       st.audio.volume = 1;
       st.audio.v = 6;
+      saveSettings(st);
+    }
+    if ((st.audio.v ?? 0) < 7) {
+      // 2.9: his own voice for every lead time — the Egyptian TTS voices are removed
+      for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) {
+        const v = st.audio.voice.perPrayer[k];
+        v.sound = v.sound === 'chime' ? 'chime' : 'own';
+      }
+      st.audio.v = 7;
       saveSettings(st);
     }
     if (!parsed.audio && parsed.notify?.sound === 'adhan') {

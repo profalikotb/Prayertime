@@ -354,7 +354,7 @@ public class MainActivity extends Activity {
             String[] n = new String[mins.length];
             int sel = 0;
             for (int i = 0; i < mins.length; i++) {
-                n[i] = Day.arabic(String.valueOf(mins[i])) + (mins[i] <= 10 ? " دقائق" : " دقيقة") + " — تنبيه صوتي";
+                n[i] = Day.arabic(String.valueOf(mins[i])) + (mins[i] <= 10 ? " دقائق" : " دقيقة") + " — بصوتي";
                 if (mins[i] == Store.voiceMin(this)) sel = i;
             }
             new AlertDialog.Builder(this).setTitle("وقت التنبيه قبل الأذان").setSingleChoiceItems(n, sel, (dlg, w) -> {
@@ -363,7 +363,7 @@ public class MainActivity extends Activity {
                 changed();
             }).show();
         }, GLASS);
-        text("الافتراضي: صوتي قبل كل صلاة بـ ١٥ دقيقة، بأعلى مستوى صوت وإجباريًا حتى في الوضع الصامت.", 12, DIM, false);
+        text("صوتي قبل كل صلاة بالمدة المختارة (٥–٢٥ دقيقة، الافتراضي ١٥)، بأعلى مستوى صوت وإجباريًا حتى في الوضع الصامت.", 12, DIM, false);
 
         for (int i : Alerts.PRAYERS) {
             final int k = i;
@@ -387,7 +387,7 @@ public class MainActivity extends Activity {
 
     private String soundName(String id, boolean voice) {
         if ("own".equals(id)) return "صوتي";
-        if ("builtin".equals(id)) return "صوت مصري";
+        if ("builtin".equals(id)) return "صوتي";
         if ("chime".equals(id)) return "نغمة هادئة";
         if ("default".equals(id)) return "صوت النظام";
         if ("refaat_short".equals(id)) return "الشيخ محمد رفعت – مختصر";
@@ -413,8 +413,7 @@ public class MainActivity extends Activity {
         names.add("إيقاف لهذه الصلاة");
         if (voice) {
             // voice reminder: only the recorded file or the soft chime
-            ids.add("own"); names.add("🎙 صوتي (تسجيلي) — الافتراضي");
-            ids.add("builtin"); names.add("صوت مصري حسب المدة");
+            ids.add("own"); names.add("🎙 صوتي (تسجيلي) — لكل المدد");
             ids.add("chime"); names.add("نغمة هادئة");
         } else {
             ids.add("refaat_short"); names.add("🕌 الشيخ محمد رفعت – مختصر");

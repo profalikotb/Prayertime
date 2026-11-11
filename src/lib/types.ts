@@ -101,7 +101,7 @@ export type FivePrayer = 'fajr' | 'dhuhr' | 'asr' | 'maghrib' | 'isha';
 /**
  * Personal audio. Sound ids: 'chime' (built-in synthesized bell) · 'silent' · 'legacy' (/public/adhan.mp3)
  * · 'clip:<id>' (a recording saved on this device, IndexedDB) · 'tts' (system speech, voice reminder only)
- * · 'builtin' (/audio/reminder-5min.mp3 — «باقي خمس دقائق…», used when the reminder is 5 min before).
+ * · 'own' (/audio/reminder-own.mp3 — his own recorded voice, used for every lead time 5–25 min).
  */
 export interface AudioPrefs {
   voice: {

@@ -344,7 +344,7 @@ export function soundLabel(sound: string, clips: ClipMeta[], lang: 'ar' | 'en'):
   if (sound === 'silent') return lang === 'ar' ? 'صامت (إشعار فقط)' : 'Silent (notification only)';
   if (sound === 'tts') return lang === 'ar' ? 'صوت الجهاز (قراءة آلية)' : 'Device voice (TTS)';
   if (sound === 'own') return lang === 'ar' ? '🎙 صوتي (تسجيل أ.د. على قطب)' : '🎙 My own voice';
-  if (sound === 'builtin') return lang === 'ar' ? 'صوت مصري حسب المدة' : 'Egyptian voice (per lead time)';
+  if (sound === 'builtin') return lang === 'ar' ? '🎙 صوتي (تسجيل أ.د. على قطب)' : '🎙 My own voice';
   if (sound === 'legacy') return lang === 'ar' ? 'ملف الموقع adhan.mp3' : 'Site file adhan.mp3';
   const b = BUILTIN_ADHANS.find((x) => x.id === sound);
   if (b) return lang === 'ar' ? b.ar : b.en;
@@ -353,17 +353,12 @@ export function soundLabel(sound: string, clips: ClipMeta[], lang: 'ar' | 'en'):
 }
 
 /** Recorded reminders shipped with the app (Egyptian male voice, cached offline): one per lead time 5–25 min */
-export const BUILTIN_REMINDER = '/audio/reminder-5min.mp3';
+const OWN_REMINDER_SRC = '/audio/reminder-own.mp3';
+export const BUILTIN_REMINDER = OWN_REMINDER_SRC;
 /** Prof Ali Kotb's own recorded reminder (loudness-boosted) — the default */
 export const OWN_REMINDER = '/audio/reminder-own.mp3';
 export const DEFAULT_VOICE_MIN = 15;
-export const VOICE_FILES: Record<number, string> = {
-  5: '/audio/reminder-5min.mp3',
-  10: '/audio/reminder-10min.mp3',
-  15: '/audio/reminder-15min.mp3',
-  20: '/audio/reminder-20min.mp3',
-  25: '/audio/reminder-25min.mp3',
-};
+export const VOICE_FILES: Record<number, string> = { 5: OWN_REMINDER_SRC, 10: OWN_REMINDER_SRC, 15: OWN_REMINDER_SRC, 20: OWN_REMINDER_SRC, 25: OWN_REMINDER_SRC };
 export const hasVoiceFor = (m: number) => m in VOICE_FILES;
 
 /** Adhans shipped with the app (Egyptian radio-era recordings; full + short ≈ 1 min ending after the first Shahada pair). */
@@ -381,8 +376,9 @@ export const REMINDER_MINUTES = [5, 10, 15, 20, 25];
  * (the notification still shows the right minutes).
  */
 export function voiceSoundFor(sound: string, minutes = 5) {
-  if (sound === 'own') return 'own';
-  return sound === 'chime' || !hasVoiceFor(minutes) ? 'chime' : `builtin:${minutes}`;
+  // his own recording for every lead time (5–25 min); the only alternative is the soft chime
+  void minutes;
+  return sound === 'chime' ? 'chime' : 'own';
 }
 
 export const FIVE: FivePrayer[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];

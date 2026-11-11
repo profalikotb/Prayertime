@@ -75,12 +75,11 @@ final class Store {
     static void setVoiceFor(Context c, int i, boolean v) { p(c).edit().putBoolean("voiceOn" + i, v).apply(); }
     static boolean adhanFor(Context c, int i) { return p(c).getBoolean("adhanOn" + i, true); }
     static void setAdhanFor(Context c, int i, boolean v) { p(c).edit().putBoolean("adhanOn" + i, v).apply(); }
-    /** voice: "builtin" (res/raw/reminder_5min — «باقي خمس دقائق…») | "chime" (res/raw/chime). Adhan: "default" | "chime" | "silent" | "clip:<id>" */
-    /** voice: "own" (his recording, default) | "builtin" (Egyptian voice per lead time) | "chime" */
+    /** voice: "own" (his recording, every lead time) | "chime" */
     static String voiceSound(Context c, int i) {
         migrate(c);
         String v = p(c).getString("voiceSnd" + i, "own");
-        return "chime".equals(v) || "builtin".equals(v) ? v : "own";
+        return "chime".equals(v) ? "chime" : "own"; // his own voice for every lead time
     }
     /** 2.8: his own voice, 15 min before every prayer, full volume — applied once to existing installs */
     static void migrate(Context c) {
