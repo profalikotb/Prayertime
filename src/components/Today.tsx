@@ -63,10 +63,7 @@ function TopBar() {
           <h1 className="truncate bg-gradient-to-l from-emerald via-emerald to-gold bg-clip-text font-display text-[30px] font-extrabold tracking-tight text-transparent drop-shadow-sm">
             {t.appName}
           </h1>
-          <p className="mt-1.5 flex items-center gap-1.5 text-[16px] font-extrabold text-gold">
-            <span className="h-[2px] w-5 rounded-full bg-gold/70" />
-            {t.appBy}
-          </p>
+          <p className="mt-1.5 font-sans text-[17px] font-black tracking-tight text-gold">{t.appBy}</p>
         </div>
       </div>
       <DesktopWidgetButton />
