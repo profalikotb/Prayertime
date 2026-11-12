@@ -56,9 +56,18 @@ function TopBar() {
   const { s, set, t, online } = useApp();
   return (
     <header className="mb-3 flex items-center gap-2 px-1">
-      <div className="flex-1 leading-tight">
-        <h1 className="font-display text-[22px] font-bold text-emerald">{t.appName}</h1>
-        <p className="text-[12px] font-semibold text-gold">{t.appBy}</p>
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icons/icon-192.png" alt="" className="h-12 w-12 shrink-0 rounded-2xl shadow-md ring-1 ring-gold/40" />
+        <div className="min-w-0 leading-none">
+          <h1 className="truncate bg-gradient-to-l from-emerald via-emerald to-gold bg-clip-text font-display text-[30px] font-extrabold tracking-tight text-transparent drop-shadow-sm">
+            {t.appName}
+          </h1>
+          <p className="mt-1.5 flex items-center gap-1.5 text-[16px] font-extrabold text-gold">
+            <span className="h-[2px] w-5 rounded-full bg-gold/70" />
+            {t.appBy}
+          </p>
+        </div>
       </div>
       <DesktopWidgetButton />
       {!online && (
