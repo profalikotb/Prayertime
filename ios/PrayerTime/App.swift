@@ -40,6 +40,7 @@ struct ContentView: View {
                 header
                 timesCard
                 alertsCard
+                wakeCard
                 placeCard
                 Text("أ.د. على قطب على · أستاذ جراحة المخ والأعصاب – جامعة عين شمس")
                     .font(.caption2).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.bottom, 20)
@@ -148,6 +149,23 @@ struct ContentView: View {
             Text(armed > 0 ? "✓ \(armed) منبّهًا مجدولًا لـ \(Alarms.days) أيام · يعمل والتطبيق مغلق وفي الوضع الصامت" : (status.isEmpty ? "افتح التطبيق مرة أسبوعيًا ليُجدِّد المنبّهات." : ""))
                 .font(.caption).foregroundStyle(armed > 0 ? emerald : .secondary)
             if !status.isEmpty { Text(status).font(.caption).foregroundStyle(gold) }
+        }
+    }
+
+    private var wakeCard: some View {
+        card("منبّه الاستيقاظ قبل الشروق", icon: "sunrise") {
+            Toggle("منبّه عالي الصوت قبل الشروق يوميًا", isOn: $s.wakeOn).tint(emerald)
+            if s.wakeOn {
+                Picker("قبل الشروق بـ", selection: $s.wakeMin) {
+                    ForEach(Settings.wakeLeads, id: \.self) { Text("\($0)").tag($0) }
+                }
+                .pickerStyle(.segmented)
+                if let t = today {
+                    Text("قبل الشروق بـ \(Fmt.minutesAr(s.wakeMin)) · الشروق \(Fmt.time.string(from: t.sunrise)) · المنبّه \(Fmt.time.string(from: t.sunrise.addingTimeInterval(TimeInterval(-s.wakeMin * 60))))")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Text("منبّه النظام بنغمته العالية، يرن حتى في الوضع الصامت إلى أن تضغط «إيقاف».").font(.caption).foregroundStyle(.secondary)
+            }
         }
     }
 

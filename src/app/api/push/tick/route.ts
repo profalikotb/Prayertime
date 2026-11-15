@@ -40,6 +40,8 @@ interface Sub {
   city?: string;
   /** epoch ms until which alerts are silent (surgery mode) */
   silentUntil?: number;
+  /** wake-up alarm N min before sunrise (0 = off; absent = 20) */
+  wake?: number;
 }
 
 export async function POST(req: NextRequest) {
@@ -95,6 +97,15 @@ export async function POST(req: NextRequest) {
             tag: `${k}-a`,
           });
         }
+      }
+      const wake = typeof s.wake === 'number' ? s.wake : 20;
+      const wAt = t.sunrise.getTime() - wake * 60_000;
+      if (wake > 0 && wAt > from && wAt <= now) {
+        msgs.push({
+          title: ar ? `⏰ الشروق بعد ${wake} ${wake <= 10 ? 'دقائق' : 'دقيقة'}` : `⏰ Sunrise in ${wake} min`,
+          body: ar ? 'استيقظ — صلِّ الفجر قبل الشروق' : 'Wake up — pray Fajr before sunrise',
+          tag: 'wake',
+        });
       }
       for (const m of msgs) {
         try {

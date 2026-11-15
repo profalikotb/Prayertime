@@ -144,6 +144,8 @@ export interface Settings {
   shareFooter: string;
   /** manual "in theatre" switch: silent alerts until `until` (epoch ms) */
   surgery: { from: number; until: number } | null;
+  /** wake-up alarm N min before sunrise (0 = off) */
+  wakeMin?: number;
   /** this device is subscribed to closed-app push alerts (n8n) */
   push?: boolean;
   /** travel mode: homes + qasr distance (km) */

@@ -44,6 +44,12 @@ enum Alarms {
             if Task.isCancelled { return n }
             guard let day = cal.date(byAdding: .day, value: d, to: now),
                   let t = Engine.day(day, lat: s.lat, lng: s.lng, country: s.country, hanafi: s.hanafi) else { continue }
+            if s.wakeOn {
+                let w = t.sunrise.addingTimeInterval(TimeInterval(-s.wakeMin * 60))
+                if w > now.addingTimeInterval(5),
+                   await arm(at: w, title: "⏰ الشروق بعد \(Fmt.minutesAr(s.wakeMin)) — صلِّ الفجر", sound: nil,
+                             meta: PrayerAlarmMeta(prayer: "sunrise", kind: "wake")) { n += 1 }
+            }
             for p in Salah.allCases {
                 guard let at = t.times[p] else { continue }
                 let name = p.label(on: day)

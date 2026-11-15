@@ -37,6 +37,7 @@ function CalendarFeed() {
     m: method,
     asr: s.madhab,
     before: String(s.audio.voice.minutes || 15),
+    wake: String(s.wakeMin ?? 20),
   }).toString();
   const host = typeof location !== 'undefined' ? location.host : 'prayertimealikotb.vercel.app';
   const https = `https://${host}/api/ics?${q}`;
@@ -380,6 +381,19 @@ export default function SettingsView() {
           {t.exportIcs}
         </button>
         <CalendarFeed />
+      </Card>
+
+      <Card title={s.lang === 'ar' ? '⏰ منبّه الاستيقاظ قبل الشروق' : '⏰ Wake-up alarm before sunrise'} icon="sunrise">
+        <Seg
+          value={s.wakeMin ?? 20}
+          onChange={(v) => set((x) => ({ ...x, wakeMin: v }))}
+          options={[0, 10, 15, 20, 30, 45].map((m) => ({ v: m, l: m === 0 ? (s.lang === 'ar' ? 'إيقاف' : 'Off') : String(m) }))}
+        />
+        <p className="mt-2 text-[12px] leading-5 text-muted">
+          {s.lang === 'ar'
+            ? 'يوميًا قبل الشروق بالمدة المختارة (الافتراضي ٢٠ دقيقة). على أندرويد وتطبيق iPhone الأصلي: منبّه عالي الصوت يتكرر حتى تُوقفه، حتى في الوضع الصامت. على iPhone (تطبيق الويب): إشعار + تنبيه في التقويم المشترك.'
+            : 'Daily, before sunrise (default 20 min). Android & native iPhone app: loud repeating alarm, even in silent mode. iPhone web app: notification + calendar alert.'}
+        </p>
       </Card>
 
       <PushCard />

@@ -34,7 +34,7 @@ public class AlertReceiver extends BroadcastReceiver {
         long prayerAt = in.getLongExtra(Alerts.X_AT, System.currentTimeMillis());
         String id = in.getStringExtra(Alerts.X_ID);
         boolean test = in.getBooleanExtra("test", false);
-        long due = kind == Alerts.KIND_VOICE && !test ? prayerAt - Store.voiceMin(c) * 60_000L : prayerAt;
+        long due = test ? prayerAt : kind == Alerts.KIND_VOICE ? prayerAt - Store.voiceMin(c) * 60_000L : kind == Alerts.KIND_WAKE ? prayerAt - Store.wakeMin(c) * 60_000L : prayerAt;
         if (!test && System.currentTimeMillis() - due > 10 * 60_000L) return;
         if (id == null || !Store.claim(c, id)) return;
 
@@ -44,6 +44,12 @@ public class AlertReceiver extends BroadcastReceiver {
         String title = voice ? "⏳ " + name + " بعد " + Day.arabic(String.valueOf(Store.voiceMin(c))) + (Store.voiceMin(c) <= 10 ? " دقائق" : " دقيقة") : "🕌 حان الآن وقت صلاة " + name;
         String body = voice ? Alerts.reminderText(i, Store.voiceMin(c)) : d.city + " · " + Day.time(prayerAt);
         String sound = voice ? Store.voiceSound(c, i) : Store.adhanSound(c, i);
+        if (kind == Alerts.KIND_WAKE) {
+            int wm = Store.wakeMin(c);
+            title = "⏰ الشروق بعد " + Day.arabic(String.valueOf(wm)) + (wm <= 10 ? " دقائق" : " دقيقة");
+            body = "استيقظ — صلِّ الفجر قبل الشروق · الشروق " + Day.time(prayerAt);
+            sound = "wake";
+        }
 
         AudioManager am = c.getSystemService(AudioManager.class);
         NotificationManager nm = c.getSystemService(NotificationManager.class);

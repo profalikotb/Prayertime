@@ -28,6 +28,7 @@ export function defaultSettings(): Settings {
     clinics: DEFAULT_CLINICS.map((c) => ({ ...c, days: [...c.days] })),
     scheduleClean: true,
     surgery: null,
+    wakeMin: 20,
     travel: { enabled: true, km: DEFAULT_TRAVEL_KM, homes: DEFAULT_HOMES.map((h) => ({ ...h })) },
     audio: {
       v: 7,

@@ -32,6 +32,7 @@ export function GET(req: NextRequest) {
   const madhab = q.get('asr') === 'hanafi' ? 'hanafi' : 'shafi';
   const before = num(q.get('before'), 0, 30) ?? 5;
   const days = num(q.get('days'), 7, 90) ?? 60;
+  const wake = q.get('wake') === null ? 20 : num(q.get('wake'), 0, 60) ?? 20; // existing subscriptions get it by default
 
   const place: Place = { lat, lng, cc, tz, city: { ar: city, en: city }, country: { ar: '', en: '' }, source: 'manual', at: Date.now() };
   const p = profileFor(cc);
@@ -47,7 +48,7 @@ export function GET(req: NextRequest) {
     vibrate: true,
     ramadan: false,
   };
-  const body = buildIcs(civilToday(tz), days, place, opts, notify, lang, true);
+  const body = buildIcs(civilToday(tz), days, place, opts, notify, lang, true, wake);
   return new NextResponse(body, {
     headers: {
       'Content-Type': 'text/calendar; charset=utf-8',

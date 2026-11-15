@@ -372,6 +372,28 @@ public class MainActivity extends Activity {
             button(Day.AR[i] + "   🎙 " + vs + "   🕌 " + as, v -> prayerDialog(k), 0x22FFFFFF);
         }
 
+        section("⏰ منبّه الاستيقاظ قبل الشروق");
+        toggle("منبّه عالي الصوت قبل الشروق يوميًا", Store.wakeOn(this), (x, on) -> {
+            Store.setWakeOn(this, on);
+            if (on) askPermissions();
+            changed();
+        });
+        int[] wm = {10, 15, 20, 30, 45};
+        button("⏰  قبل الشروق بـ " + Day.arabic(String.valueOf(Store.wakeMin(this))) + " دقيقة · الشروق " + Day.time(d.today[1]), v -> {
+            String[] n = new String[wm.length];
+            int sel = 0;
+            for (int i = 0; i < wm.length; i++) {
+                n[i] = Day.arabic(String.valueOf(wm[i])) + (wm[i] <= 10 ? " دقائق" : " دقيقة");
+                if (wm[i] == Store.wakeMin(this)) sel = i;
+            }
+            new AlertDialog.Builder(this).setTitle("المنبّه قبل الشروق بـ").setSingleChoiceItems(n, sel, (dlg, w) -> {
+                Store.setWakeMin(this, wm[w]);
+                dlg.dismiss();
+                changed();
+            }).show();
+        }, GLASS);
+        text("نغمة منبّه الهاتف بأعلى صوت، تتكرر حتى تضغط «إيقاف الصوت» (تتوقف وحدها بعد ٥ دقائق). تعمل والتطبيق مغلق وفي الوضع الصامت.", 12, DIM, false);
+
         button("🗂  إدارة التسجيلات (تشغيل، تسمية، حذف)", v -> manageDialog(), GLASS);
 
         text("🔊 مستوى الصوت: الأعلى دائمًا (إجباري)", 14, 0xFFFBF5E6, false).setPadding(0, dp(12), 0, 0);

@@ -14,11 +14,14 @@ struct Settings: Equatable {
     var lead: Int
     var voiceOff: Set<String>
     var adhanOff: Set<String>
+    var wakeOn: Bool
+    var wakeMin: Int
 
     func voice(_ p: Salah) -> Bool { !voiceOff.contains(p.rawValue) }
     func adhan(_ p: Salah) -> Bool { !adhanOff.contains(p.rawValue) }
 
     static let leads = [5, 10, 15, 20, 25]
+    static let wakeLeads = [10, 15, 20, 30, 45]
     private static let d = UserDefaults.standard
 
     static func load() -> Settings {
@@ -26,6 +29,7 @@ struct Settings: Equatable {
         func dbl(_ k: String, _ v: Double) -> Double { d.object(forKey: k) == nil ? v : d.double(forKey: k) }
         func bool(_ k: String, _ v: Bool) -> Bool { d.object(forKey: k) == nil ? v : d.bool(forKey: k) }
         let lead = d.integer(forKey: "lead")
+        let wm = d.integer(forKey: "wakeMin")
         return Settings(
             lat: dbl("lat", 30.0911), lng: dbl("lng", 31.3225),
             city: d.string(forKey: "city") ?? "مصر الجديدة",
@@ -36,7 +40,9 @@ struct Settings: Equatable {
             voiceChime: bool("voiceChime", false),
             lead: leads.contains(lead) ? lead : 15,
             voiceOff: Set(d.stringArray(forKey: "voiceOff") ?? []),
-            adhanOff: Set(d.stringArray(forKey: "adhanOff") ?? [])
+            adhanOff: Set(d.stringArray(forKey: "adhanOff") ?? []),
+            wakeOn: bool("wakeOn", true),
+            wakeMin: wakeLeads.contains(wm) ? wm : 20
         )
     }
 
@@ -46,6 +52,7 @@ struct Settings: Equatable {
         d.set(hanafi, forKey: "hanafi"); d.set(alertsOn, forKey: "alertsOn"); d.set(voiceOn, forKey: "voiceOn")
         d.set(voiceChime, forKey: "voiceChime"); d.set(lead, forKey: "lead")
         d.set(Array(voiceOff), forKey: "voiceOff"); d.set(Array(adhanOff), forKey: "adhanOff")
+        d.set(wakeOn, forKey: "wakeOn"); d.set(wakeMin, forKey: "wakeMin")
     }
 }
 

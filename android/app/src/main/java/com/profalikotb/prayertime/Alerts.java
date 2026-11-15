@@ -19,7 +19,7 @@ final class Alerts {
     static final int[] PRAYERS = {0, 2, 3, 4, 5};
     static final String ACTION = "com.profalikotb.prayertime.ALERT";
     static final String X_IDX = "idx", X_KIND = "kind", X_AT = "at", X_ID = "id";
-    static final int KIND_VOICE = 0, KIND_ADHAN = 1;
+    static final int KIND_VOICE = 0, KIND_ADHAN = 1, KIND_WAKE = 2;
 
     /** Arms today's and tomorrow's remaining alerts. Called from Updater.updateAll(). */
     static void schedule(Context c, Day d) {
@@ -46,6 +46,14 @@ final class Alerts {
                     else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
                 }
             }
+            // wake-up alarm: N min before sunrise (index 1)
+            long wAt = t[1] - Store.wakeMin(c) * 60_000L;
+            Intent wi = new Intent(c, AlertReceiver.class).setAction(ACTION)
+                    .putExtra(X_IDX, 1).putExtra(X_KIND, KIND_WAKE).putExtra(X_AT, t[1]).putExtra(X_ID, date + "-1-wake");
+            PendingIntent wp = PendingIntent.getBroadcast(c, 150 + day, wi, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+            if (!Store.alertsOn(c) || !Store.wakeOn(c) || wAt <= now + 1000) am.cancel(wp);
+            else if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, wAt, wp);
+            else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, wAt, wp);
         }
     }
 

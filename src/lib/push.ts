@@ -49,6 +49,7 @@ function prefs(s: Settings, place: Place, method: MethodKey) {
     prayers: five.filter((k) => s.notify.perPrayer[k].at),
     lang: s.lang,
     silentUntil: s.surgery?.until ?? 0,
+    wake: s.wakeMin ?? 20,
   };
 }
 

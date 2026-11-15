@@ -28,7 +28,7 @@ function fold(line: string): string {
  * The iOS/Android calendar then delivers alerts reliably even when the web app is closed.
  * Times are written in UTC (…Z), so the calendar shows them correctly in any timezone.
  */
-export function buildIcs(start: CivilDate, days: number, place: Place, opts: (d: CivilDate) => PrayerOptions, notify: NotifyPrefs, lang: Lang, feed = false): string {
+export function buildIcs(start: CivilDate, days: number, place: Place, opts: (d: CivilDate) => PrayerOptions, notify: NotifyPrefs, lang: Lang, feed = false, wake = 0): string {
   const names = PRAYER_NAMES[lang];
   const city = place.city[lang];
   const now = stamp(new Date());
@@ -45,6 +45,21 @@ export function buildIcs(start: CivilDate, days: number, place: Place, opts: (d:
   for (let i = 0; i < days; i++) {
     const d = addDays(start, i);
     const t = computeDay(d, place, opts(d));
+    if (wake > 0) {
+      // wake-up alarm before sunrise: a short event at (sunrise − wake) with an alert at its start
+      const w = new Date(t.sunrise.getTime() - wake * 60000);
+      lines.push(
+        'BEGIN:VEVENT',
+        `UID:${key(d)}-wake-${place.lat.toFixed(2)}-${place.lng.toFixed(2)}@prof-ali-kotb-prayer-time`,
+        `DTSTAMP:${now}`,
+        `DTSTART:${stamp(w)}`,
+        `DTEND:${stamp(new Date(w.getTime() + 5 * 60000))}`,
+        `SUMMARY:${esc(lang === 'ar' ? `⏰ الشروق بعد ${wake} ${wake <= 10 ? 'دقائق' : 'دقيقة'}` : `⏰ Sunrise in ${wake} min`)}`,
+        'TRANSP:TRANSPARENT',
+        'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${esc(lang === 'ar' ? 'استيقظ — صلِّ الفجر قبل الشروق' : 'Wake up — pray Fajr before sunrise')}`, 'TRIGGER:PT0M', 'END:VALARM',
+        'END:VEVENT',
+      );
+    }
     for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) {
       const at = t[k];
       const pref = notify.perPrayer[k];

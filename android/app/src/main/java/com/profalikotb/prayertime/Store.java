@@ -70,6 +70,14 @@ final class Store {
         return v == 5 || v == 10 || v == 15 || v == 20 || v == 25 ? v : 15;
     }
     static void setVoiceMin(Context c, int v) { p(c).edit().putInt("voiceMin", v).apply(); }
+    /** wake-up alarm before sunrise (loud, looping until stopped; default on, 20 min) */
+    static boolean wakeOn(Context c) { return p(c).getBoolean("wakeOn", true); }
+    static void setWakeOn(Context c, boolean v) { p(c).edit().putBoolean("wakeOn", v).apply(); }
+    static int wakeMin(Context c) {
+        int v = p(c).getInt("wakeMin", 20);
+        return v == 10 || v == 15 || v == 20 || v == 30 || v == 45 ? v : 20;
+    }
+    static void setWakeMin(Context c, int v) { p(c).edit().putInt("wakeMin", v).apply(); }
     /** i = PrayerEngine index (0 fajr, 2 dhuhr, 3 asr, 4 maghrib, 5 isha) */
     static boolean voiceFor(Context c, int i) { return p(c).getBoolean("voiceOn" + i, true); }
     static void setVoiceFor(Context c, int i, boolean v) { p(c).edit().putBoolean("voiceOn" + i, v).apply(); }

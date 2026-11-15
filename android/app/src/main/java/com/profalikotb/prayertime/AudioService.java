@@ -29,6 +29,7 @@ public class AudioService extends Service {
     private static final long MAX_MS = 10 * 60_000L;
 
     private MediaPlayer player;
+    private boolean loop;
     private AudioManager am;
     private AudioFocusRequest focus;
     private final Handler h = new Handler(Looper.getMainLooper());
@@ -57,6 +58,16 @@ public class AudioService extends Service {
         forceMax();
         requestFocus();
         h.postDelayed(this::finish, MAX_MS);
+        if ("wake".equals(sound)) {
+            // wake-up alarm: the phone's alarm tone, looping at max volume until «إيقاف الصوت» (auto-stop after 5 min)
+            h.removeCallbacksAndMessages(null);
+            h.postDelayed(this::finish, 5 * 60_000L);
+            loop = true;
+            Uri u = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+            playUri(u != null ? u : raw(R.raw.chime));
+            return START_NOT_STICKY;
+        }
+        loop = false;
         if (voice) {
             // voice reminder: ONLY the recorded file or the soft chime — never a device / TTS voice
             playUri(raw("chime".equals(sound) ? R.raw.chime : R.raw.reminder_own)); // his own voice, every lead time
@@ -107,6 +118,7 @@ public class AudioService extends Service {
             player.setAudioAttributes(attrs());
             player.setDataSource(this, u);
             player.setVolume(1f, 1f); // always full
+            player.setLooping(loop);
             player.setOnCompletionListener(m -> finish());
             player.setOnErrorListener((m, w, e) -> {
                 finish();

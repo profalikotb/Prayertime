@@ -96,6 +96,14 @@ export function useAudioScheduler(now: Date, s: Settings | null, times: { today:
       void showLocal(s.lang === 'ar' ? 'السحور' : 'Suhoor', s.lang === 'ar' ? 'بقي ٣٠ دقيقة على الفجر' : '30 minutes until Fajr', n.vibrate);
       if (n.sound !== 'silent') void play('chime', { volume: a.volume });
     }
+    // wake-up alarm before sunrise (app open): notification + three loud chimes
+    const wake = s.wakeMin ?? 20;
+    if (wake > 0 && due('wake', times.today.sunrise.getTime() - wake * 60000)) {
+      void showLocal(s.lang === 'ar' ? `⏰ الشروق بعد ${wake} ${wake <= 10 ? 'دقائق' : 'دقيقة'}` : `⏰ Sunrise in ${wake} min`, s.lang === 'ar' ? 'استيقظ — صلِّ الفجر قبل الشروق' : 'Wake up — pray Fajr before sunrise', n.vibrate);
+      void (async () => {
+        for (let r = 0; r < 3; r++) await play('chime', { volume: 1 });
+      })();
+    }
     // end of a surgery window: list the prayers whose time fell inside it
     for (const w of windows) {
       if (!due(`surg-${w.end}`, w.end)) continue;
