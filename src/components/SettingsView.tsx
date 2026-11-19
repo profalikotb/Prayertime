@@ -22,6 +22,55 @@ import { resetAll } from '@/lib/storage';
 const selectCls =
   'w-full rounded-xl border border-line/15 bg-surface px-3 py-2.5 text-[14px] font-semibold text-ink outline-none focus:border-emerald bg-[length:14px] bg-no-repeat';
 
+/** Windows desktop alarm: a small per-user background script (voice + Adhan + sunrise alarm, browser not needed). */
+function DesktopAlarm() {
+  const { s, place, method } = useApp();
+  const ar = s.lang === 'ar';
+  const [copied, setCopied] = useState(false);
+  const q = new URLSearchParams({
+    lat: place.lat.toFixed(4),
+    lng: place.lng.toFixed(4),
+    cc: place.cc || 'EG',
+    tz: place.tz,
+    city: place.city.ar,
+    m: method,
+    asr: s.madhab,
+    lead: String(s.audio.voice.enabled ? s.audio.voice.minutes || 15 : 0),
+    wake: String(s.wakeMin ?? 20),
+  }).toString();
+  const host = typeof location !== 'undefined' ? location.host : 'prayertimealikotb.vercel.app';
+  const url = `https://${host}/api/desktop?${q}`;
+  const oneLine = `iex ((New-Object Net.WebClient).DownloadString('${url}&f=ps1'))`;
+  return (
+    <div className="mt-3 rounded-xl border border-gold/30 bg-gold/5 p-3 text-[12.5px] leading-6">
+      <p className="font-extrabold text-gold">{ar ? '🖥️ منبّه الكمبيوتر (Windows) — بصوتك والأذان' : '🖥️ Windows desktop alarm — your voice + Adhan'}</p>
+      <p className="text-ink/80">
+        {ar
+          ? `يعمل في الخلفية ويبدأ مع تشغيل الويندوز بدون فتح المتصفح: صوتك قبل كل صلاة بـ ${s.audio.voice.minutes || 15} دقيقة، والأذان في موعده، ومنبّه قبل الشروق — بأعلى مستوى صوت ثم يعيد الصوت كما كان، مع نافذة صغيرة فيها زر «إيقاف».`
+          : `Runs in the background from Windows start-up, no browser needed: your voice ${s.audio.voice.minutes || 15} min before each prayer, the Adhan on time, and a sunrise alarm — at full volume, then restored, with a small Stop window.`}
+      </p>
+      <a href={url} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gold py-2.5 text-[14px] font-bold text-[#0b2a24]">
+        {ar ? '⬇️ تحميل المثبّت Install-PrayerAlarm.cmd' : '⬇️ Download installer (Install-PrayerAlarm.cmd)'}
+      </a>
+      <button
+        type="button"
+        onClick={() => {
+          void navigator.clipboard?.writeText(oneLine).then(() => setCopied(true));
+          setTimeout(() => setCopied(false), 2500);
+        }}
+        className="mt-1.5 w-full rounded-xl border border-gold/40 py-2 text-[13px] font-bold text-gold"
+      >
+        {copied ? (ar ? '✓ نُسخ الأمر — الصقه في PowerShell' : '✓ Copied — paste into PowerShell') : ar ? 'أو: نسخ أمر التثبيت (للصقه في PowerShell)' : 'Or: copy the install command (PowerShell)'}
+      </button>
+      <p className="mt-1.5 text-[11.5px] text-muted">
+        {ar
+          ? 'شغّل الملف بالنقر المزدوج (إن ظهر «Windows protected your PC» اضغط More info ← Run anyway). يُشغّل تجربة فورًا. أعد التحميل إذا غيّرت المدينة أو المدة. للإزالة: Uninstall.cmd في المجلد %LOCALAPPDATA%\\PrayerAlarm.'
+          : 'Double-click it (if SmartScreen warns: More info → Run anyway). A test plays right away. Re-download after changing city or lead time. To remove: Uninstall.cmd in %LOCALAPPDATA%\\PrayerAlarm.'}
+      </p>
+    </div>
+  );
+}
+
 /** Alarms that work with the app CLOSED: a live calendar subscription (iPhone, Mac, Windows/Outlook) + the Android app. */
 function CalendarFeed() {
   const { s, place, method } = useApp();
@@ -381,6 +430,7 @@ export default function SettingsView() {
           {t.exportIcs}
         </button>
         <CalendarFeed />
+        <DesktopAlarm />
       </Card>
 
       <Card title={s.lang === 'ar' ? '⏰ منبّه الاستيقاظ قبل الشروق' : '⏰ Wake-up alarm before sunrise'} icon="sunrise">
