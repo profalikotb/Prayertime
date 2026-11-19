@@ -105,13 +105,14 @@ const prevAt = (() => {
 })();
 const isFri = now.getDay() === 5;
 const label = (k) => (k === 'dhuhr' && isFri ? 'الجمعة' : AR[k]);
-const hm = (d) => d.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' }).replace(/\s?[صم]$/, '');
+const latn = (s) => String(s).replace(/[٠-٩]/g, (c) => '٠١٢٣٤٥٦٧٨٩'.indexOf(c));
+const hm = (d) => latn( d.toLocaleTimeString('ar-EG-u-nu-latn', { hour: 'numeric', minute: '2-digit' }).replace(/\s?[صم]$/, ''));
 const ap = (d) => (d.getHours() < 12 ? 'ص' : 'م');
 const minsLeft = Math.round((nextAt - now) / 60000);
 const soon = minsLeft <= 15; // "smart": highlight the last 15 minutes before a prayer
 let hijri = '';
 try {
-  hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { day: 'numeric', month: 'long' }).format(now);
+  hijri = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'long' }).format(now).replace(/[٠-٩]/g, (c) => '٠١٢٣٤٥٦٧٨٩'.indexOf(c));
 } catch (e) {}
 
 
@@ -195,7 +196,7 @@ if (MODE === 'wallpaper' || MODE === 'wallpaper-save') {
 
   // date line (just below the iOS clock + widgets area)
   let y = H * 0.355;
-  const hij = (() => { try { return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura', { weekday: 'long', day: 'numeric', month: 'long' }).format(now); } catch (e) { return ''; } })();
+  const hij = (() => { try { return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura-nu-latn', { weekday: 'long', day: 'numeric', month: 'long' }).format(now).replace(/[٠-٩]/g, (c) => '٠١٢٣٤٥٦٧٨٩'.indexOf(c)); } catch (e) { return ''; } })();
   text(`${hij}${loc.name ? '  ·  ' + loc.name : ''}`, y, u * 4.4, SOFT, { align: 'center', light: true });
   y += u * 8;
 
