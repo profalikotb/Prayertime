@@ -75,6 +75,16 @@ public class MainActivity extends Activity {
         AlertReceiver.channels(this);
         askPermissions();
         render();
+        // once: battery optimisation blocks alarms on many phones → ask to exempt the app
+        PowerManager pm = getSystemService(PowerManager.class);
+        if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName()) && !getSharedPreferences("prayer", MODE_PRIVATE).getBoolean("battAsked31", false)) {
+            getSharedPreferences("prayer", MODE_PRIVATE).edit().putBoolean("battAsked31", true).apply();
+            try {
+                startActivity(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + getPackageName())));
+            } catch (Exception ignored) {
+            }
+        }
+        Updater.updateAll(this); // re-arm with alarm-clock alarms right away
     }
 
     @Override
@@ -635,9 +645,22 @@ public class MainActivity extends Activity {
         button((exact ? "✅" : "⚠️") + "  المنبّهات الدقيقة " + (exact ? "مسموحة" : "غير مسموحة — اضغط للسماح"), v -> {
             if (Build.VERSION.SDK_INT >= 31) startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + getPackageName())));
         }, exact ? 0x2232D296 : 0x55C0392B);
-        button((battery ? "✅" : "⚠️") + "  توفير البطارية " + (battery ? "لا يقيّد التطبيق" : "قد يؤخّر التنبيه — اضغط واختر «غير مقيّد»"), v ->
-                startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)), battery ? 0x2232D296 : 0x55C0392B);
-        text("بعض الشركات (شاومي، أوبو، هواوي، سامسونج) تضيف «تشغيل تلقائي» أو «تطبيقات نائمة»: اجعل «مواقيت الصلاة» مستثنى منها.", 12, DIM, false).setPadding(0, dp(8), 0, 0);
+        button((battery ? "✅" : "⚠️") + "  توفير البطارية " + (battery ? "لا يقيّد التطبيق" : "يمنع التنبيه — اضغط ثم «سماح»"), v -> {
+            try {
+                startActivity(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + getPackageName())));
+            } catch (Exception e) {
+                startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+            }
+        }, battery ? 0x2232D296 : 0x55C0392B);
+        text("بعض الشركات (شاومي، أوبو، ريلمي، هواوي، سامسونج) تضيف «تشغيل تلقائي» أو «تطبيقات نائمة»: اجعل «مواقيت الصلاة» مستثنى منها ولا تُغلقه بالسحب من قائمة التطبيقات الأخيرة.", 12, DIM, false).setPadding(0, dp(8), 0, 0);
+        long nx = Long.MAX_VALUE;
+        if (am != null && am.getNextAlarmClock() != null) nx = am.getNextAlarmClock().getTriggerTime();
+        text("⏰ المنبّه القادم: " + (nx == Long.MAX_VALUE ? "لا يوجد" : Day.time(nx)) + "   ·   التنبيه قبل الأذان: " + Day.arabic(String.valueOf(Store.voiceMin(this))) + " دقيقة", 13, 0xFFFBF5E6, false).setPadding(0, dp(8), 0, 0);
+        String lg = Store.log(this);
+        text("سجل آخر التنبيهات:\n" + (lg.isEmpty() ? "— لا شيء بعد —" : lg), 11, DIM, false).setPadding(0, dp(6), 0, 0);
+        String ver = "";
+        try { ver = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; } catch (Exception ignored) { }
+        text("الإصدار " + ver, 11, DIM, false);
     }
 
     /* ---------------- widgets / permissions / location ---------------- */

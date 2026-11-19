@@ -42,8 +42,7 @@ final class Alerts {
                         am.cancel(pi);
                         continue;
                     }
-                    if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
-                    else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
+                    arm(c, am, exact, at, pi);
                 }
             }
             // wake-up alarm: N min before sunrise (index 1)
@@ -52,9 +51,24 @@ final class Alerts {
                     .putExtra(X_IDX, 1).putExtra(X_KIND, KIND_WAKE).putExtra(X_AT, t[1]).putExtra(X_ID, date + "-1-wake");
             PendingIntent wp = PendingIntent.getBroadcast(c, 150 + day, wi, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
             if (!Store.alertsOn(c) || !Store.wakeOn(c) || wAt <= now + 1000) am.cancel(wp);
-            else if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, wAt, wp);
-            else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, wAt, wp);
+            else arm(c, am, exact, wAt, wp);
         }
+    }
+
+    /**
+     * Alarm-clock alarms (like the Clock app): exact, never deferred by Doze / app-standby / most OEM battery
+     * managers, and they let the receiver start the audio service from the background. Fallback: inexact.
+     */
+    static void arm(Context c, AlarmManager am, boolean exact, long at, PendingIntent pi) {
+        try {
+            if (exact) {
+                PendingIntent show = PendingIntent.getActivity(c, 5, new Intent(c, MainActivity.class), PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+                am.setAlarmClock(new AlarmManager.AlarmClockInfo(at, show), pi);
+                return;
+            }
+        } catch (SecurityException ignored) {
+        }
+        am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
     }
 
     private static PendingIntent pending(Context c, int day, int i, int kind, LocalDate date, long at, long prayerAt) {
@@ -77,9 +91,7 @@ final class Alerts {
                     .putExtra(X_IDX, i).putExtra(X_KIND, kind).putExtra(X_AT, d.nextAt).putExtra(X_ID, stamp + "-" + kind).putExtra("test", true);
             PendingIntent pi = PendingIntent.getBroadcast(c, 90 + kind, it, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
             long at = now + (kind == 0 ? 30_000 : 60_000);
-            boolean exact = Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms();
-            if (exact) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
-            else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
+            arm(c, am, Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms(), at, pi);
         }
     }
 

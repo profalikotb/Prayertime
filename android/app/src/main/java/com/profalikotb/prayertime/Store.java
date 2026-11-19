@@ -58,6 +58,17 @@ final class Store {
     static int hijriOffset(Context c) { return p(c).getInt("hijriOff", Integer.MIN_VALUE); }
     static void setHijriOffset(Context c, int v) { p(c).edit().putInt("hijriOff", v).apply(); }
 
+    /* ---------------- alert log (diagnostics, last 8) ---------------- */
+    static void log(Context c, String msg) {
+        String t = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM hh:mm a", java.util.Locale.US));
+        String old = p(c).getString("alog", "");
+        String[] lines = (t + "  " + msg + (old.isEmpty() ? "" : "\n" + old)).split("\n");
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < Math.min(8, lines.length); i++) b.append(i > 0 ? "\n" : "").append(lines[i]);
+        p(c).edit().putString("alog", b.toString()).apply();
+    }
+    static String log(Context c) { return p(c).getString("alog", ""); }
+
     /* ---------------- alerts ---------------- */
     static boolean alertsOn(Context c) { return p(c).getBoolean("alerts", true); }
     static void setAlertsOn(Context c, boolean v) { p(c).edit().putBoolean("alerts", v).apply(); }

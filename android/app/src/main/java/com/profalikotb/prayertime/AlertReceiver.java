@@ -26,6 +26,8 @@ import android.os.Vibrator;
 public class AlertReceiver extends BroadcastReceiver {
     static final String CH_SILENT = "prayer_alerts";
     static final String CH_SOUND = "prayer_alerts_sound";
+    /** fallback channels that carry the real sound on the ALARM stream (used only if the audio service can't start) */
+    static final String CH_ADHAN = "prayer_adhan_v1", CH_VOICE = "prayer_voice_v1", CH_WAKE = "prayer_wake_v1";
 
     @Override
     public void onReceive(Context c, Intent in) {
@@ -64,10 +66,12 @@ public class AlertReceiver extends BroadcastReceiver {
                     .putExtra(AudioService.X_VOICE, voice);
             try {
                 c.startForegroundService(s);
+                Store.log(c, title + " ✓");
                 return; // the service shows the notification itself
             } catch (Exception e) {
-                // Android 12+ may refuse a background FGS start (battery restrictions) → system-sound notification
-                post(c, title, body, true, voice);
+                // background start refused (OEM battery manager) → notification whose channel plays the same sound on the alarm stream
+                Store.log(c, title + " ⚠️ " + e.getClass().getSimpleName());
+                postAlarm(c, title, body, kind == Alerts.KIND_WAKE ? CH_WAKE : voice ? ("chime".equals(sound) ? CH_SOUND : CH_VOICE) : CH_ADHAN);
                 return;
             }
         }
@@ -87,6 +91,35 @@ public class AlertReceiver extends BroadcastReceiver {
                 new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT).build());
         b.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
         nm.createNotificationChannel(b);
+    }
+
+    private static void soundChannel(NotificationManager nm, Context c, String id, String name, android.net.Uri u) {
+        if (nm.getNotificationChannel(id) != null) return;
+        NotificationChannel ch = new NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH);
+        ch.setSound(u, new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build());
+        ch.enableVibration(true);
+        ch.setBypassDnd(true);
+        ch.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+        nm.createNotificationChannel(ch);
+    }
+
+    static void postAlarm(Context c, String title, String body, String channel) {
+        if (Build.VERSION.SDK_INT >= 33 && c.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        if (nm == null) return;
+        channels(c);
+        String pkg = "android.resource://" + c.getPackageName() + "/";
+        soundChannel(nm, c, CH_ADHAN, "الأذان (احتياطي)", android.net.Uri.parse(pkg + R.raw.adhan_refaat_short));
+        soundChannel(nm, c, CH_VOICE, "التنبيه بصوتي (احتياطي)", android.net.Uri.parse(pkg + R.raw.reminder_own));
+        soundChannel(nm, c, CH_WAKE, "منبّه الشروق (احتياطي)", RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM));
+        Intent open = new Intent(c, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        Notification n = new Notification.Builder(c, channel)
+                .setSmallIcon(R.drawable.ic_stat).setContentTitle(title).setContentText(body)
+                .setStyle(new Notification.BigTextStyle().bigText(body)).setColor(0xFF0E8A6A)
+                .setCategory(Notification.CATEGORY_ALARM).setVisibility(Notification.VISIBILITY_PUBLIC).setAutoCancel(true)
+                .setContentIntent(PendingIntent.getActivity(c, 3, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT))
+                .build();
+        nm.notify(23, n);
     }
 
     static Notification build(Context c, String title, String body, boolean withSound, boolean voice, PendingIntent stop) {
