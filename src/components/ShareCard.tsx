@@ -191,7 +191,7 @@ export default function ShareCard() {
         onChange={setRange}
         options={[
           { v: 'today', l: ar ? 'اليوم' : 'Today' },
-          { v: 'week', l: ar ? '٧ أيام' : '7 days' },
+          { v: 'week', l: ar ? '7 أيام' : '7 days' },
         ]}
       />
       <div className="mt-3 overflow-hidden rounded-xl border border-line/10 bg-ink/5">

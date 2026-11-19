@@ -177,7 +177,7 @@ final class Day {
 
     static String arabic(String s) {
         StringBuilder b = new StringBuilder();
-        for (char ch : s.toCharArray()) b.append(ch >= '0' && ch <= '9' ? (char) ('٠' + (ch - '0')) : ch);
+        for (char ch : s.toCharArray()) b.append(ch >= '٠' && ch <= '٩' ? (char) ('0' + (ch - '٠')) : ch); // Western digits (0-9)
         return b.toString();
     }
 

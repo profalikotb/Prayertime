@@ -93,7 +93,7 @@ export function useAudioScheduler(now: Date, s: Settings | null, times: { today:
       }
     }
     if (n.ramadan && hijri.m === 9 && due('suhoor', times.today.fajr.getTime() - 30 * 60000)) {
-      void showLocal(s.lang === 'ar' ? 'السحور' : 'Suhoor', s.lang === 'ar' ? 'بقي ٣٠ دقيقة على الفجر' : '30 minutes until Fajr', n.vibrate);
+      void showLocal(s.lang === 'ar' ? 'السحور' : 'Suhoor', s.lang === 'ar' ? 'بقي 30 دقيقة على الفجر' : '30 minutes until Fajr', n.vibrate);
       if (n.sound !== 'silent') void play('chime', { volume: a.volume });
     }
     // wake-up alarm before sunrise (app open): notification + three loud chimes

@@ -171,7 +171,7 @@ export function LogCard() {
       </div>
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl bg-emerald/5 p-2">
-          <p className="text-[11px] text-muted">{ar ? 'آخر ٣٠ يومًا' : 'Last 30 days'}</p>
+          <p className="text-[11px] text-muted">{ar ? 'آخر 30 يومًا' : 'Last 30 days'}</p>
           <p className="tnum text-[18px] font-extrabold text-emerald">{f.n(Math.round(st.last30 * 100))}٪</p>
         </div>
         <div className="rounded-xl bg-gold/10 p-2">

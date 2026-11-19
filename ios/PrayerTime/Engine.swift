@@ -79,20 +79,20 @@ enum Engine {
 enum Fmt {
     static let time: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "ar_EG")
+        f.locale = Locale(identifier: "ar_EG@numbers=latn")
         f.dateFormat = "h:mm a"
         return f
     }()
     static let date: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "ar_EG")
+        f.locale = Locale(identifier: "ar_EG@numbers=latn")
         f.dateFormat = "EEEE dd/MM/yyyy"
         return f
     }()
     static let hijri: DateFormatter = {
         let f = DateFormatter()
         f.calendar = Calendar(identifier: .islamicUmmAlQura)
-        f.locale = Locale(identifier: "ar")
+        f.locale = Locale(identifier: "ar@numbers=latn")
         f.dateFormat = "d MMMM yyyy هـ"
         return f
     }()

@@ -274,7 +274,7 @@ public class MainActivity extends Activity {
             changed();
         });
         String[] hlKeys = {"auto", "middle", "seventh", "twilight"};
-        String[] hlNames = {"تلقائي (سُبع الليل فوق ٤٨°)", "منتصف الليل", "سُبع الليل", "حسب الزاوية"};
+        String[] hlNames = {"تلقائي (سُبع الليل فوق 48°)", "منتصف الليل", "سُبع الليل", "حسب الزاوية"};
         int hs = java.util.Arrays.asList(hlKeys).indexOf(Store.highLat(this));
         button("🌍  خطوط العرض العليا: " + hlNames[Math.max(0, hs)], v -> new AlertDialog.Builder(this).setTitle("قاعدة خطوط العرض العليا")
                 .setSingleChoiceItems(hlNames, Math.max(0, hs), (dlg, w) -> {
@@ -284,7 +284,7 @@ public class MainActivity extends Activity {
                 }).show(), GLASS);
         button("⏱  تعديل الدقائق لكل صلاة (مطابقة المسجد)", v -> adjustDialog(), GLASS);
         int ho = Store.hijriOffset(this);
-        String[] hoNames = {"تلقائي (دار الإفتاء ثم أم القرى)", "−٢ يوم", "−١ يوم", "بدون تعديل (أم القرى)", "+١ يوم", "+٢ يوم"};
+        String[] hoNames = {"تلقائي (دار الإفتاء ثم أم القرى)", "−2 يوم", "−1 يوم", "بدون تعديل (أم القرى)", "+1 يوم", "+2 يوم"};
         int hoSel = ho == Integer.MIN_VALUE ? 0 : ho + 3;
         button("🌙  تصحيح التاريخ الهجري: " + hoNames[hoSel], v -> new AlertDialog.Builder(this).setTitle("تصحيح التاريخ الهجري")
                 .setSingleChoiceItems(hoNames, hoSel, (dlg, w) -> {
@@ -296,18 +296,18 @@ public class MainActivity extends Activity {
 
     private static String detail(String m) {
         switch (m) {
-            case "Egyptian": return "فجر ١٩٫٥° · عشاء ١٧٫٥°";
-            case "UmmAlQura": return "فجر ١٨٫٥° · عشاء ٩٠ د (١٢٠ في رمضان)";
-            case "MuslimWorldLeague": return "فجر ١٨° · عشاء ١٧°";
-            case "NorthAmerica": return "فجر ١٥° · عشاء ١٥°";
-            case "FCNA": return "فجر ١٣° · عشاء ١٣°";
-            case "UOIF": return "فجر ١٢° · عشاء ١٢°";
-            case "Kuwait": return "فجر ١٨° · عشاء ١٧٫٥°";
-            case "Qatar": return "فجر ١٨° · عشاء ٩٠ د";
-            case "Karachi": return "فجر ١٨° · عشاء ١٨°";
-            case "Dubai": return "فجر ١٨٫٢° · عشاء ١٨٫٢°";
-            case "Singapore": return "فجر ٢٠° · عشاء ١٨°";
-            case "Tehran": return "فجر ١٧٫٧° · عشاء ١٤°";
+            case "Egyptian": return "فجر 19.5° · عشاء 17.5°";
+            case "UmmAlQura": return "فجر 18.5° · عشاء 90 د (120 في رمضان)";
+            case "MuslimWorldLeague": return "فجر 18° · عشاء 17°";
+            case "NorthAmerica": return "فجر 15° · عشاء 15°";
+            case "FCNA": return "فجر 13° · عشاء 13°";
+            case "UOIF": return "فجر 12° · عشاء 12°";
+            case "Kuwait": return "فجر 18° · عشاء 17.5°";
+            case "Qatar": return "فجر 18° · عشاء 90 د";
+            case "Karachi": return "فجر 18° · عشاء 18°";
+            case "Dubai": return "فجر 18.2° · عشاء 18.2°";
+            case "Singapore": return "فجر 20° · عشاء 18°";
+            case "Tehran": return "فجر 17.7° · عشاء 14°";
             default: return "";
         }
     }
@@ -373,7 +373,7 @@ public class MainActivity extends Activity {
                 changed();
             }).show();
         }, GLASS);
-        text("صوتي قبل كل صلاة بالمدة المختارة (٥–٢٥ دقيقة، الافتراضي ١٥)، بأعلى مستوى صوت وإجباريًا حتى في الوضع الصامت.", 12, DIM, false);
+        text("صوتي قبل كل صلاة بالمدة المختارة (5–25 دقيقة، الافتراضي 15)، بأعلى مستوى صوت وإجباريًا حتى في الوضع الصامت.", 12, DIM, false);
 
         for (int i : Alerts.PRAYERS) {
             final int k = i;
@@ -402,14 +402,14 @@ public class MainActivity extends Activity {
                 changed();
             }).show();
         }, GLASS);
-        text("نغمة منبّه الهاتف بأعلى صوت، تتكرر حتى تضغط «إيقاف الصوت» (تتوقف وحدها بعد ٥ دقائق). تعمل والتطبيق مغلق وفي الوضع الصامت.", 12, DIM, false);
+        text("نغمة منبّه الهاتف بأعلى صوت، تتكرر حتى تضغط «إيقاف الصوت» (تتوقف وحدها بعد 5 دقائق). تعمل والتطبيق مغلق وفي الوضع الصامت.", 12, DIM, false);
 
         button("🗂  إدارة التسجيلات (تشغيل، تسمية، حذف)", v -> manageDialog(), GLASS);
 
         text("🔊 مستوى الصوت: الأعلى دائمًا (إجباري)", 14, 0xFFFBF5E6, false).setPadding(0, dp(12), 0, 0);
         toggle("اهتزاز مع التنبيه", Store.vibrate(this), (x, on) -> Store.setVibrate(this, on));
 
-        button("▶  تجربة كاملة: صوتك بعد ٣٠ ث ثم الأذان بعد ٦٠ ث", v -> {
+        button("▶  تجربة كاملة: صوتك بعد 30 ث ثم الأذان بعد 60 ث", v -> {
             Alerts.scheduleTest(this, new Day(this));
             Toast.makeText(this, "اقفل الشاشة الآن للتأكد من عمل التنبيه في الخلفية", Toast.LENGTH_LONG).show();
         }, GREEN);
@@ -587,7 +587,7 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) {
         }
         if (size > (voice ? MAX_VOICE_BYTES : MAX_ADHAN_BYTES)) {
-            Toast.makeText(this, "الملف كبير جدًا (الحد " + (voice ? "٨" : "٢٥") + " ميجابايت)", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "الملف كبير جدًا (الحد " + (voice ? "8" : "25") + " ميجابايت)", Toast.LENGTH_LONG).show();
             return;
         }
         String ext = name.contains(".") ? name.substring(name.lastIndexOf('.')).toLowerCase(Locale.ROOT) : ".mp3";

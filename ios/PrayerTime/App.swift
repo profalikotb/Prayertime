@@ -6,7 +6,7 @@ struct PrayerTimeApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.layoutDirection, .rightToLeft)
-                .environment(\.locale, Locale(identifier: "ar_EG"))
+                .environment(\.locale, Locale(identifier: "ar_EG@numbers=latn"))
         }
     }
 }
@@ -138,12 +138,12 @@ struct ContentView: View {
                 Task {
                     busy = true
                     let ok = await Alarms.test(s)
-                    status = ok ? "✓ اقفل الشاشة الآن: صوتك بعد ٣٠ ث ثم الأذان بعد ٦٠ ث" : "لم يُسمح بالمنبّهات — الإعدادات ← مواقيت الصلاة ← المنبّهات"
+                    status = ok ? "✓ اقفل الشاشة الآن: صوتك بعد 30 ث ثم الأذان بعد 60 ث" : "لم يُسمح بالمنبّهات — الإعدادات ← مواقيت الصلاة ← المنبّهات"
                     busy = false
                     Task { try? await Task.sleep(for: .seconds(65)); rearmSoon() }
                 }
             } label: {
-                Label("تجربة كاملة (٣٠ ث ثم ٦٠ ث)", systemImage: "play.circle.fill").frame(maxWidth: .infinity)
+                Label("تجربة كاملة (30 ث ثم 60 ث)", systemImage: "play.circle.fill").frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent).tint(emerald).disabled(busy)
             Text(armed > 0 ? "✓ \(armed) منبّهًا مجدولًا لـ \(Alarms.days) أيام · يعمل والتطبيق مغلق وفي الوضع الصامت" : (status.isEmpty ? "افتح التطبيق مرة أسبوعيًا ليُجدِّد المنبّهات." : ""))
@@ -193,7 +193,7 @@ struct ContentView: View {
                 Text("العصر: الحنفي").tag(true)
             }
             .pickerStyle(.segmented)
-            Text(s.country == "EG" ? "الهيئة المصرية العامة للمساحة (١٩٫٥° / ١٧٫٥°)" : "طريقة الحساب حسب الدولة (\(s.country))")
+            Text(s.country == "EG" ? "الهيئة المصرية العامة للمساحة (19.5° / 17.5°)" : "طريقة الحساب حسب الدولة (\(s.country))")
                 .font(.caption).foregroundStyle(.secondary)
         }
     }

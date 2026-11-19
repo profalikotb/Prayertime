@@ -91,9 +91,9 @@ export function TravelCard() {
       <div className="mt-2 grid grid-cols-3 gap-2 text-center">
         {(
           [
-            ['dhuhr', '٤ ← ٢'],
-            ['asr', '٤ ← ٢'],
-            ['isha', '٤ ← ٢'],
+            ['dhuhr', '4 ← 2'],
+            ['asr', '4 ← 2'],
+            ['isha', '4 ← 2'],
           ] as const
         ).map(([k]) => (
           <div key={k} className="rounded-xl bg-[#4b6cb7]/10 p-2">
@@ -122,7 +122,7 @@ export function TravelCard() {
       </ul>
       <p className="mt-2 text-[10.5px] leading-4 text-muted">
         {ar
-          ? 'النساء ١٠١ · «صدقة تصدّق الله بها عليكم فاقبلوا صدقته» صحيح مسلم ٦٨٦ · جمع النبي ﷺ في السفر: صحيح البخاري ١١٠٧ · «كان ابن عمر وابن عباس يقصران ويفطران في أربعة بُرُد» البخاري تعليقًا. فيه خلاف معتبر في المسافة (الجمهور نحو ٨٠–٨٥ كم، ومن العلماء من ردّها إلى العرف)، وفي مدة الإقامة التي ينقطع بها حكم السفر (الجمهور: نية إقامة أكثر من أربعة أيام).'
+          ? 'النساء 101 · «صدقة تصدّق الله بها عليكم فاقبلوا صدقته» صحيح مسلم 686 · جمع النبي ﷺ في السفر: صحيح البخاري 1107 · «كان ابن عمر وابن عباس يقصران ويفطران في أربعة بُرُد» البخاري تعليقًا. فيه خلاف معتبر في المسافة (الجمهور نحو 80–85 كم، ومن العلماء من ردّها إلى العرف)، وفي مدة الإقامة التي ينقطع بها حكم السفر (الجمهور: نية إقامة أكثر من أربعة أيام).'
           : 'Qurʾan 4:101 · Muslim 686 · Bukhari 1107 · Ibn ʿUmar & Ibn ʿAbbas: four burud (Bukhari, taʿliq). Scholars differ on the distance (majority ≈ 80–85 km; some defer to custom) and on the length of stay that ends travel (majority: intending more than four days).'}
       </p>
     </Card>
@@ -139,7 +139,7 @@ export function TravelSettings() {
   return (
     <Card title={ar ? 'وضع السفر (القصر والجمع)' : 'Travel mode'} icon="pin">
       <Toggle on={tr.enabled} label={ar ? 'إظهار رخصة القصر والجمع عند السفر' : 'Show shortening/combining when travelling'} onChange={(v) => setTr((t) => ({ ...t, enabled: v }))} />
-      <Row label={ar ? 'مسافة القصر (كم)' : 'Qasr distance (km)'} hint={ar ? 'الشائع ٨٣ كم؛ اتبع مذهبك.' : 'Commonly 83 km; follow your school.'}>
+      <Row label={ar ? 'مسافة القصر (كم)' : 'Qasr distance (km)'} hint={ar ? 'الشائع 83 كم؛ اتبع مذهبك.' : 'Commonly 83 km; follow your school.'}>
         <Seg value={tr.km} onChange={(v) => setTr((t) => ({ ...t, km: v }))} options={[80, 83, 85, 89].map((k) => ({ v: k, l: f.n(k) }))} />
       </Row>
       <p className="mb-1 mt-2 text-[12.5px] font-bold">{ar ? 'أماكن الإقامة (لا يُعدّ فيها مسافرًا)' : 'Home places'}</p>

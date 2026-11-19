@@ -14,7 +14,7 @@ export function defaultSettings(): Settings {
     lang: 'ar',
     theme: 'auto',
     timeFormat: '12',
-    digits: 'arab',
+    digits: 'latn',
     locationMode: 'auto',
     manualCityId: null,
     method: 'auto',
@@ -127,6 +127,12 @@ export function loadSettings(): Settings {
       for (const k of ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const) st.audio.voice.perPrayer[k] = { on: true, sound: 'own' };
       st.audio.volume = 1;
       st.audio.v = 6;
+      saveSettings(st);
+    }
+    if (!st.digitsV) {
+      // Western digits (0-9) by default — switch once; the user can still pick Eastern digits in Settings
+      st.digits = 'latn';
+      st.digitsV = 1;
       saveSettings(st);
     }
     if ((st.audio.v ?? 0) < 7) {

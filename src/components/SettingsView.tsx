@@ -47,7 +47,7 @@ function CalendarFeed() {
       <p className="font-extrabold text-emerald">{ar ? 'تنبيه يعمل والتطبيق مغلق' : 'Alerts with the app closed'}</p>
       <p className="text-ink/80">
         {ar
-          ? 'اشترك مرة واحدة في «تقويم المواقيت»: يرن الهاتف أو الكمبيوتر قبل كل صلاة بـ ٥ دقائق وعند الأذان حتى والتطبيق مغلق، ويتحدّث تلقائيًا كل يوم.'
+          ? 'اشترك مرة واحدة في «تقويم المواقيت»: يرن الهاتف أو الكمبيوتر قبل كل صلاة بـ 5 دقائق وعند الأذان حتى والتطبيق مغلق، ويتحدّث تلقائيًا كل يوم.'
           : 'Subscribe once: your phone or computer alerts 5 min before each prayer and at the Adhan even when the app is closed, refreshed automatically.'}
       </p>
       <a href={webcal} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald py-2.5 text-[14px] font-bold text-white">
@@ -243,7 +243,7 @@ export default function SettingsView() {
             ))}
             <p className="col-span-3 text-[11px] font-normal leading-5 text-muted">
               {s.lang === 'ar'
-                ? 'لمطابقة جدول مسجدك المحلي (مثل بريطانيا): اضبط الزوايا هنا ثم استخدم تعديل الدقائق لكل صلاة أدناه. ٠ دقيقة = استخدام زاوية العشاء.'
+                ? 'لمطابقة جدول مسجدك المحلي (مثل بريطانيا): اضبط الزوايا هنا ثم استخدم تعديل الدقائق لكل صلاة أدناه. 0 دقيقة = استخدام زاوية العشاء.'
                 : 'To match your local mosque (e.g. UK): set the angles, then fine-tune each prayer below. 0 min = use the Isha angle.'}
             </p>
           </div>
@@ -256,7 +256,7 @@ export default function SettingsView() {
                 ? `موقعك عند ${Math.abs(place.lat).toFixed(1)}° — القاعدة تؤثر على الفجر والعشاء صيفًا.`
                 : `You are at ${Math.abs(place.lat).toFixed(1)}° — this affects Fajr/Isha in summer.`
               : s.lang === 'ar'
-                ? 'لا تؤثر في موقعك الحالي (تُستخدم فوق ٤٨° تقريبًا).'
+                ? 'لا تؤثر في موقعك الحالي (تُستخدم فوق 48° تقريبًا).'
                 : 'No effect at your latitude (matters above ~48°).'
           }
         >
@@ -391,7 +391,7 @@ export default function SettingsView() {
         />
         <p className="mt-2 text-[12px] leading-5 text-muted">
           {s.lang === 'ar'
-            ? 'يوميًا قبل الشروق بالمدة المختارة (الافتراضي ٢٠ دقيقة). على أندرويد وتطبيق iPhone الأصلي: منبّه عالي الصوت يتكرر حتى تُوقفه، حتى في الوضع الصامت. على iPhone (تطبيق الويب): إشعار + تنبيه في التقويم المشترك.'
+            ? 'يوميًا قبل الشروق بالمدة المختارة (الافتراضي 20 دقيقة). على أندرويد وتطبيق iPhone الأصلي: منبّه عالي الصوت يتكرر حتى تُوقفه، حتى في الوضع الصامت. على iPhone (تطبيق الويب): إشعار + تنبيه في التقويم المشترك.'
             : 'Daily, before sunrise (default 20 min). Android & native iPhone app: loud repeating alarm, even in silent mode. iPhone web app: notification + calendar alert.'}
         </p>
       </Card>

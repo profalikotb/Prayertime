@@ -335,7 +335,7 @@ export default function QiblaView() {
         </div>
         <p className="mt-3 text-[11px] leading-5 text-muted">
           {ar
-            ? 'للحصول على أدق قراءة: أمسك الهاتف أفقيًا، وابتعد نصف متر على الأقل عن المعادن والأجهزة والسماعات المغناطيسية، وإن ظهرت دقة ضعيفة حرّك الهاتف على شكل رقم ٨.'
+            ? 'للحصول على أدق قراءة: أمسك الهاتف أفقيًا، وابتعد نصف متر على الأقل عن المعادن والأجهزة والسماعات المغناطيسية، وإن ظهرت دقة ضعيفة حرّك الهاتف على شكل رقم 8.'
             : 'Best accuracy: hold the phone flat, at least half a metre from metal, electronics and magnetic cases; if accuracy is poor, move it in a figure-8.'}
         </p>
       </Card>

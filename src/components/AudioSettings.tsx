@@ -76,7 +76,7 @@ export default function AudioSettings() {
       <Card title={ar ? 'التنبيه بصوتي قبل الصلاة' : 'My voice prayer reminder'} icon="mic" className="md:col-span-2">
         <div id="audio" className="-mt-1 mb-2 text-[12px] leading-5 text-muted">
           {ar
-            ? 'صوتي (تسجيلي) قبل كل صلاة بالمدة التي تختارها (٥ إلى ٢٥ دقيقة، الافتراضي ١٥) بأعلى مستوى صوت، أو نغمة هادئة — اختر لكل صلاة.'
+            ? 'صوتي (تسجيلي) قبل كل صلاة بالمدة التي تختارها (5 إلى 25 دقيقة، الافتراضي 15) بأعلى مستوى صوت، أو نغمة هادئة — اختر لكل صلاة.'
             : 'Before each prayer (5–25 min): your recorded reminder or a soft chime — choose per prayer.'}
         </div>
         <Toggle on={a.voice.enabled} label={ar ? 'تفعيل التنبيه الصوتي' : 'Enable voice reminder'} onChange={(v) => setVoice((x) => ({ ...x, enabled: v }))} />

@@ -20,7 +20,7 @@ export default function PrayerWhy({ k }: { k: PrayerKey }) {
   const rule: Record<PrayerKey, string> = ar
     ? {
         fajr: `طلوع الفجر الصادق: الشمس تحت الأفق بزاوية ${deg(p.fajrAngle)}.`,
-        sunrise: 'ظهور الحافة العليا لقرص الشمس مع احتساب الانكسار الجوي (−٠٫٨٣°)، ويُقرَّب للدقيقة الأسبق احتياطًا لانتهاء وقت الفجر.',
+        sunrise: 'ظهور الحافة العليا لقرص الشمس مع احتساب الانكسار الجوي (−0٫83°)، ويُقرَّب للدقيقة الأسبق احتياطًا لانتهاء وقت الفجر.',
         dhuhr: 'زوال الشمس: عبورها خط الزوال (أعلى نقطة في السماء)' + (mAdj ? ` + ${f.n(mAdj)} دقيقة احتياط الطريقة.` : '، دون إضافة (كجداول الهيئة المصرية).'),
         asr:
           s.madhab === 'hanafi'
@@ -28,7 +28,7 @@ export default function PrayerWhy({ k }: { k: PrayerKey }) {
             : 'مصير ظل الشيء مثله بعد ظل الزوال (مذهب الجمهور).',
         maghrib: 'غروب قرص الشمس كاملًا تحت الأفق مع احتساب الانكسار الجوي.',
         isha: ishaMin
-          ? `${f.n(ishaMin)} دقيقة بعد المغرب (طريقة أم القرى${hijri.m === 9 ? '، وتصبح ١٢٠ في رمضان' : ''}).`
+          ? `${f.n(ishaMin)} دقيقة بعد المغرب (طريقة أم القرى${hijri.m === 9 ? '، وتصبح 120 في رمضان' : ''}).`
           : `غياب الشفق: الشمس تحت الأفق بزاوية ${deg(p.ishaAngle)}.`,
       }
     : {
@@ -59,7 +59,7 @@ export default function PrayerWhy({ k }: { k: PrayerKey }) {
       </p>
       {method === 'Egyptian' && (
         <p className="mt-1 text-[11px] text-emerald">
-          {ar ? '✓ مطابق للجدول المصري المنشور للقاهرة (١١/١٠/٢٠٢٦) في المواقيت الست.' : '✓ Matches the published Cairo schedule (11/10/2026) on all six times.'}
+          {ar ? '✓ مطابق للجدول المصري المنشور للقاهرة (11/10/2026) في المواقيت الست.' : '✓ Matches the published Cairo schedule (11/10/2026) on all six times.'}
         </p>
       )}
     </div>

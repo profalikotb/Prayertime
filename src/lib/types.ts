@@ -123,6 +123,7 @@ export interface Settings {
   theme: 'auto' | 'light' | 'dark';
   timeFormat: '12' | '24';
   digits: 'arab' | 'latn';
+  digitsV?: number;
   locationMode: 'auto' | 'manual';
   manualCityId: string | null;
   method: 'auto' | MethodKey;

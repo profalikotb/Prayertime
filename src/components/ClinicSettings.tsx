@@ -29,7 +29,7 @@ export default function ClinicSettings() {
   };
   const toggle = (id: string, on: boolean) => set((x) => ({ ...x, clinics: x.clinics.map((e) => (e.id === id ? { ...e, enabled: on } : e)) }));
 
-  /** "19:00" → "٧:٠٠ م" (12-hour, Arabic digits) — avoids RTL reordering of 24-h ranges */
+  /** "19:00" → "7:00 م" (12-hour, Arabic digits) — avoids RTL reordering of 24-h ranges */
   const clock = (hhmm: string) => {
     const [h, m] = hhmm.split(':').map(Number);
     if (s.timeFormat === '24') return f.n(hhmm);
