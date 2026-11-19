@@ -79,7 +79,11 @@ Write-Host "Folder: $Dir   (Test.lnk = test again, Uninstall.cmd = remove)"
   const cmd = [
     '@echo off',
     'title Prayer Alarm - Prof Ali Kotb',
-    `powershell -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12'; iex ((New-Object Net.WebClient).DownloadString('${self.toString().replace(/%/g, '%%')}'))"`,
+    // full path: some PCs have a broken PATH where plain «powershell» is "not recognized"
+    'set "PS=%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"',
+    'if not exist "%PS%" set "PS=%SystemRoot%\\Sysnative\\WindowsPowerShell\\v1.0\\powershell.exe"',
+    'if not exist "%PS%" set "PS=pwsh.exe"',
+    `"%PS%" -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol='Tls12'; iex ((New-Object Net.WebClient).DownloadString('${self.toString().replace(/%/g, '%%')}'))"`,
     'echo.',
     'pause',
     '',
