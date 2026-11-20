@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useApp } from './ctx';
 import { Icon } from './ui';
-import { useWikiDay, wikiDayUrl, type WikiItem } from '@/lib/wikiDay';
+import { islamicOnly, useWikiDay, wikiDayUrl, type WikiItem } from '@/lib/wikiDay';
 
 /**
  * «من ويكيبيديا العربية» — all events / deaths recorded for this Hijri day.
@@ -11,8 +11,11 @@ import { useWikiDay, wikiDayUrl, type WikiItem } from '@/lib/wikiDay';
 export default function WikiDayList({ m, d, compact = false }: { m: number; d: number; compact?: boolean }) {
   const { s, f, online } = useApp();
   const ar = s.lang === 'ar';
-  const { loading, data, failed } = useWikiDay(m, d);
+  const { loading, data: raw, failed } = useWikiDay(m, d);
   const [all, setAll] = useState(false);
+  const [everything, setEverything] = useState(false); // default: Islamic history only
+  const data = raw && !everything ? islamicOnly(raw) : raw;
+  const rawTotal = raw ? raw.events.length + raw.births.length + raw.deaths.length : 0;
   const url = data?.url ?? wikiDayUrl(m, d);
 
   const sections: [string, WikiItem[]][] = data
@@ -31,12 +34,16 @@ export default function WikiDayList({ m, d, compact = false }: { m: number; d: n
         <span className="grid h-6 w-6 place-items-center rounded-md bg-ink/5 text-[11px] font-black">W</span>
         <p className="flex-1 text-[13px] font-extrabold">
           {ar ? `من ويكيبيديا العربية — ${f.n(d)} ${f.hMonth(m)}` : `From Arabic Wikipedia — ${d} ${f.hMonth(m)}`}
+          {!everything && <span className="ms-1 text-[11.5px] font-semibold text-gold">{ar ? '· أحداث إسلامية' : '· Islamic history'}</span>}
           {total > 0 && <span className="ms-1 text-[11.5px] font-semibold text-muted">({f.n(total)})</span>}
         </p>
       </div>
 
       {loading && <p className="text-[12px] text-muted">{ar ? 'جارٍ التحميل…' : 'Loading…'}</p>}
-      {!loading && (failed || total === 0) && (
+      {!loading && !failed && total === 0 && rawTotal > 0 && (
+        <p className="text-[12px] text-muted">{ar ? 'لا توجد أحداث إسلامية مسجلة لهذا اليوم في ويكيبيديا.' : 'No Islamic-history entries for this day on Wikipedia.'}</p>
+      )}
+      {!loading && (failed || rawTotal === 0) && (
         <p className="text-[12px] text-muted">
           {!online ? (ar ? 'يحتاج اتصالًا بالإنترنت.' : 'Needs an internet connection.') : ar ? 'لا توجد قائمة لهذا اليوم في ويكيبيديا.' : 'No list for this day on Wikipedia.'}
         </p>
@@ -65,6 +72,13 @@ export default function WikiDayList({ m, d, compact = false }: { m: number; d: n
       })}
 
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+        {rawTotal > 0 && (
+          <button type="button" onClick={() => setEverything((v) => !v)} className="text-[12px] font-bold text-gold">
+            {everything
+              ? ar ? '🕌 الأحداث الإسلامية فقط' : '🕌 Islamic history only'
+              : ar ? `عرض كل أحداث ويكيبيديا (${f.n(rawTotal)})` : `Show all Wikipedia entries (${rawTotal})`}
+          </button>
+        )}
         {total > limit && !all && (
           <button type="button" onClick={() => setAll(true)} className="text-[12px] font-bold text-emerald">
             {ar ? 'عرض الكل' : 'Show all'}
