@@ -4,6 +4,7 @@ import { useApp } from './ctx';
 import { Card, Icon, StatusChip, refEn } from './ui';
 import HijriAdjust from './HijriAdjust';
 import EventCard from './EventCard';
+import Timetable from './Timetable';
 import { addDays, key, sameDay, weekday } from '@/lib/civil';
 import { fromIndex, hijriFor, hijriIndex, monthGrid } from '@/lib/hijri';
 import { daysWithEvents, eventsForDay, eventsForMonthOnly } from '@/data/history';
@@ -109,6 +110,7 @@ export default function CalendarView() {
         <Card title={t.hijriAdjust} icon="gear">
           <HijriAdjust />
         </Card>
+        <Timetable />
       </div>
 
       <div className="grid gap-3">
