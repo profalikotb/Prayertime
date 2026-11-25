@@ -145,15 +145,28 @@ final class Updater {
             if (all.length() > 0) all.append("   ");
             all.append(Day.AR[i].replace("ال", "")).append(' ').append(Day.time(d.today[i]).replace(" ص", "").replace(" م", ""));
         }
+        // custom body: Samsung (One UI) draws the built-in countdown chronometer with a leading "−" — our own
+        // Chronometer view counts down cleanly; the posting time ("10:30 AM") is hidden.
+        String title = (d.soon() ? "⏰ " : "🕌 ") + d.label(d.next) + "  " + Day.time(d.nextAt);
+        RemoteViews body = new RemoteViews(c.getPackageName(), R.layout.notif_next);
+        body.setTextViewText(R.id.n_title, title);
+        body.setTextViewText(R.id.n_all, all.toString());
+        body.setChronometer(R.id.n_count, SystemClock.elapsedRealtime() + Math.max(0, d.nextAt - System.currentTimeMillis()), null, true);
+        body.setChronometerCountDown(R.id.n_count, true);
+        RemoteViews big = new RemoteViews(c.getPackageName(), R.layout.notif_next);
+        big.setTextViewText(R.id.n_title, title);
+        big.setTextViewText(R.id.n_all, all.toString() + "\n" + d.hijri + " · " + d.city);
+        big.setInt(R.id.n_all, "setMaxLines", 3);
+        big.setChronometer(R.id.n_count, SystemClock.elapsedRealtime() + Math.max(0, d.nextAt - System.currentTimeMillis()), null, true);
+        big.setChronometerCountDown(R.id.n_count, true);
         Notification n = new Notification.Builder(c, CHANNEL)
                 .setSmallIcon(R.drawable.ic_stat)
-                .setContentTitle((d.soon() ? "⏰ " : "🕌 ") + d.label(d.next) + "  " + Day.time(d.nextAt))
+                .setContentTitle(title)
                 .setContentText(all.toString())
-                .setStyle(new Notification.BigTextStyle().bigText(all.toString() + "\n" + d.hijri + " · " + d.city))
-                .setWhen(d.nextAt)
-                .setShowWhen(true)
-                .setUsesChronometer(true)
-                .setChronometerCountDown(true)
+                .setStyle(new Notification.DecoratedCustomViewStyle())
+                .setCustomContentView(body)
+                .setCustomBigContentView(big)
+                .setShowWhen(false)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setColor(0xFF0E8A6A)
